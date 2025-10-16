@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Faq from './tabs/Faq';
 import Help from './tabs/Help';
 import ContactUs from './tabs/ContactUs';
-
+import Breadcrumb from '../Common/Breadcrumb';
+import { useLocation } from "react-router-dom";
+  
 const Support = () => {
+  const location = useLocation();
+ 
   const [activeSection, setActiveSection] = React.useState('faq');
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const tab = queryParams.get("tab");
+    if (tab) {
+      setActiveSection(tab);
+    }
+  }, [location.search]);
 
   return (
     <div className="space-y-6">
+      <Breadcrumb />
       <div className="bg-primary rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Support Center</h1>
         <p className="text-primary-100">Get help and find answers to common questions</p>

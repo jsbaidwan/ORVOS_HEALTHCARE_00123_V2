@@ -3,6 +3,7 @@ import { useUser } from '../../context/UserContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
 import UserForm from './UserForm';
+import Breadcrumb from '../Common/Breadcrumb';
 
 const UsersList = () => {
   const { users, deleteUser } = useUser();
@@ -123,6 +124,7 @@ const UsersList = () => {
 
   return (
     <div>
+      <Breadcrumb />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>

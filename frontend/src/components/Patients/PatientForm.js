@@ -5,7 +5,8 @@ import { useClinic } from '../../context/ClinicContext';
 import FormField from '../UI/FormField';
 import EyeImageUploader from './EyeImageUploader';
 import MedicalHistorySection from './MedicalHistorySection';
-
+import Breadcrumb from '../Common/Breadcrumb';
+   
 const PatientForm = ({ patient }) => {
   const navigate = useNavigate();
   const { addPatient, updatePatient } = usePatient();
@@ -68,6 +69,7 @@ const PatientForm = ({ patient }) => {
 
   return (
     <div className="mx-auto">
+      <Breadcrumb />
       <div className="bg-white rounded-xl shadow-card p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">

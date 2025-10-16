@@ -88,7 +88,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="px-4 py-6 overflow-y-auto h-[calc(100vh-88px)]">
+        <nav className="px-4 py-6 scrollbar-thin overflow-y-auto h-[calc(100vh-88px)]">
           <ul className="space-y-2">
             {menuItemsWithPaths.map((item, index) => (
               <li key={index}>
@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
                         isActive(item.path) || openParentId === item.basePath
                           ? 'bg-white text-primary'
-                          : 'hover:bg-gray-100 hover:text-primary'
+                          : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
                       }`}
                     >
                       <span className="flex items-center space-x-3">
@@ -126,7 +126,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                               className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
                                 location.pathname === subItem.path
                                   ? 'bg-primary-100 text-primary border'
-                                  : 'hover:bg-primary-100 hover:text-primary hover:border'
+                                  : 'hover:bg-primary-50 hover:text-primary'
                               }`}
                             >
                               {subItem.icon && (
@@ -145,7 +145,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
                       isActive(item.path)
                         ? 'bg-white text-primary'
-                        : 'hover:bg-gray-100 hover:text-primary'
+                        : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
                     }`}
                   >
                     <span className="flex items-center space-x-3">

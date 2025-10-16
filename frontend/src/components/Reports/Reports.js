@@ -3,6 +3,7 @@ import { useClinic } from '../../context/ClinicContext';
 import { usePatient } from '../../context/PatientContext';
 import FormField from '../UI/FormField';
 import Table from '../Common/Table';
+import Breadcrumb from '../Common/Breadcrumb';
 
 const Reports = () => {
   const { getActiveeClinics } = useClinic();
@@ -47,6 +48,7 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <Breadcrumb />
       <div className="bg-primary rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Reports</h1>
         <p className="text-primary-100">Generate and view clinic reports</p>

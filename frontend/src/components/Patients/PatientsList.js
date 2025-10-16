@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
+import Breadcrumb from '../Common/Breadcrumb';
+import { useRoutePath } from '../../hooks/useRoutePath';
 
 const PatientsList = ({ status = 'all' }) => {
   const navigate = useNavigate();
+  const getRoutePath = useRoutePath();
   const { patients, getPendingPatients, getCompletedPatients, deletePatient, markAsCompleted } = usePatient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
-
+ 
   const getPatients = () => {
     if (status === 'pending') return getPendingPatients();
     if (status === 'completed') return getCompletedPatients();
@@ -74,18 +77,15 @@ const PatientsList = ({ status = 'all' }) => {
       sortable: false,
       render: (row) => (
         <div className="flex items-center space-x-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/patients/edit/${row.id}`);
-            }}
+          <Link
+            to={getRoutePath(`/patients/edit/${row.id}`)}
             className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200"
             title="Edit"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-          </button>
+          </Link>
           {row.status === 'Pending' && (
             <button
               onClick={(e) => {
@@ -134,6 +134,7 @@ const PatientsList = ({ status = 'all' }) => {
 
   return (
     <div>
+      <Breadcrumb />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>
@@ -163,26 +164,16 @@ const PatientsList = ({ status = 'all' }) => {
               </button>
             </>
           )}
-          {status !== 'all' && (
-            <button
-              onClick={() => navigate('/patients')}
-              className="btn-secondary flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Back to All</span>
-            </button>
-          )}
-          <button
-            onClick={() => navigate('/patients/add')}
+          
+          <Link
+            to={getRoutePath('/patients/add')}
             className="btn-primary flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             <span>Add Patient</span> 
-          </button>
+          </Link>
         </div>
       </div>
 

@@ -83,7 +83,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
-                  column.sortable !== false ? 'cursor-pointer hover:bg-primary-600 transition-colors duration-150 select-none' : ''
+                  column.sortable !== false ? 'cursor-pointer select-none text-white border-r border-white hover:bg-primary-600 transition-colors duration-150' : ''
                 }`}
               >
                 <div className="flex items-center">

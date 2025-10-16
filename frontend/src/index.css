@@ -467,6 +467,31 @@
   .focus\:ring-primary:focus { --tw-ring-color: #009efb; }
   .focus\:border-primary:focus { border-color: #009efb; }
   .border { border: 1px solid #009ffb6e; }
+
+  /* Scrollbar for WebKit browsers (Chrome, Edge, Safari) */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px; /* vertical scrollbar thickness */
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #e6e7e95e; /* track color */
+    border-radius: 10px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #009efb; /* thumb color */
+    border-radius: 10px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #33b1ff !important; /* slightly brighter on hover */
+  }
+
+  /* Scrollbar for Firefox */
+  .scrollbar-thin {
+    scrollbar-width: thin; /* thin scrollbar */
+    scrollbar-color: #009efb #e6e7e95e; /* thumb | track */
+}
 }
 
 

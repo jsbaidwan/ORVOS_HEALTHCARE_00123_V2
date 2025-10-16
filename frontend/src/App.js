@@ -75,7 +75,7 @@ const MainLayout = ({ children }) => {
       <div className="flex flex-col flex-1 overflow-hidden lg:ml-64">
         <Header toggleSidebar={toggleSidebar} />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 scrollbar-thin overflow-y-auto p-6">
           {children}
         </main>
         

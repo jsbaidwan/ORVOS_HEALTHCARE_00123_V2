@@ -4,6 +4,7 @@ import { useClinic } from '../../context/ClinicContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
 import ClinicForm from './ClinicForm';
+import Breadcrumb from '../Common/Breadcrumb';
 
 const ClinicsList = ({ archived = false }) => {
   const navigate = useNavigate();
@@ -116,6 +117,7 @@ const ClinicsList = ({ archived = false }) => {
 
   return (
     <div>
+      <Breadcrumb />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>

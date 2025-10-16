@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ChangePassword from './ChangePassword';
 import EmailTemplates from './EmailTemplates';
 import ClinicSettings from './ClinicSettings';
+import Breadcrumb from '../Common/Breadcrumb';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('password');
@@ -15,6 +16,7 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <Breadcrumb />
       <div className="bg-primary rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
         <p className="text-primary-100">Manage your account and application settings</p>

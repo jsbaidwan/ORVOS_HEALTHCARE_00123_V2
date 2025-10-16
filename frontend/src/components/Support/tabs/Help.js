@@ -124,7 +124,7 @@ const Help = () => {
       <div className="bg-primary border border-primary rounded-lg p-6">
         <h3 className="text-lg font-bold mb-2">Video Tutorials</h3>
         <p className="mb-4">Watch step-by-step video guides to help you get the most out of Orvos.</p>
-        <button className="btn-primary">
+        <button className="btn-primary border-2 border-white">
           Watch Tutorials
         </button>
       </div>
