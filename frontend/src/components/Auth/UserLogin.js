@@ -1,50 +1,99 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import GoogleCaptchaLogin from './GoogleCaptchaLogin';
+import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath'
+import { useNavigate } from 'react-router-dom';
+
+// Validation schema
+const loginSchema = yup.object({
+  email: yup
+    .string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+  password: yup
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+  useGoogleCaptcha: yup.boolean()
+});
 
 const UserLogin = () => {
   const { login } = useAuth();
   const getRoutePath = useRoutePath();
   const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    useGoogleCaptcha: true, // Enable by default for security
-  });
-  const [error, setError] = useState('');
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const navigate = useNavigate();
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+    setError
+     
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      useGoogleCaptcha: true
+    }
+  });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
+  const useGoogleCaptcha = watch('useGoogleCaptcha');
 
   const handleCaptchaVerify = (verified) => {
     setCaptchaVerified(verified);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
+  const onSubmit = async (data) => {
+      
     // Check reCAPTCHA verification if enabled
-    if (formData.useGoogleCaptcha && !captchaVerified) {
-      setError('Please complete the reCAPTCHA verification');
+    if (data.useGoogleCaptcha && !captchaVerified) {
+      setError('general',{type: 'manual', message: 'Please complete the reCAPTCHA verification'});
       return;
     }
 
-    const result = await login(formData.email, formData.password, 'user');
-    if (!result.success) {
-      setError(result.error || 'Login failed. Please try again.');
+    try {
+      const response = await login(data);
+      if (response.status === 200) {
+        navigate('/dashboard');
+      } else {
+        
+        if (response.errors) {
+        
+          Object.entries(response?.errors).forEach(([field, message]) => {
+            setError(field, {
+              type: 'manual',
+              message,
+            });
+           
+          });
+          
+        } else if (response.error?.message) {
+          setError('general', {
+            type: 'manual',
+            message: response.error.message,
+          });
+        }else if(response === false){
+          setError('general', {
+            type: 'manual',
+            message: 'Login failed. Please try again.',
+          });
+        }
+      }
+    } catch (error) {
+      setError('general', {type: 'manual', message: 'An unexpected error occurred. Please try again.'});
     }
   };
 
   return (
+    
     <div className="min-h-screen bg-primary flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
@@ -63,14 +112,11 @@ const UserLogin = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
             Welcome Back
           </h2>
+  
+          {/* Display form errors from context */}
+          <ErrorHandle errors={errors} title="ERROR:- Login Failed" />
 
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -78,13 +124,14 @@ const UserLogin = () => {
               <input
                 type="email"
                 id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                {...register('email')}
                 placeholder="Enter your email"
-                className="input-field"
-                required
+                className={`text-black input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors?.email && (
+                <p className="mt-1 text-sm text-red-600">{errors?.email?.message}</p>
+              )}
+
             </div>
 
             <div>
@@ -94,13 +141,13 @@ const UserLogin = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                {...register('password')}
                 placeholder="Enter your password"
-                className="input-field"
-                required
+                className={`text-black  input-field ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors?.password && (
+                <p className="mt-1 text-sm text-red-600">{errors?.password?.message}</p>
+              )}
             </div>
 
             {/* Google Captcha Option */}
@@ -108,9 +155,7 @@ const UserLogin = () => {
               <input
                 type="checkbox"
                 id="useGoogleCaptcha"
-                name="useGoogleCaptcha"
-                checked={formData.useGoogleCaptcha}
-                onChange={handleChange}
+                {...register('useGoogleCaptcha')}
                 className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
               <label htmlFor="useGoogleCaptcha" className="ml-2 text-sm text-gray-700 flex-1">
@@ -118,10 +163,14 @@ const UserLogin = () => {
               </label>
             </div> */}
 
-            {formData.useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify} />}
+            {useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify}  />}
 
-            <button type="submit" className="w-full btn-primary py-3 text-base">
-              Sign In
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
 
             <div className="flex items-center justify-between text-sm">

@@ -1,53 +1,90 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import GoogleCaptchaLogin from './GoogleCaptchaLogin';
-import { useRoutePath } from '../../hooks/useRoutePath'
+import ErrorHandle from '../Common/ErrorHandle';
+import { useRoutePath } from '../../hooks/useRoutePath';
+import { useNavigate } from 'react-router-dom';
+
+// Validation schema
+const adminLoginSchema = yup.object({
+  email: yup
+    .string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+  password: yup
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+  useGoogleCaptcha: yup.boolean()
+});
 
 const SuperAdminLogin = () => {
   const { login } = useAuth();
   const getRoutePath = useRoutePath();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    useGoogleCaptcha: true, // Enable by default for admin security
-  });
-  const [error, setError] = useState('');
+  const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+    setError
+  } = useForm({
+    resolver: yupResolver(adminLoginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      useGoogleCaptcha: true
+    }
+  });
+
+  const useGoogleCaptcha = watch('useGoogleCaptcha');
 
   const handleCaptchaVerify = (verified) => {
     setCaptchaVerified(verified);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    // Check reCAPTCHA verification if enabled (with graceful degradation)
-    if (formData.useGoogleCaptcha && !captchaVerified) {
-      // Show warning but allow proceeding after confirmation
-      const proceed = window.confirm(
-        'reCAPTCHA verification is not complete. This may be due to network issues.\n\n' +
-        'Do you want to proceed without reCAPTCHA verification?'
-      );
-      
-      if (!proceed) {
-        setError('Please complete the reCAPTCHA verification or disable it to continue');
-        return;
-      }
+  const onSubmit = async (data) => {
+    // Check reCAPTCHA verification if enabled
+    if (data.useGoogleCaptcha && !captchaVerified) {
+      setError('general', { type: 'manual', message: 'Please complete the reCAPTCHA verification' });
+      return;
     }
 
-    const result = await login(formData.email, formData.password, 'admin');
-    if (!result.success) {
-      setError(result.error || 'Login failed. Please try again.');
+    try {
+      data.is_admin = true;
+      const response = await login(data);
+      if (response.status === 200) {
+        navigate(`/${adminPrefix}/dashboard`);
+      } else {
+        if (response.errors) {
+          Object.entries(response?.errors).forEach(([field, message]) => {
+            setError(field, {
+              type: 'manual',
+              message,
+            });
+          });
+        } else if (response.error?.message) {
+          setError('general', {
+            type: 'manual',
+            message: response.error.message,
+          });
+        } else if (response === false) {
+          setError('general', {
+            type: 'manual',
+            message: 'Login failed. Please try again.',
+          });
+        }
+      }
+    } catch (error) {
+      setError('general', { type: 'manual', message: 'An unexpected error occurred. Please try again.' });
     }
   };
 
@@ -76,13 +113,10 @@ const SuperAdminLogin = () => {
             <h2 className="text-2xl font-bold text-gray-900">Admin Portal</h2>
           </div>
 
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
+          {/* Display form errors */}
+          <ErrorHandle errors={errors} title="ERROR:- Admin Login Failed" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Admin Email
@@ -90,13 +124,13 @@ const SuperAdminLogin = () => {
               <input
                 type="email"
                 id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                {...register('email')}
                 placeholder="Enter admin email"
-                className="input-field"
-                required
+                className={`text-black input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors?.email && (
+                <p className="mt-1 text-sm text-red-600">{errors?.email?.message}</p>
+              )}
             </div>
 
             <div>
@@ -106,13 +140,13 @@ const SuperAdminLogin = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                {...register('password')}
                 placeholder="Enter admin password"
-                className="input-field"
-                required
+                className={`text-black input-field ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors?.password && (
+                <p className="mt-1 text-sm text-red-600">{errors?.password?.message}</p>
+              )}
             </div>
 
             {/* Google Captcha Option */}
@@ -120,9 +154,7 @@ const SuperAdminLogin = () => {
               <input
                 type="checkbox"
                 id="useGoogleCaptcha"
-                name="useGoogleCaptcha"
-                checked={formData.useGoogleCaptcha}
-                onChange={handleChange}
+                {...register('useGoogleCaptcha')}
                 className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
               />
               <label htmlFor="useGoogleCaptcha" className="ml-2 text-sm text-gray-700 flex-1">
@@ -130,10 +162,14 @@ const SuperAdminLogin = () => {
               </label>
             </div> */}
 
-            {formData.useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify} />}
+            {useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify} />}
 
-            <button type="submit" className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-3 px-4 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 font-semibold text-base">
-              Admin Sign In
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-3 px-4 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Signing In...' : 'Admin Sign In'}
             </button>
 
             <div className="flex items-center justify-between text-sm">

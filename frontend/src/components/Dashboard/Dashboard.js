@@ -12,7 +12,7 @@ const Dashboard = () => {
   const pendingPatients = getPendingPatients();
   const completedPatients = getCompletedPatients();
   const activeClinics = getActiveeClinics();
-
+ 
   const stats = [
     {
       title: 'Total Clinics',

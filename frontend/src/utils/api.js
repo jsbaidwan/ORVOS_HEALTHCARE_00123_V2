@@ -1,80 +1,137 @@
-import axios from 'axios';
+const API_NAME = process.env.REACT_APP_API_NAME;
+const BASE_URL = `${process.env.REACT_APP_API_URL}/${API_NAME}/api`;
+const APP_URL = process.env.REACT_APP_BASE_URL;
 
-// API base URL - update this with your actual API endpoint
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
-// Create axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+/**
+ * Custom API Error class for consistent error handling
+ */
+class ApiError extends Error {
+  constructor(status, message, data = null) {
+    super(message);
+    this.status = status;
+    this.data = data;
+    this.name = 'ApiError';
+    this.validationErrors = data?.errors || data?.message || {};
   }
-);
+}
 
-// Handle response errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+/**
+ * Factory function to create API instance
+ * @param {Function} getToken - Function that returns the current token
+ */
+const Api = (getToken) => {
+  /**
+   * Generate headers for the request
+   * @param {boolean} useToken - Whether to include Authorization header
+   * @param {boolean} isFormData - Whether the request contains FormData
+   * @returns {Object} Headers object
+   */
+  const getHeaders = (useToken = true, isFormData = false) => {
+    const headers = {};
+    
+    // Set Content-Type only for non-FormData requests
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
     }
-    return Promise.reject(error);
-  }
-);
+     
+    if (useToken) {
+      const token = getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
 
-// API methods
-export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  logout: () => api.post('/auth/logout'),
-  changePassword: (data) => api.post('/auth/change-password', data),
+    return headers;
+  };
+
+  /**
+   * Handle API response and parse JSON safely
+   * @param {Response} response - Fetch response object
+   * @returns {Promise<{status:number, data:Object, error?:ApiError}>}
+   */
+  const handleResponse = async (response) => {
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const apiError = new ApiError(
+        response.status,
+        data.message || 'An error occurred',
+        data
+      );
+      return { status: response.status, data, error: apiError };
+    }
+
+    return { status: response.status, data };
+  };
+
+  /**
+   * Append app_url to endpoint if not already present
+   * @param {string} endpoint
+   * @param {string} appUrl
+   * @returns {string}
+   */
+  const addAppUrl = (endpoint, appUrl) => {
+    if (endpoint.includes('app_url=')) return endpoint;
+    const separator = endpoint.includes('?') ? '&' : '?';
+    return `${endpoint}${separator}app_url=${appUrl}`;
+  };
+
+  /**
+   * Main API call handler
+   * @param {string} endpoint - API endpoint
+   * @param {string} method - HTTP method
+   * @param {Object|FormData|null} data - Request body data (JSON object or FormData)
+   * @param {boolean} useToken - Include bearer token
+   * @returns {Promise<{status:number, data:Object, error?:ApiError}>}
+   */
+  const call = async (endpoint, method = 'GET', data = null, useToken = true) => {
+   
+    try {
+      const isFormData = data instanceof FormData;
+     
+      const options = {
+        method: method.toUpperCase(),
+        headers: getHeaders(useToken, isFormData),
+      };
+
+      if (data) {
+        if (isFormData) {
+          data.append('app_url', APP_URL);
+          options.body = data;
+        } else {
+          // Handle JSON data
+          data.app_url = APP_URL;
+          if (method.toUpperCase() !== 'GET') {
+            options.body = JSON.stringify(data);
+          }
+        }
+      }
+
+      if (method.toUpperCase() === 'GET') {
+        endpoint = addAppUrl(endpoint, APP_URL);
+      }
+
+      const response = await fetch(`${BASE_URL}/${endpoint}`, options);
+      return await handleResponse(response);
+    } catch (error) {
+      const status = error?.response?.status || 500;
+      const apiError = new ApiError(status, error?.message || 'An error occurred');
+      return { status, error: apiError };
+    }
+  };
+
+  // Expose CRUD helper methods
+  return {
+    call,
+    get: (endpoint, useToken = true) => call(endpoint, 'GET', null, useToken),
+    post: (endpoint, data, useToken = true) => call(endpoint, 'POST', data, useToken),
+    put: (endpoint, data, useToken = true) => call(endpoint, 'PUT', data, useToken),
+    delete: (endpoint, useToken = true) => call(endpoint, 'DELETE', null, useToken),
+    
+  };
 };
 
-export const clinicAPI = {
-  getAll: () => api.get('/clinics'),
-  getById: (id) => api.get(`/clinics/${id}`),
-  create: (data) => api.post('/clinics', data),
-  update: (id, data) => api.put(`/clinics/${id}`, data),
-  delete: (id) => api.delete(`/clinics/${id}`),
-  archive: (id) => api.put(`/clinics/${id}/archive`),
-};
+// Export the ApiError class and Api factory function for external use
+export { ApiError, Api as createApi };
 
-export const patientAPI = {
-  getAll: () => api.get('/patients'),
-  getById: (id) => api.get(`/patients/${id}`),
-  create: (data) => api.post('/patients', data),
-  update: (id, data) => api.put(`/patients/${id}`, data),
-  delete: (id) => api.delete(`/patients/${id}`),
-  getPending: () => api.get('/patients?status=pending'),
-  getCompleted: () => api.get('/patients?status=completed'),
-};
-
-export const reportAPI = {
-  getClinicPatients: (clinicId) => api.get(`/reports/clinic-patients/${clinicId}`),
-  getDoctorReview: () => api.get('/reports/doctor-review'),
-};
-
-export const settingsAPI = {
-  getEmailTemplates: () => api.get('/settings/email-templates'),
-  updateEmailTemplate: (id, data) => api.put(`/settings/email-templates/${id}`, data),
-  getClinicSettings: (clinicId) => api.get(`/settings/clinic/${clinicId}`),
-  updateClinicSettings: (clinicId, data) => api.put(`/settings/clinic/${clinicId}`, data),
-};
-
-export default api;
-
+export default Api;

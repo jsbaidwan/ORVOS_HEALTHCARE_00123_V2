@@ -5,13 +5,13 @@ import { Link } from 'react-router-dom';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
 
 const Header = ({ toggleSidebar }) => {
-  const { user, logout } = useAuth();
+  const { user, logout} = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const getRoutePath = useRoutePath();
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
+  useEffect(() => { 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -68,12 +68,13 @@ const Header = ({ toggleSidebar }) => {
             >
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-sm">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                
+                  {user?.first_name ? user.first_name.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-semibold text-gray-900">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{user?.role || 'Admin'}</p>
+                <p className="text-sm font-semibold text-gray-900">{user?.first_name + ' ' + user?.last_name || 'User'}</p>
+                <p className="text-xs text-gray-500">{user?.role?.name || ''}</p>
               </div>
               <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

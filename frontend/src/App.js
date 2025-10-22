@@ -41,19 +41,20 @@ const USER_PREFIX = process.env.REACT_APP_USER_ROUTE_PREFIX || '';
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, loading, user } = useAuth();
-
+ 
   if (loading) {
     return <Loader fullScreen />;
-  }
+  } 
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
-
+ 
   // Check role if specified
   if (requiredRole && user?.role_id !== requiredRole) {
     // Redirect to appropriate dashboard
     const prefix = user?.role_id === 1 ? `/${ADMIN_PREFIX}` : (USER_PREFIX ? `/${USER_PREFIX}` : '');
+   
     return <Navigate to={`${prefix}/dashboard`} replace />;
   }
 
@@ -205,7 +206,7 @@ const AppContent = () => {
       <Route 
         path="/login" 
         element={
-          isAuthenticated ? (
+          isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
             <UserLogin />
@@ -213,9 +214,9 @@ const AppContent = () => {
         } 
       />
       <Route 
-        path="/admin/login" 
+        path={ADMIN_PREFIX+"/login"} 
         element={
-          isAuthenticated ? (
+          isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
             <SuperAdminLogin />
@@ -225,7 +226,7 @@ const AppContent = () => {
       <Route 
         path="/forgot-password" 
         element={
-          isAuthenticated ? (
+          isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
             <ForgotPassword />
@@ -235,7 +236,7 @@ const AppContent = () => {
       <Route 
         path="/reset-password" 
         element={
-          isAuthenticated ? (
+          isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
             <ResetPassword />
@@ -247,13 +248,13 @@ const AppContent = () => {
       {createProtectedRoutes(ADMIN_PREFIX, 1)}
 
       {/* User Protected Routes (with user prefix or no prefix) */}
-      {createProtectedRoutes(USER_PREFIX, 2)}
+      {createProtectedRoutes(USER_PREFIX, user?.role_id || '')}
 
       {/* Default redirects */}
       <Route 
         path="/" 
         element={
-          isAuthenticated ? (
+          isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
             <Navigate to="/login" replace />

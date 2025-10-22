@@ -1,8 +1,166 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Api from '../utils/api';
+import Loader from '../components/Common/Loader';
+// import ErrorHandle from '../components/Common/ErrorHandle';
+import { useDecode } from '../hooks/useDecode';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
 
+export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+
+  // State management
+  const [user, setUser] = useState(null);
+  const [api, setApi] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Initialize API instance with token getter.
+   */
+  useEffect(() => {
+    setApi(Api(() => user?.token));
+  }, [user]);
+
+  /**
+   * Load stored authentication data on component mount.
+   */
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const storedAuth = localStorage.getItem('auth');
+        if (storedAuth) {
+          const authData = JSON.parse(storedAuth);
+          setUser(authData);
+        }
+      } catch (error) {
+        localStorage.removeItem('auth');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  /**
+   * Handle API errors globally.
+   */
+  const handleApiError = (error) => {
+    if (error?.status === 401) {
+      logout();
+      return false;
+    } 
+ 
+    return false;
+  };
+
+  /**
+   * Perform login with provided credentials.
+   */
+  const login = async (credentials) => {
+    
+    let endpoint = 'login'
+    const url = credentials?.is_admin ? 'admin/'+endpoint : endpoint;
+    delete credentials.is_admin;
+     
+    let formData = new FormData();
+    for(let key in credentials) {
+      if(credentials[key]) {
+        formData.append(key, credentials[key]);
+      }
+    }
+
+    const response = await api.call(url, 'POST', formData, false);
+    
+    if (response?.status === 200) {
+      const auth = response.data.auth;
+      setUser(auth);
+      localStorage.setItem('auth', JSON.stringify(auth));
+      return { status: 200 };
+    }
+
+    if (response?.error?.status === 422 && response?.error?.validationErrors) {
+      return {
+        status: 422,
+        errors: response.error.validationErrors,
+      };
+    } else {
+      return handleApiError(response.error);
+    }
+  };
+
+  /**
+   * Clear user session and redirect based on role.
+   */
+  const logout = () => {
+    const isAdmin = isSuperAdmin();
+    setUser(null);
+    localStorage.removeItem('auth');
+    navigate(isAdmin ? `${adminPrefix}/login` : '/login');
+  };
+
+  /**
+   * Update user state and persist changes.
+   */
+  const updateUser = (updatedUser) => {
+    updatedUser.token = getToken();
+    setUser(updatedUser);
+    localStorage.setItem('auth', JSON.stringify(updatedUser));
+  };
+
+  /**
+   * Check authentication status.
+   */
+  const isAuthenticated = () => !!user?.token;
+
+  /**
+   * Check if current user is Super Admin.
+   */
+  const isSuperAdmin = () => user?.role_id === 1;
+
+  /**
+   * Retrieve current user's token.
+   */
+  const getToken = () => user?.token;
+
+  /**
+   * Decode Google Map API Key (if available).
+   */
+  const { decodedValue: googleMapApiKey } = useDecode(
+    user?.google_map_api_key,
+    'password'
+  );
+
+  // Show loader while initializing authentication
+  if (loading) {
+    return <Loader fullScreen />;
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        updateUser,
+        login,
+        logout,
+        isAuthenticated,
+        isSuperAdmin,
+        getToken,
+        api,
+        loading,
+        googleMapApiKey,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+/**
+ * Custom hook to access authentication context.
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -10,70 +168,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is logged in (from localStorage)
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (email, password, role = 'user') => {
-    try {
-      // Simulate API call
-      // In production, replace with actual API call
-      const userData = {
-        id: role === 'admin' ? 1 : 2,
-        name: role === 'admin' ? 'Admin User' : 'Medical User',
-        email: email,
-        role: role,
-        role_id: role === 'admin' ? 1 : 2, // 1 = Admin, 2 = User
-      };
-
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', 'sample-jwt-token');
-      setUser(userData);
-
-      // Navigate based on role with prefix
-      const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
-      const userPrefix = process.env.REACT_APP_USER_ROUTE_PREFIX || '';
-      
-      if (userData.role_id === 1) {
-        navigate(`/${adminPrefix}/dashboard`);
-      } else if (userPrefix) {
-        navigate(`/${userPrefix}/dashboard`);
-      } else {
-        navigate('/dashboard');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-    navigate('/login');
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
