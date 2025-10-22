@@ -2413,7 +2413,7 @@ class Helper{
 	 
 	public static function googleMapApiKey()
 	{ 
-		return ['google_map_api_key' => 'AIzaSyDoBhFjwVoFSyHv2lstUDUiDf30pj9CC4k'];
+		return ['google_map_api_key' => ''];
 	}
 	
 	/**
@@ -2433,13 +2433,13 @@ class Helper{
 		//utest5452@gmail.com
 		$credentials =  [
 			'v2' => [
-				'site_key' => '6LeX5dwrAAAAAKRG205HjKlmXQS9TvSk0bCsXdnf',
-				'secret_key' => '6LeX5dwrAAAAAMszoGRg-rOQDVj75ubvfngVuKIH',
+				'site_key' => '',
+				'secret_key' => '',
 			],
 			
 			'v3' => [
-				'site_key' => '6LdQ4dwrAAAAAOAK_ArcqsgD9Uq4gFsGCNv1qlLh',
-				'secret_key' => '6LdQ4dwrAAAAACObbWnBcVZLzHx5_9CReaBSJK9Q',
+				'site_key' => '',
+				'secret_key' => '',
 			],
 			
 		];
