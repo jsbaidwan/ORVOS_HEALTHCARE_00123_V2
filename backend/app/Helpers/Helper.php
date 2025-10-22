@@ -2413,7 +2413,7 @@ class Helper{
 	 
 	public static function googleMapApiKey()
 	{ 
-		return ['google_map_api_key' => ''];
+		return ['google_map_api_key' => env('GOOGLE_MAP_API_KEY')];
 	}
 	
 	/**
@@ -2433,13 +2433,13 @@ class Helper{
 		//utest5452@gmail.com
 		$credentials =  [
 			'v2' => [
-				'site_key' => '',
-				'secret_key' => '',
+				'site_key' => env('RECAPTCHA_SITE_KEY_V2'),
+				'secret_key' => env('RECAPTCHA_SECRET_KEY_V2'),
 			],
 			
 			'v3' => [
-				'site_key' => '',
-				'secret_key' => '',
+				'site_key' => env('RECAPTCHA_SITE_KEY_V3'),
+				'secret_key' => env('RECAPTCHA_SECRET_KEY_V3'),
 			],
 			
 		];
