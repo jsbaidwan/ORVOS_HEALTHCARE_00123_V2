@@ -166,7 +166,7 @@ const SuperAdminLogin = () => {
                   id="password"
                   {...register('password')}
                   placeholder="Enter your password"
-                  className={`w-full pl-10 pr-5 text-sm sm:text-base text-black py-2 sm:py-2.5 border rounded-md focus:outline-none focus:ring-1 ${
+                  className={`w-full pl-10 pr-5 text-sm sm:text-base text-black py-2 sm:py-2.5 border rounded-tl-md rounded-bl-md focus:outline-none focus:ring-1 ${
                     errors?.password
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
