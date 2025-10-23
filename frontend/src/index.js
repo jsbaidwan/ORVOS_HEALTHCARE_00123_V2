@@ -11,7 +11,7 @@ root.render(
   <React.StrictMode>
     <LoaderProvider>
       <ToastProvider>
-        <Toaster  position="top-right" richColors closeButton animation="fade" />
+        <Toaster  position="top-right" richColors closeButton animation="zoom" />
         <App />
       </ToastProvider>
     </LoaderProvider>
