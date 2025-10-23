@@ -10,6 +10,8 @@ import { useRoutePath } from '../../hooks/useRoutePath'
 import { useNavigate } from 'react-router-dom';
 import { useLoader } from '../../context/LoaderContext';
 import { EyeIcon, EyeSlashIcon,EnvelopeIcon,LockClosedIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
+//import { useToast } from "../../context/ToastContext";
+import { toast } from 'sonner';
  
 // Validation schema
 const loginSchema = yup.object({
@@ -32,7 +34,7 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const { showLoader, hideLoader } = useLoader();
   const [showPassword, setShowPassword] = useState(false);
-
+  //const { showToast } = useToast();
   // Initialize react-hook-form
   const {
     register,
@@ -68,6 +70,8 @@ const UserLogin = () => {
     try {
       const response = await login(data);
       if (response.status === 200) {
+        toast.success(response?.message);
+        //showToast(response?.message, "success");
         navigate('/dashboard');
       } else {
         

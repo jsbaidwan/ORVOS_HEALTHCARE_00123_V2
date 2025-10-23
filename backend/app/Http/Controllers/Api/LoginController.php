@@ -219,7 +219,7 @@ class LoginController extends Controller
 		  
 		$userData = $this->user($user, $input); 
 		 
-		$data = array('status' => 200,'message' => 'successfully login','auth' => $userData,'redirect_url' => redirect()->intended()->getTargetUrl());
+		$data = array('status' => 200,'message' => 'Login Successfully!','auth' => $userData,'redirect_url' => redirect()->intended()->getTargetUrl());
 		return response()->json($data,200,[],JSON_UNESCAPED_SLASHES);
 		//return json_encode($data,JSON_UNESCAPED_SLASHES);
        // return $this->authenticated($request, $this->guard()->user())

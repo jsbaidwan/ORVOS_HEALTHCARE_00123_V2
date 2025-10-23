@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       const auth = response.data.auth;
       setUser(auth);
       localStorage.setItem('auth', JSON.stringify(auth));
-      return { status: 200 };
+      return { status: 200,message: response?.data?.message };
     }
 
     if (response?.error?.status === 422 && response?.error?.validationErrors) {
