@@ -102,10 +102,10 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center px-4">
+    <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
             <svg className="w-12 h-12 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -113,7 +113,7 @@ const ResetPassword = () => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Orvos</h1>
           <p className="text-primary-200">Reset Your Password</p>
-        </div>
+        </div> */}
 
         {/* Reset Password Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -286,11 +286,7 @@ const ResetPassword = () => {
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-primary-200 text-sm mt-6">
-          © {new Date().getFullYear()} Orvos. All rights reserved.
-        </p>
+ 
       </div>
     </div>
   );

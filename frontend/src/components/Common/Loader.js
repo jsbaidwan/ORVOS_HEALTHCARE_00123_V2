@@ -1,34 +1,22 @@
 import React from 'react';
+import ClipLoader from 'react-spinners/ClipLoader';
 
-const Loader = ({ size = 'md', fullScreen = false }) => {
-  const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-16 h-16',
-  };
+const Loader = ({ size = 50, isLoading = true }) => {
+  const color = '#009efb';
 
-  const spinner = (
-    <div className={`${sizeClasses[size]} border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin`}></div>
-  );
-
-  if (fullScreen) {
-    return (
-      <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-        <div className="text-center">
-          {spinner}
-          <p className="mt-4 text-gray-600 font-medium">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!isLoading) return null; // Don't render anything if not loading
 
   return (
-    <div className="flex items-center justify-center p-8">
-      {spinner}
+    <div className="fixed inset-0 bg-gray-700/50 backdrop-blur-[6px] flex items-center justify-center z-50">
+      <div
+        className="flex flex-col items-center justify-center bg-white p-6 rounded-lg shadow-md text-center"
+        style={{ color }}
+      >
+        <ClipLoader size={size} color={color} />
+        <p className="mt-4 text-sm">Loading...</p>
+      </div>
     </div>
   );
 };
 
 export default Loader;
-
-

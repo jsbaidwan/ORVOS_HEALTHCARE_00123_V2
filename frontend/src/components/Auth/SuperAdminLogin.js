@@ -8,7 +8,8 @@ import GoogleCaptchaLogin from './GoogleCaptchaLogin';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
-
+import { useLoader } from '../../context/LoaderContext';
+ 
 // Validation schema
 const adminLoginSchema = yup.object({
   email: yup
@@ -28,7 +29,8 @@ const SuperAdminLogin = () => {
   const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const navigate = useNavigate();
-
+  const { showLoader, hideLoader } = useLoader();
+  
   // Initialize react-hook-form
   const {
     register,
@@ -52,12 +54,14 @@ const SuperAdminLogin = () => {
   };
 
   const onSubmit = async (data) => {
+    
     // Check reCAPTCHA verification if enabled
     if (data.useGoogleCaptcha && !captchaVerified) {
       setError('general', { type: 'manual', message: 'Please complete the reCAPTCHA verification' });
       return;
     }
 
+    showLoader();
     try {
       data.is_admin = true;
       const response = await login(data);
@@ -85,14 +89,17 @@ const SuperAdminLogin = () => {
       }
     } catch (error) {
       setError('general', { type: 'manual', message: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      hideLoader();
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
+     
+    <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl shadow-lg mb-4">
             <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -100,7 +107,7 @@ const SuperAdminLogin = () => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Orvos</h1>
           <p className="text-gray-400">Super Admin Access</p>
-        </div>
+        </div> */}
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -182,14 +189,12 @@ const SuperAdminLogin = () => {
             </div>
           </form>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-500 text-sm mt-6">
-          © {new Date().getFullYear()} Orvos. Secure Admin Access.
-        </p>
+ 
       </div>
     </div>
-  );
+     
+    )
+    
 };
 
 export default SuperAdminLogin;

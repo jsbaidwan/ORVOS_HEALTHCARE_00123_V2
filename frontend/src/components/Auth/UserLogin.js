@@ -8,6 +8,7 @@ import GoogleCaptchaLogin from './GoogleCaptchaLogin';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath'
 import { useNavigate } from 'react-router-dom';
+import { useLoader } from '../../context/LoaderContext';
 
 // Validation schema
 const loginSchema = yup.object({
@@ -28,6 +29,8 @@ const UserLogin = () => {
   const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const navigate = useNavigate();
+  const { showLoader, hideLoader } = useLoader();
+
   // Initialize react-hook-form
   const {
     register,
@@ -59,6 +62,7 @@ const UserLogin = () => {
       return;
     }
 
+    showLoader();
     try {
       const response = await login(data);
       if (response.status === 200) {
@@ -89,15 +93,18 @@ const UserLogin = () => {
       }
     } catch (error) {
       setError('general', {type: 'manual', message: 'An unexpected error occurred. Please try again.'});
+    } finally {
+      hideLoader();
     }
   };
 
   return (
     
-    <div className="min-h-screen bg-primary flex items-center justify-center px-4">
+    <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
+
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
             <svg className="w-12 h-12 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -105,7 +112,7 @@ const UserLogin = () => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Orvos</h1>
           <p className="text-primary-200">User Login</p>
-        </div>
+        </div> */}
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -183,11 +190,7 @@ const UserLogin = () => {
             </div>
           </form>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-primary-200 text-sm mt-6">
-          © {new Date().getFullYear()} Orvos. All rights reserved.
-        </p>
+ 
       </div>
     </div>
   );

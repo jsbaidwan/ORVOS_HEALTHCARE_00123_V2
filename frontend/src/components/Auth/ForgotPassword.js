@@ -36,10 +36,10 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center px-4">
+    <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
             <svg className="w-12 h-12 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -47,7 +47,7 @@ const ForgotPassword = () => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Orvos</h1>
           <p className="text-primary-200">Password Recovery</p>
-        </div>
+        </div> */}
 
         {/* Forgot Password Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -151,11 +151,7 @@ const ForgotPassword = () => {
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-primary-200 text-sm mt-6">
-          © {new Date().getFullYear()} Orvos. All rights reserved.
-        </p>
+ 
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, loading, user } = useAuth();
  
   if (loading) {
-    return <Loader fullScreen />;
+    return <Loader />;
   } 
 
   if (!isAuthenticated()) {
@@ -63,6 +63,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
 // Main Layout Component
 const MainLayout = ({ children }) => {
+  const { isAuthenticated} = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -70,20 +71,24 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+    <div className={isAuthenticated() ? "flex h-screen overflow-hidden bg-gray-50" : " "}>
       
-      <div className="flex flex-col flex-1 overflow-hidden lg:ml-64">
+      {isAuthenticated() ? (
+        <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      ) : null}
+      
+      <div className={isAuthenticated() ? "flex flex-col flex-1 overflow-hidden lg:ml-64" : " "}>
         <Header toggleSidebar={toggleSidebar} />
         
-        <main className="flex-1 scrollbar-thin overflow-y-auto p-6">
+        <main className={isAuthenticated() ? "flex-1 scrollbar-thin overflow-y-auto p-6" : "scrollbar-thin overflow-y-auto "}>
           {children}
         </main>
         
-        <Footer />
+          <Footer />  
       </div>
     </div>
   );
+  
 };
 
 // Create protected route wrapper for both user and admin
@@ -197,7 +202,7 @@ const AppContent = () => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
-    return <Loader fullScreen />;
+    return <Loader />;
   }
 
   return (
@@ -209,7 +214,7 @@ const AppContent = () => {
           isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
-            <UserLogin />
+            <MainLayout><UserLogin /></MainLayout>
           )
         } 
       />
@@ -219,7 +224,7 @@ const AppContent = () => {
           isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
-            <SuperAdminLogin />
+            <MainLayout><SuperAdminLogin /></MainLayout>
           )
         } 
       />
@@ -229,7 +234,7 @@ const AppContent = () => {
           isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
-            <ForgotPassword />
+            <MainLayout><ForgotPassword /></MainLayout>
           )
         } 
       />
@@ -239,7 +244,7 @@ const AppContent = () => {
           isAuthenticated() ? (
             <Navigate to={user?.role_id === 1 ? `/${ADMIN_PREFIX}/dashboard` : (USER_PREFIX ? `/${USER_PREFIX}/dashboard` : '/dashboard')} replace />
           ) : (
-            <ResetPassword />
+            <MainLayout><ResetPassword /></MainLayout>
           )
         } 
       />

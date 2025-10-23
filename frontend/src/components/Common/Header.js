@@ -3,9 +3,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { Link } from 'react-router-dom';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
+import OrvosBanner from '../../assets/images/orvos_background.jpeg';
+import OrvosBannerLogo from '../../assets/images/OrvosTransparentLogo1.png';
 
 const Header = ({ toggleSidebar }) => {
-  const { user, logout} = useAuth();
+  const { user, logout, isAuthenticated} = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const getRoutePath = useRoutePath();
   const dropdownRef = useRef(null);
@@ -30,7 +32,11 @@ const Header = ({ toggleSidebar }) => {
   }, [showDropdown]);
 
   return (
+
+    isAuthenticated() ? (
+    <>
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+       
       <div className="flex items-center justify-between px-6 py-3">
         {/* Left side - Menu button & Logo */}
         <div className="flex items-center space-x-4 ">
@@ -127,6 +133,27 @@ const Header = ({ toggleSidebar }) => {
         </div>
       </div>
     </header>
+    </>
+  ) : (
+    <>
+    <div className="w-full h-30 sm:h-60 relative">
+      {/* Banner Image */}
+      <img 
+        src={OrvosBanner} 
+        alt="Orvos Logo" 
+        className="w-full h-full object-cover"
+      />
+
+      {/* Logo on top-left */}
+      <img
+        src={OrvosBannerLogo}
+        alt="Orvos Logo"
+       className="absolute w-40 h-auto top-4 left-1/2 transform -translate-x-1/2 sm:top-4 sm:left-4 sm:translate-x-0 sm:w-60 md:w-72 lg:w-96"
+      />
+    </div>
+ 
+    </>
+  )
   );
 };
 
