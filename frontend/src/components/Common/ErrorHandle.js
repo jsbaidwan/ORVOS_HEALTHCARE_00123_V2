@@ -1,9 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-/**
- * Reusable Error Handling Component
- * Supports react-hook-form errors, API errors, arrays, strings, and React elements
- */
 const ErrorHandle = ({
   errors,
   className = "mb-4 p-4 bg-red-50 border border-red-200 rounded-lg",
@@ -11,6 +7,17 @@ const ErrorHandle = ({
   showIcon = true,
   title = "Error"
 }) => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Reset visibility when errors change
+  useEffect(() => {
+    if (errors && (typeof errors !== 'object' || Object.keys(errors).length > 0)) {
+      setIsVisible(true);
+    }
+  }, [errors]);
+
+  if (!isVisible) return null;
+
   if (!errors || (typeof errors === 'object' && Object.keys(errors).length === 0)) {
     return null;
   }
@@ -24,11 +31,8 @@ const ErrorHandle = ({
   );
 
   const renderErrors = () => {
- 
-    // React element
     if (React.isValidElement(errors)) return errors;
 
-    // String
     if (typeof errors === 'string') {
       return (
         <div className="flex items-start">
@@ -38,7 +42,6 @@ const ErrorHandle = ({
       );
     }
 
-    // Array of strings
     if (Array.isArray(errors)) {
       return errors.map((msg, i) => (
         <div key={i} className="flex items-start">
@@ -48,13 +51,11 @@ const ErrorHandle = ({
       ));
     }
 
-    // Object (react-hook-form or API error format)
     if (typeof errors === 'object') {
       return Object.entries(errors).map(([field, value], i) => {
-        // react-hook-form error object { type, message, ref }
         const messages = value?.message
           ? Array.isArray(value.message) ? value.message : [value.message]
-          : Array.isArray(value) ? value : [value]; // API error array
+          : Array.isArray(value) ? value : [value];
 
         return (
           <div key={field || i} className="mb-2">
@@ -76,7 +77,16 @@ const ErrorHandle = ({
   };
 
   return (
-    <div className={className} role="alert">
+    <div className={`${className} relative`} role="alert">
+      {/* Close button */}
+      <button
+        type="button"
+        className="absolute top-2 right-2 text-red-800 hover:text-red-600 font-bold text-xl"
+        onClick={() => setIsVisible(false)}
+      >
+        &times;
+      </button>
+
       {title && (
         <div className="flex items-center mb-2">
           <h3 className="text-sm font-medium text-red-800">{title}</h3>

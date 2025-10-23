@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { EnvelopeIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -54,9 +55,12 @@ const ForgotPassword = () => {
           {!isSuccess ? (
             <>
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Forgot Password?
-                </h2>
+                <div className="flex items-center justify-center mb-6">
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-2">
+                      <ShieldCheckIcon className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Forgot Password?</h2>
+                </div>
                 <p className="text-gray-600 text-sm">
                   Enter your email address and we'll send you a link to reset your password.
                 </p>
@@ -75,9 +79,7 @@ const ForgotPassword = () => {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
+                      <EnvelopeIcon className="w-5 h-5 text-gray-400" />
                     </div>
                     <input
                       type="email"

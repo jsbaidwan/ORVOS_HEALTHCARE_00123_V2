@@ -9,6 +9,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
 import { useLoader } from '../../context/LoaderContext';
+import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
  
 // Validation schema
 const adminLoginSchema = yup.object({
@@ -30,6 +31,7 @@ const SuperAdminLogin = () => {
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const navigate = useNavigate();
   const { showLoader, hideLoader } = useLoader();
+  const [showPassword, setShowPassword] = useState(false);
   
   // Initialize react-hook-form
   const {
@@ -113,9 +115,7 @@ const SuperAdminLogin = () => {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex items-center justify-center mb-6">
             <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center mr-2">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+              <ShieldCheckIcon className="w-5 h-5 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Admin Portal</h2>
           </div>
@@ -123,52 +123,64 @@ const SuperAdminLogin = () => {
           {/* Display form errors */}
           <ErrorHandle errors={errors} title="ERROR:- Admin Login Failed" />
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete='off'>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Admin Email
+                Email Address
               </label>
-              <input
-                type="email"
-                id="email"
-                {...register('email')}
-                placeholder="Enter admin email"
-                className={`text-black input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <EnvelopeIcon className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  {...register('email')}
+                  placeholder="Enter your email"
+                  className={`pl-10 text-black input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+              </div>
               {errors?.email && (
                 <p className="mt-1 text-sm text-red-600">{errors?.email?.message}</p>
               )}
-            </div>
 
-            <div>
+            </div>
+ 
+            <div className="w-full max-w-sm">
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                {...register('password')}
-                placeholder="Enter admin password"
-                className={`text-black input-field ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
+
+              {/* Input group */}
+              <div className="flex relative">
+
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <LockClosedIcon className="w-5 h-5 text-gray-400" />
+                </div>
+
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  {...register('password')}
+                  placeholder="Enter your password"
+                  className={`pl-10 flex-1 text-black px-4 py-2 border rounded-l-md focus:outline-none focus:ring-1 ${
+                    errors?.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="flex items-center justify-center px-3 border border-l-0 rounded-r-md bg-gray-10 hover:bg-gray-50 focus:outline-none"
+                >
+                  {showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-600" /> : <EyeIcon className="h-5 w-5 text-gray-600" />}
+                </button>
+              </div>
+
               {errors?.password && (
-                <p className="mt-1 text-sm text-red-600">{errors?.password?.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
-
-            {/* Google Captcha Option */}
-            {/* <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                id="useGoogleCaptcha"
-                {...register('useGoogleCaptcha')}
-                className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-              />
-              <label htmlFor="useGoogleCaptcha" className="ml-2 text-sm text-gray-700 flex-1">
-                Use Google reCAPTCHA v2 verification (Recommended)
-              </label>
-            </div> */}
-
+ 
             {useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify} />}
 
             <button 

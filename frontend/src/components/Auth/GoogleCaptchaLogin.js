@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Api from '../../utils/api';
 import { useDecode } from '../../hooks/useDecode';
 import ReCAPTCHA from 'react-google-recaptcha';
+import ErrorHandle from '../Common/ErrorHandle';
 
 const GoogleCaptchaLogin = ({ onVerify }) => {
   const [rawSiteKey, setRawSiteKey] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const loadDataRef = useRef(false);
+  const [error, setError] = useState(null);
   
   // Decode once at top level
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
@@ -18,14 +20,22 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     try {
       const api = Api(() => null);
       const response = await api.call('get-recaptcha-keys', 'GET', false);
- 
+       
+      if(response.status !== 200){
+        setError(response?.error?.message);
+        return {
+          siteKey: defaultSiteKey,
+          secretKey: defaultSecretKey,
+        };
+      }
       const fetchedSiteKey =
         response?.data?.recaptchaCredentails?.site_key || defaultSiteKey;
       const fetchedSecretKey =
         response?.data?.recaptchaCredentails?.secret_key || defaultSecretKey;
 
       return { siteKey: fetchedSiteKey, secretKey: fetchedSecretKey };
-    } catch {
+    } catch(error) {
+      setError('Failed to fetch');
       return {
         siteKey: defaultSiteKey,
         secretKey: defaultSecretKey,
@@ -37,8 +47,8 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     const fetchRecaptchaKeys = async () => {
       const { siteKey } = await getRecaptchaKeys();
       setRawSiteKey(siteKey);
-      // Wait 1 second before showing the CAPTCHA
-      setTimeout(() => setIsLoading(false), 1000);
+      // Wait 100 milliseconds before showing the CAPTCHA
+      setTimeout(() => setIsLoading(false), 100);
     };
 
     if (!loadDataRef.current) {
@@ -54,6 +64,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   if (isLoading) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md flex justify-center items-center"> 
+        
          <div className="inset-0 flex flex-col items-center justify-center bg-white z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-500"></div>
             {/* <svg
@@ -82,12 +93,16 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     );
   }
 
+  if (error) return <ErrorHandle errors={error} title="ERROR:- reCAPTCHA Loading Failed"/>;
+
   if (!siteKey) return null;
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md flex justify-center items-center">
+      
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg flex justify-center">
         <div className="g-recaptcha transform scale-[0.85] sm:scale-100 origin-center">
+        
           <ReCAPTCHA
             sitekey={siteKey}
             onChange={handleChange}
