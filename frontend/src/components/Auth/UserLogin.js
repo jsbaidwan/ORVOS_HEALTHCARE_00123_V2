@@ -152,15 +152,18 @@ const UserLogin = () => {
 
             </div>
 
-            <div className="w-full max-w-sm">
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+            <div className="w-full max-w-sm sm:max-w-md md:max-w-lg mx-auto">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
                 Password
               </label>
 
               {/* Input group */}
-              <div className="flex relative">
-
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="flex relative w-full">
+                {/* Left icon */}
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <LockClosedIcon className="w-5 h-5 text-gray-400" />
                 </div>
 
@@ -169,16 +172,24 @@ const UserLogin = () => {
                   id="password"
                   {...register('password')}
                   placeholder="Enter your password"
-                  className={`pl-10 flex-1 text-black px-4 py-2 border rounded-l-md focus:outline-none focus:ring-1 ${
-                    errors?.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  className={`w-full pl-10 pr-12 text-sm sm:text-base text-black py-2 sm:py-2.5 border rounded-md focus:outline-none focus:ring-1 ${
+                    errors?.password
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                   }`}
                 />
+
+                {/* Right icon (Eye/EyeSlash) */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="flex items-center justify-center px-3 border border-l-0 rounded-r-md bg-gray-10 hover:bg-gray-50 focus:outline-none"
+                  className="absolute inset-y-0 right-0 flex items-center justify-center bg-white border px-3 p-3  focus:outline-none rounded-tr-lg rounded-br-lg"
                 >
-                  {showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-600" /> : <EyeIcon className="h-5 w-5 text-gray-600" />}
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-600" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-600" />
+                  )}
                 </button>
               </div>
 
@@ -186,6 +197,7 @@ const UserLogin = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
+
 
             {useGoogleCaptcha && <GoogleCaptchaLogin onVerify={handleCaptchaVerify}  />}
 
