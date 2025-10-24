@@ -140,19 +140,19 @@ const ResetPassword = () => {
                   <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                     New Password
                   </label>
-                  <div className="relative">
+                  <div className="flex relative w-full">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       {...register('password')}
                       placeholder="Enter new password"
-                      className={`input-field pr-10 ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
+                      className={`w-full pl-5 pr-5 text-sm sm:text-base text-black py-2 sm:py-2.5 border rounded-tl-md rounded-bl-md focus:outline-none focus:ring-1 ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting || !token}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="relative inset-y-0 right-0 flex items-center justify-center bg-white border px-3 p-3  focus:outline-none rounded-tr-lg rounded-br-lg"
                     >
                       {showPassword ? (
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,19 +175,19 @@ const ResetPassword = () => {
                   <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                     Confirm New Password
                   </label>
-                  <div className="relative">
+                  <div className="flex relative w-full">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirmPassword"
                       {...register('confirmPassword')}
                       placeholder="Confirm new password"
-                      className={`input-field pr-10 ${errors?.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
+                      className={`w-full pl-5 pr-5 text-sm sm:text-base text-black py-2 sm:py-2.5 border rounded-tl-md rounded-bl-md focus:outline-none focus:ring-1 ${errors?.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting || !token}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="relative inset-y-0 right-0 flex items-center justify-center bg-white border px-3 p-3  focus:outline-none rounded-tr-lg rounded-br-lg"
                     >
                       {showConfirmPassword ? (
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
