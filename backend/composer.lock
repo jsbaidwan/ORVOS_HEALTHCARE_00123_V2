@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cde043130e56e7b2d4778f47984db186",
+    "content-hash": "93974c6514f60e124bf30f7876eb9829",
     "packages": [
         {
             "name": "beyondcode/laravel-websockets",
@@ -1706,6 +1706,68 @@
                 }
             ],
             "time": "2025-02-03T10:55:03+00:00"
+        },
+        {
+            "name": "ivannofick/laravelminifyobfuscate",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ivannofick/laravelminifyobfuscate.git",
+                "reference": "246f628184d7b42ee602fcd8bcf4fb6ed883f3cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ivannofick/laravelminifyobfuscate/zipball/246f628184d7b42ee602fcd8bcf4fb6ed883f3cc",
+                "reference": "246f628184d7b42ee602fcd8bcf4fb6ed883f3cc",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/http": "^7.0 || ^8.0 || ^9.0 || ^10.0",
+                "illuminate/support": "^7.0 || ^8.0 || ^9.0 || ^10.0",
+                "illuminate/view": "^7.0 || ^8.0 || ^9.0 || ^10.0",
+                "php": "^7.4.5 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ivannofick\\Laravelminifyobfuscate\\MinifyObfuscateProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ivannofick\\Laravelminifyobfuscate\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "ivannofick",
+                    "email": "ivannofick@gmail.com",
+                    "homepage": "https://www.ruangapp.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Obfuscate your Blade templates in Laravel by encrypting HTML, CSS, and JS into one HTML file.",
+            "keywords": [
+                "css-obfuscate",
+                "html-obfuscate",
+                "js-obfuscate",
+                "laravel",
+                "obfuscate",
+                "obfuscate using php",
+                "php7.4",
+                "php8"
+            ],
+            "support": {
+                "issues": "https://github.com/ivannofick/laravelminifyobfuscate/issues",
+                "source": "https://github.com/ivannofick/laravelminifyobfuscate/tree/v1.0.0"
+            },
+            "time": "2023-08-02T15:22:29+00:00"
         },
         {
             "name": "laravel/framework",
