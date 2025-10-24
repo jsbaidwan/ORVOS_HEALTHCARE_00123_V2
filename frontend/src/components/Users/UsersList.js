@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '../../context/UserContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
 import UserForm from './UserForm';
 import Breadcrumb from '../Common/Breadcrumb';
+import { useTitle } from '../../context/TitleContext';
 
 const UsersList = () => {
   const { users, deleteUser } = useUser();
@@ -12,6 +13,11 @@ const UsersList = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const { setPageTitle } = useTitle();
+
+  useEffect(() => {
+    setPageTitle('Users');
+  }, [setPageTitle]);
 
   const userTypeLabels = {
     '2': 'Orvos Doctor',

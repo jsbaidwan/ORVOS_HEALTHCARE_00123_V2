@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClinic } from '../../context/ClinicContext';
 import { usePatient } from '../../context/PatientContext';
 import FormField from '../UI/FormField';
 import Table from '../Common/Table';
 import Breadcrumb from '../Common/Breadcrumb';
+import { useTitle } from '../../context/TitleContext';
 
 const Reports = () => {
   const { getActiveeClinics } = useClinic();
   const { patients } = usePatient();
   const [selectedClinic, setSelectedClinic] = useState('');
   const [reportType, setReportType] = useState('clinic-patients');
+  const { setPageTitle } = useTitle();
 
   const clinics = getActiveeClinics();
 
@@ -19,6 +21,10 @@ const Reports = () => {
   };
 
   const clinicPatients = getClinicPatients();
+
+  useEffect(() => {
+    setPageTitle('Reports');
+  }, [setPageTitle]);
 
   const exportToCSV = () => {
     const headers = ['Name', 'Email', 'Phone', 'Clinic', 'Status', 'Medical Condition', 'Date Added'];

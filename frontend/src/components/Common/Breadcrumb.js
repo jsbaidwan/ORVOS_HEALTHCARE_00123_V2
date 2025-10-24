@@ -94,9 +94,14 @@ const Breadcrumb = () => {
                 {isLast ? (
                   <span className="ml-2 text-sm font-medium text-gray-500">{name}</span>
                 ) : (
+                  
+                  toPath === '/patients' ?
                   <Link to={toPath + (routePathParam ? '/' + routePathParam : '')} className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]">
-                    {name}
+                    {name} 
                   </Link>  
+                  : <Link to={toPath} className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]">
+                    {name}
+                  </Link>
                 )}
               </div>
             </li>

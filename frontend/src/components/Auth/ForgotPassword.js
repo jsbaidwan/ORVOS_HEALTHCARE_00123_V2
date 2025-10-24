@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { EnvelopeIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { useTitle } from '../../context/TitleContext';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const { setPageTitle } = useTitle();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,6 +37,10 @@ const ForgotPassword = () => {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    setPageTitle('Forgot Password');
+  }, [setPageTitle]);
 
   return (
     <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">

@@ -4,10 +4,11 @@ import Help from './tabs/Help';
 import ContactUs from './tabs/ContactUs';
 import Breadcrumb from '../Common/Breadcrumb';
 import { useLocation } from "react-router-dom";
+import { useTitle } from '../../context/TitleContext';
   
 const Support = () => {
   const location = useLocation();
- 
+ const { setPageTitle } = useTitle();
   const [activeSection, setActiveSection] = React.useState('faq');
 
   useEffect(() => {
@@ -18,7 +19,11 @@ const Support = () => {
     }
   }, [location.search]);
 
-  return (
+  useEffect(() => {
+    setPageTitle('Support Center');
+  }, [setPageTitle]);
+
+    return (
     <div className="space-y-6">
       <Breadcrumb />
       <div className="bg-primary rounded-xl p-8 text-white">

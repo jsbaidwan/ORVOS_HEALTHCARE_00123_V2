@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useReport } from '../../context/ReportContext';
+import { useTitle } from '../../context/TitleContext';
 
 const ClinicPatients = ({ selectedClinic }) => {
   const { getClinicPatientsReport } = useReport();
   const patients = getClinicPatientsReport(selectedClinic);
+  const { setPageTitle } = useTitle();
+
+  useEffect(() => {
+    setPageTitle('Clinic Patients Report');
+  }, [setPageTitle]);
 
   return (
     <div className="bg-white rounded-xl shadow-card p-6">

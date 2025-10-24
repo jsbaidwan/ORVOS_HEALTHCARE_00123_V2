@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -12,7 +12,8 @@ import { useLoader } from '../../context/LoaderContext';
 import { EyeIcon, EyeSlashIcon,EnvelopeIcon,LockClosedIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
 //import { useToast } from "../../context/ToastContext";
 import { toast } from 'sonner';
- 
+import { useTitle } from '../../context/TitleContext';
+
 // Validation schema
 const loginSchema = yup.object({
   email: yup
@@ -34,6 +35,7 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const { showLoader, hideLoader } = useLoader();
   const [showPassword, setShowPassword] = useState(false);
+  const { setPageTitle } = useTitle();
   //const { showToast } = useToast();
   // Initialize react-hook-form
   const {
@@ -103,6 +105,10 @@ const UserLogin = () => {
       hideLoader();
     }
   };
+
+  useEffect(() => {
+    setPageTitle('User Login');
+  }, [setPageTitle]);
 
   return (
     

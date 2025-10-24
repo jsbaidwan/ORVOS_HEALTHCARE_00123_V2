@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTitle } from '../../context/TitleContext';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const ResetPassword = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { setPageTitle } = useTitle();
 
   useEffect(() => {
     // Verify token exists
@@ -101,7 +103,11 @@ const ResetPassword = () => {
     }
   };
 
-  return (
+  useEffect(() => {
+    setPageTitle('Reset Password');
+  }, [setPageTitle]);
+
+    return (
     <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}

@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClinic } from '../../context/ClinicContext';
 import Table from '../Common/Table';
+import Breadcrumb from '../Common/Breadcrumb';
+import { useTitle } from '../../context/TitleContext';
 
 const ArchiveClinics = () => {
   const navigate = useNavigate();
   const { getArchivedClinics, deleteClinic } = useClinic();
-
+  const { setPageTitle } = useTitle();
   const archivedClinics = getArchivedClinics();
+
+  useEffect(() => {
+    setPageTitle('Archived Clinics');
+  }, [setPageTitle]);
 
   const columns = [
     {
@@ -73,6 +79,7 @@ const ArchiveClinics = () => {
 
   return (
     <div>
+      <Breadcrumb />
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClinic } from '../../context/ClinicContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
 import ClinicForm from './ClinicForm';
 import Breadcrumb from '../Common/Breadcrumb';
+import { useTitle } from '../../context/TitleContext';
 
 const ClinicsList = ({ archived = false }) => {
   const navigate = useNavigate();
   const { getActiveeClinics, getArchivedClinics, archiveClinic, deleteClinic } = useClinic();
+  const { setPageTitle } = useTitle();
   const [showModal, setShowModal] = useState(false);
   const [editingClinic, setEditingClinic] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -16,6 +18,10 @@ const ClinicsList = ({ archived = false }) => {
 
   const clinics = archived ? getArchivedClinics() : getActiveeClinics();
 
+  useEffect(() => {
+    setPageTitle(archived ? 'Archived Clinics' : 'Clinics');
+  }, [setPageTitle, archived]);
+  
   const columns = [
     {
       header: 'Company Name',

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChangePassword from './ChangePassword';
 import EmailTemplates from './EmailTemplates';
 import ClinicSettings from './ClinicSettings';
 import Breadcrumb from '../Common/Breadcrumb';
+import { useTitle } from '../../context/TitleContext';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('password');
+  const { setPageTitle } = useTitle();
+
+  useEffect(() => {
+    setPageTitle('Settings');
+  }, [setPageTitle]);
 
   const tabs = [
     { id: 'password', name: 'Change Password', icon: '🔒' },

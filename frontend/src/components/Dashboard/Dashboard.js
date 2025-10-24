@@ -1,18 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import { useClinic } from '../../context/ClinicContext';
 import StatsCard from './StatsCard';
+import { useTitle } from "../../context/TitleContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { getPendingPatients, getCompletedPatients } = usePatient();
   const { getActiveeClinics } = useClinic();
+  const { setPageTitle } = useTitle();
 
   const pendingPatients = getPendingPatients();
   const completedPatients = getCompletedPatients();
   const activeClinics = getActiveeClinics();
  
+
+  useEffect(() => {
+    setPageTitle("Dashboard");
+  }, [setPageTitle]);
+
   const stats = [
     {
       title: 'Total Clinics',

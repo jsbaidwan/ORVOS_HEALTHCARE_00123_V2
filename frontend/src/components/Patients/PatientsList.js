@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import Table from '../Common/Table';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
 import { useRoutePath } from '../../hooks/useRoutePath';
+import { useTitle } from '../../context/TitleContext';
 
 const PatientsList = ({ status = 'all' }) => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const PatientsList = ({ status = 'all' }) => {
   const { patients, getPendingPatients, getCompletedPatients, deletePatient, markAsCompleted } = usePatient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  const { setPageTitle } = useTitle();
  
   const getPatients = () => {
     if (status === 'pending') return getPendingPatients();
@@ -20,6 +22,10 @@ const PatientsList = ({ status = 'all' }) => {
   };
 
   const patientList = getPatients();
+
+  useEffect(() => {
+    setPageTitle(status === 'pending' ? 'Pending Patients' : status === 'completed' ? 'Completed Patients' : 'All Patients');
+  }, [setPageTitle, status]);
 
   const columns = [
     {

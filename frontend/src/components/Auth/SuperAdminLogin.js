@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLoader } from '../../context/LoaderContext';
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 //import { useToast } from "../../context/ToastContext";
+import { useTitle } from '../../context/TitleContext';
 import { toast } from 'sonner';
 
 // Validation schema
@@ -34,6 +35,7 @@ const SuperAdminLogin = () => {
   const navigate = useNavigate();
   const { showLoader, hideLoader } = useLoader();
   const [showPassword, setShowPassword] = useState(false);
+  const { setPageTitle } = useTitle();
   //const { showToast } = useToast();
   // Initialize react-hook-form
   const {
@@ -99,6 +101,10 @@ const SuperAdminLogin = () => {
       hideLoader();
     }
   };
+
+  useEffect(() => {
+    setPageTitle('Admin Login');
+  }, [setPageTitle]);
 
   return (
      
