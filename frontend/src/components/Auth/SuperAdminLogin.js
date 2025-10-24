@@ -50,7 +50,7 @@ const SuperAdminLogin = () => {
     defaultValues: {
       email: '',
       password: '',
-      useGoogleCaptcha: false
+      useGoogleCaptcha: true
     }
   });
 
