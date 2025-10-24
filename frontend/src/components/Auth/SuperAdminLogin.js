@@ -82,7 +82,8 @@ const SuperAdminLogin = () => {
          
       }
     } catch (error) {
-      setError('general', { type: 'manual', message: 'An unexpected error occurred. Please try again.' });
+      errorsFormatted(error,setError)
+       
     } finally {
       hideLoader();
     }

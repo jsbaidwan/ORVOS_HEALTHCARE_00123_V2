@@ -7,6 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import ErrorHandle from '../Common/ErrorHandle';
 import { toast } from 'sonner';
+import { errorsFormatted } from '../../utils/errorHandler';
 
 // Validation schema
 const resetPasswordSchema = yup.object({
@@ -28,13 +29,15 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const email = searchParams.get('email');
   const { setPageTitle } = useTitle();
+  const [isSuccess, setIsSuccess] = useState('');
   const { 
     isSubmitting, 
-    isSuccess, 
+    
     error, 
-    resetPassword: resetPasswordApi, 
-    setError 
+    resetPassword: resetPasswordApi,  
+  
   } = useForgotPassword();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +48,7 @@ const ResetPassword = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setError: setFormError
+    setError
   } = useForm({
     resolver: yupResolver(resetPasswordSchema),
     defaultValues: {
@@ -71,29 +74,24 @@ const ResetPassword = () => {
       const resetData = {
         token,
         password: data.password,
-        password_confirmation: data.confirmPassword
+        password_confirmation: data.confirmPassword,
+        email:email
       };
 
       const response = await resetPasswordApi(resetData);
       
       if (response?.status === 200) {
         toast.success(response?.message);
+        setIsSuccess(response?.message);
         // Redirect to login after 3 seconds
         setTimeout(() => {
           navigate('/login');
         }, 3000);
-      } else if (response?.errors) {
-        Object.entries(response.errors).forEach(([field, message]) => {
-          setFormError(field, {
-            type: 'manual',
-            message,
-          });
-        });
-      } else if (response?.message) {
-        setError(response.message);
+      } else {
+        errorsFormatted(response,setError)
       }
     } catch (error) {
-      setError('An unexpected error occurred. Please try again.');
+      errorsFormatted(error,setError)
     }
   };
 

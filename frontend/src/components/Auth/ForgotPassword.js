@@ -1,4 +1,4 @@
-import React, {   useEffect } from 'react';
+import React, {   useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { EnvelopeIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
@@ -8,7 +8,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import ErrorHandle from '../Common/ErrorHandle';
 import { toast } from 'sonner';
-
+import { errorsFormatted } from '../../utils/errorHandler';
+import { useLoader } from '../../context/LoaderContext';
+  
 // Validation schema
 const forgotPasswordSchema = yup.object({
   email: yup
@@ -21,20 +23,20 @@ const ForgotPassword = () => {
   const { setPageTitle } = useTitle();
   const { 
     isSubmitting, 
-    isSuccess, 
     error, 
     email, 
     sendResetEmail, 
-    resetSuccess, 
-    setError 
+    
   } = useForgotPassword();
-
+  const { showLoader, hideLoader } = useLoader();
+  const [isSuccess, setIsSuccess] = useState('');
   // Initialize react-hook-form
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setError: setFormError
+    setError,
+    reset
   } = useForm({
     resolver: yupResolver(forgotPasswordSchema),
     defaultValues: {
@@ -43,32 +45,32 @@ const ForgotPassword = () => {
   });
 
   const onSubmit = async (data) => {
+    showLoader();
     try {
       const response = await sendResetEmail(data);
       
       if (response?.status === 200) {
         toast.success(response?.message);
-      } else if (response?.errors) {
-        Object.entries(response.errors).forEach(([field, message]) => {
-          setFormError(field, {
-            type: 'manual',
-            message,
-          });
-        });
-      } else if (response?.message) {
-        setError(response.message);
+        setIsSuccess(response?.message);
+        reset();
+      } else {
+        errorsFormatted(response,setError)
       }
     } catch (error) {
-      setError('An unexpected error occurred. Please try again.');
+      errorsFormatted(error,setError)
+    } finally {
+      hideLoader();
     }
   };
 
   useEffect(() => {
+    
     setPageTitle('Forgot Password');
   }, [setPageTitle]);
 
   return (
     <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
+      
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         {/* <div className="text-center mb-8">
@@ -97,6 +99,7 @@ const ForgotPassword = () => {
                 </p>
               </div>
 
+              
               {/* Display form errors from context */}
               <ErrorHandle errors={errors} title="ERROR:- Password Reset Failed" />
 
@@ -105,7 +108,7 @@ const ForgotPassword = () => {
                   <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
-
+              
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -123,7 +126,11 @@ const ForgotPassword = () => {
                       className={`pl-10 input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting}
                     />
+                  
                   </div>
+                  {errors?.email && (
+                      <p className="mt-1 text-sm text-red-600">{errors?.email?.message}</p>
+                    )}
                 </div>
 
                 <button
@@ -172,7 +179,7 @@ const ForgotPassword = () => {
                   <strong>Didn't receive the email?</strong><br />
                   Check your spam folder or{' '}
                   <button
-                    onClick={() => resetSuccess()}
+                    onClick={() => setIsSuccess(false)}
                     className="text-blue-600 hover:text-blue-700 underline"
                   >
                     try again

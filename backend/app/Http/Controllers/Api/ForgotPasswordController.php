@@ -111,13 +111,14 @@ class ForgotPasswordController extends Controller
     {	
 		$rolesResult = \Helper::getRoles();
 		$roleIds = [];
-
-		if (isset($rolesResult['roles']['data']) && is_iterable($rolesResult['roles']['data'])) {
-			$roleIds = collect($rolesResult['roles']['data'])
+		
+		if (isset($rolesResult['roles'])) {
+			$roleIds = collect($rolesResult['roles'])
 				->where('id', '!=', 1)
 				->pluck('id')
 				->toArray();
 		}
+		 
 		return array_merge($request->only('email'), ['active' => 1,'role_id' => $roleIds]);
 		//return array_merge($request->only('email'), ['active' => 1,'role_id' => [2]]);
        // return $request->only('email');

@@ -28,7 +28,8 @@ class User extends Authenticatable
 		'role_id',
 		'image',
 		'timezone',
-		'country_code',			
+		'country_code',	
+		'remember_token'
 		 
     ];
 

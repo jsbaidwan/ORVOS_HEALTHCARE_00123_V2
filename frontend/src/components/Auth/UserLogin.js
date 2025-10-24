@@ -81,7 +81,7 @@ const UserLogin = () => {
          
       }
     } catch (error) {
-      setError('general', {type: 'manual', message: 'An unexpected error occurred. Please try again.'});
+      errorsFormatted(error,setError)
     } finally {
       hideLoader();
     }
@@ -137,6 +137,7 @@ const UserLogin = () => {
                   
                 />
               </div>
+             
               {errors?.email && (
                 <p className="mt-1 text-sm text-red-600">{errors?.email?.message}</p>
               )}

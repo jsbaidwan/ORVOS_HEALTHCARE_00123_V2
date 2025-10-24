@@ -7,7 +7,6 @@ const ForgotPasswordContext = createContext(null);
 
 export const ForgotPasswordProvider = ({ children }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [email, setEmail] = useState('');
 
   // Get logout function from AuthContext
@@ -23,13 +22,12 @@ export const ForgotPasswordProvider = ({ children }) => {
    */
   const sendResetEmail = async (emailData) => {
     setIsSubmitting(true);
-    setIsSuccess(false);
-
+    
     try {
-      const response = await api.call('forgot-password', 'POST', emailData, false);
+      const response = await api.call('password/email', 'POST', emailData, false);
       
       if (response?.status === 200) {
-        setIsSuccess(true);
+       
         setEmail(emailData.email);
         return {
           status: 200,
@@ -52,10 +50,10 @@ export const ForgotPasswordProvider = ({ children }) => {
     setIsSubmitting(true);
    
     try {
-      const response = await api.call('reset-password', 'POST', resetData, false);
+      const response = await api.call('password/reset', 'POST', resetData, false);
       
       if (response?.status === 200) {
-        setIsSuccess(true);
+        
         return {
           status: 200,
           message: response?.data?.message || 'Password reset successfully',
@@ -76,30 +74,22 @@ export const ForgotPasswordProvider = ({ children }) => {
    */
   const clearState = () => {
     setIsSubmitting(false);
-    setIsSuccess(false);
+    
     setEmail('');
   };
 
-  /**
-   * Reset success state
-   */
-  const resetSuccess = () => {
-    setIsSuccess(false);
-  };
 
   return (
     <ForgotPasswordContext.Provider
       value={{
         // State
         isSubmitting,
-        isSuccess,
         email,
         
         // Actions
         sendResetEmail,
         resetPassword,
         clearState,
-        resetSuccess,
         setEmail,
       }}
     >
