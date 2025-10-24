@@ -9,7 +9,7 @@ import { TitleProvider } from "./context/TitleContext";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <LoaderProvider>
       <ToastProvider>
        <TitleProvider>
@@ -18,7 +18,7 @@ root.render(
        </TitleProvider>
       </ToastProvider>
     </LoaderProvider>
-  </React.StrictMode>
+  // </React.StrictMode>
  
 );
 

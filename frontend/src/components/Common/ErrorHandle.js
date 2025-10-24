@@ -11,11 +11,12 @@ const ErrorHandle = ({
 
   // Reset visibility when errors change
   useEffect(() => {
-    if (errors && (typeof errors !== 'object' || Object.keys(errors).length > 0)) {
+  
+    if (errors) {
       setIsVisible(true);
     }
   }, [errors]);
-
+  
   if (!isVisible) return null;
 
   if (!errors || (typeof errors === 'object' && Object.keys(errors).length === 0)) {
@@ -41,7 +42,7 @@ const ErrorHandle = ({
         </div>
       );
     }
-
+   
     if (Array.isArray(errors)) {
       return errors.map((msg, i) => (
         <div key={i} className="flex items-start">
