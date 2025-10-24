@@ -1,40 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, {   useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { EnvelopeIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
+import { useForgotPassword } from '../../context/ForgotPasswordContext';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import ErrorHandle from '../Common/ErrorHandle';
+import { toast } from 'sonner';
+
+// Validation schema
+const forgotPasswordSchema = yup.object({
+  email: yup
+    .string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+});
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState('');
   const { setPageTitle } = useTitle();
+  const { 
+    isSubmitting, 
+    isSuccess, 
+    error, 
+    email, 
+    sendResetEmail, 
+    resetSuccess, 
+    setError 
+  } = useForgotPassword();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError: setFormError
+  } = useForm({
+    resolver: yupResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
+    }
+  });
 
+  const onSubmit = async (data) => {
     try {
-      // Simulate API call to request password reset
-      // In production, replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await sendResetEmail(data);
       
-      // Simulate success
-      setIsSuccess(true);
-      
-      // In production:
-      // const response = await fetch('/api/auth/forgot-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
-      // });
-      // if (!response.ok) throw new Error('Failed to send reset email');
-      // setIsSuccess(true);
-    } catch (err) {
-      setError('Failed to send reset email. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      if (response?.status === 200) {
+        toast.success(response?.message);
+      } else if (response?.errors) {
+        Object.entries(response.errors).forEach(([field, message]) => {
+          setFormError(field, {
+            type: 'manual',
+            message,
+          });
+        });
+      } else if (response?.message) {
+        setError(response.message);
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -72,13 +97,16 @@ const ForgotPassword = () => {
                 </p>
               </div>
 
+              {/* Display form errors from context */}
+              <ErrorHandle errors={errors} title="ERROR:- Password Reset Failed" />
+
               {error && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                     Email Address
@@ -90,11 +118,9 @@ const ForgotPassword = () => {
                     <input
                       type="email"
                       id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      {...register('email')}
                       placeholder="Enter your email"
-                      className="input-field pl-10"
-                      required
+                      className={`pl-10 input-field ${errors?.email ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting}
                     />
                   </div>
@@ -146,7 +172,7 @@ const ForgotPassword = () => {
                   <strong>Didn't receive the email?</strong><br />
                   Check your spam folder or{' '}
                   <button
-                    onClick={() => setIsSuccess(false)}
+                    onClick={() => resetSuccess()}
                     className="text-blue-600 hover:text-blue-700 underline"
                   >
                     try again

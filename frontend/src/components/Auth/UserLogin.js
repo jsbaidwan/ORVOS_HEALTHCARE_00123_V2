@@ -13,6 +13,7 @@ import { EyeIcon, EyeSlashIcon,EnvelopeIcon,LockClosedIcon,ShieldCheckIcon } fro
 //import { useToast } from "../../context/ToastContext";
 import { toast } from 'sonner';
 import { useTitle } from '../../context/TitleContext';
+import { errorsFormatted } from '../../utils/errorHandler';
 
 // Validation schema
 const loginSchema = yup.object({
@@ -50,7 +51,7 @@ const UserLogin = () => {
     defaultValues: {
       email: '',
       password: '',
-      useGoogleCaptcha: true
+      useGoogleCaptcha: false
     }
   });
 
@@ -76,28 +77,8 @@ const UserLogin = () => {
         //showToast(response?.message, "success");
         navigate('/dashboard');
       } else {
-        
-        if (response.errors) {
-        
-          Object.entries(response?.errors).forEach(([field, message]) => {
-            setError(field, {
-              type: 'manual',
-              message,
-            });
-           
-          });
-          
-        } else if (response.error?.message) {
-          setError('general', {
-            type: 'manual',
-            message: response.error.message,
-          });
-        }else if(response === false){
-          setError('general', {
-            type: 'manual',
-            message: 'Login failed. Please try again.',
-          });
-        }
+        errorsFormatted(response,setError)        
+         
       }
     } catch (error) {
       setError('general', {type: 'manual', message: 'An unexpected error occurred. Please try again.'});

@@ -41,39 +41,45 @@ const Api = (getToken) => {
    * Handle API response and decode if needed
    */
   const handleResponse = async (response) => {
-   
     try {
-      // Read response as text (always)
+      // Read response as text
       const rawText = await response.text();
-     
-      // Headers are case-insensitive — normalize them
-     
+  
+      // Parse JSON (obfuscated or regular)
+      let json = {};
       if (response.headers.get('X-Obfuscated')) {
         // Decode Base64 → JSON string
-       
         const bytes = Uint8Array.from(atob(rawText.trim()), (c) => c.charCodeAt(0));
         // Inflate using pako
         const decompressed = pako.inflate(bytes, { to: 'string' });
-        const json = JSON.parse(decompressed || '{}');
-        return { status: response.status, data: json};
+        json = JSON.parse(decompressed || '{}');
       } else {
         // Regular JSON
-        const json = rawText ? JSON.parse(rawText) : {};
-        return { status: response.status, data: json };
+        json = rawText ? JSON.parse(rawText) : {};
       }
+  
+      // If response is not OK, throw ApiError
+      if (!response.ok) {
+        const apiError = new ApiError(
+          response.status,
+          json.message || 'An error occurred',
+          json
+        );
+        return { status: response.status, data: json, error: apiError };
+      }
+  
+      return { status: response.status, data: json };
     } catch (err) {
       console.error('Response decode error:', err);
       return {
         status: response.status,
         data: {},
-        error: err,
+        error: new ApiError(response.status, err.message, { raw: await response.text() }),
         raw: await response.text(),
       };
     }
   };
-    
-  
-
+   
   /**
    * Append app_url to endpoint if not already present
    */

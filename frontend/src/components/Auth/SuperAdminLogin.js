@@ -13,6 +13,7 @@ import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } 
 //import { useToast } from "../../context/ToastContext";
 import { useTitle } from '../../context/TitleContext';
 import { toast } from 'sonner';
+import { errorsFormatted } from '../../utils/errorHandler';
 
 // Validation schema
 const adminLoginSchema = yup.object({
@@ -49,7 +50,7 @@ const SuperAdminLogin = () => {
     defaultValues: {
       email: '',
       password: '',
-      useGoogleCaptcha: true
+      useGoogleCaptcha: false
     }
   });
 
@@ -71,29 +72,14 @@ const SuperAdminLogin = () => {
     try {
       data.is_admin = true;
       const response = await login(data);
+     
       if (response.status === 200) {
         toast.success(response?.message);
         //showToast(response?.message, "success");
         navigate(`/${adminPrefix}/dashboard`);
       } else {
-        if (response.errors) {
-          Object.entries(response?.errors).forEach(([field, message]) => {
-            setError(field, {
-              type: 'manual',
-              message,
-            });
-          });
-        } else if (response.error?.message) {
-          setError('general', {
-            type: 'manual',
-            message: response.error.message,
-          });
-        } else if (response === false) {
-          setError('general', {
-            type: 'manual',
-            message: 'Login failed. Please try again.',
-          });
-        }
+        errorsFormatted(response,setError)
+         
       }
     } catch (error) {
       setError('general', { type: 'manual', message: 'An unexpected error occurred. Please try again.' });

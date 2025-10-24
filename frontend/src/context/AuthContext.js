@@ -4,6 +4,7 @@ import Api from '../utils/api';
 import Loader from '../components/Common/Loader';
 // import ErrorHandle from '../components/Common/ErrorHandle';
 import { useDecode } from '../hooks/useDecode';
+import { handleApiError } from '../utils/errorHandler';
 
 const AuthContext = createContext(null);
 const adminPrefix = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
@@ -45,18 +46,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Handle API errors globally.
-   */
-  const handleApiError = (error) => {
-    if (error?.status === 401) {
-      logout();
-      return false;
-    } 
- 
-    return false;
-  };
-
-  /**
    * Perform login with provided credentials.
    */
   const login = async (credentials) => {
@@ -73,22 +62,17 @@ export const AuthProvider = ({ children }) => {
     }
 
     const response = await api.call(url, 'POST', formData, false);
-    
+   
     if (response?.status === 200) {
+      
       const auth = response.data.auth;
       setUser(auth);
       localStorage.setItem('auth', JSON.stringify(auth));
       return { status: 200,message: response?.data?.message };
     }
-
-    if (response?.error?.status === 422 && response?.error?.validationErrors) {
-      return {
-        status: 422,
-        errors: response.error.validationErrors,
-      };
-    } else {
-      return handleApiError(response.error);
-    }
+    
+    return handleApiError(response.error,logout);
+   
   };
 
   /**

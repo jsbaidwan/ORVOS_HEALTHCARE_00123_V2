@@ -1,105 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTitle } from '../../context/TitleContext';
+import { useForgotPassword } from '../../context/ForgotPasswordContext';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import ErrorHandle from '../Common/ErrorHandle';
+import { toast } from 'sonner';
+
+// Validation schema
+const resetPasswordSchema = yup.object({
+  password: yup
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .matches(/[0-9]/, 'Password must contain at least one number')
+    .matches(/[!@#$%^&*]/, 'Password must contain at least one special character (!@#$%^&*)')
+    .required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'Passwords must match')
+    .required('Please confirm your password'),
+});
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { setPageTitle } = useTitle();
+  const { 
+    isSubmitting, 
+    isSuccess, 
+    error, 
+    resetPassword: resetPasswordApi, 
+    setError 
+  } = useForgotPassword();
 
-  const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [validationErrors, setValidationErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { setPageTitle } = useTitle();
+
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError: setFormError
+  } = useForm({
+    resolver: yupResolver(resetPasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    }
+  });
 
   useEffect(() => {
     // Verify token exists
     if (!token) {
       setError('Invalid or missing reset token. Please request a new password reset.');
     }
-  }, [token]);
+  }, [token, setError]);
 
-  const validatePassword = (password) => {
-    const errors = [];
-    if (password.length < 8) {
-      errors.push('At least 8 characters');
-    }
-    if (!/[A-Z]/.test(password)) {
-      errors.push('One uppercase letter');
-    }
-    if (!/[a-z]/.test(password)) {
-      errors.push('One lowercase letter');
-    }
-    if (!/[0-9]/.test(password)) {
-      errors.push('One number');
-    }
-    if (!/[!@#$%^&*]/.test(password)) {
-      errors.push('One special character (!@#$%^&*)');
-    }
-    return errors;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    
-    // Clear errors when typing
-    setValidationErrors({ ...validationErrors, [name]: '' });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setValidationErrors({});
-
-    // Validate password
-    const passwordErrors = validatePassword(formData.password);
-    if (passwordErrors.length > 0) {
-      setValidationErrors({ password: `Password must include: ${passwordErrors.join(', ')}` });
+  const onSubmit = async (data) => {
+    if (!token) {
+      setError('Invalid or missing reset token. Please request a new password reset.');
       return;
     }
-
-    // Check passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setValidationErrors({ confirmPassword: 'Passwords do not match' });
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
-      // Simulate API call to reset password
-      // In production, replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const resetData = {
+        token,
+        password: data.password,
+        password_confirmation: data.confirmPassword
+      };
+
+      const response = await resetPasswordApi(resetData);
       
-      // Simulate success
-      setIsSuccess(true);
-      
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-      
-      // In production:
-      // const response = await fetch('/api/auth/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, password: formData.password })
-      // });
-      // if (!response.ok) throw new Error('Failed to reset password');
-      // setIsSuccess(true);
-      // setTimeout(() => navigate('/login'), 3000);
-    } catch (err) {
-      setError('Failed to reset password. The link may have expired. Please request a new one.');
-    } finally {
-      setIsSubmitting(false);
+      if (response?.status === 200) {
+        toast.success(response?.message);
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else if (response?.errors) {
+        Object.entries(response.errors).forEach(([field, message]) => {
+          setFormError(field, {
+            type: 'manual',
+            message,
+          });
+        });
+      } else if (response?.message) {
+        setError(response.message);
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -134,13 +128,16 @@ const ResetPassword = () => {
                 </p>
               </div>
 
+              {/* Display form errors from context */}
+              <ErrorHandle errors={errors} title="ERROR:- Password Reset Failed" />
+
               {error && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                     New Password
@@ -149,12 +146,9 @@ const ResetPassword = () => {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
+                      {...register('password')}
                       placeholder="Enter new password"
-                      className={`input-field pr-10 ${validationErrors.password ? 'border-red-500' : ''}`}
-                      required
+                      className={`input-field pr-10 ${errors?.password ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting || !token}
                     />
                     <button
@@ -174,8 +168,8 @@ const ResetPassword = () => {
                       )}
                     </button>
                   </div>
-                  {validationErrors.password && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+                  {errors?.password && (
+                    <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                   )}
                 </div>
 
@@ -187,12 +181,9 @@ const ResetPassword = () => {
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
+                      {...register('confirmPassword')}
                       placeholder="Confirm new password"
-                      className={`input-field pr-10 ${validationErrors.confirmPassword ? 'border-red-500' : ''}`}
-                      required
+                      className={`input-field pr-10 ${errors?.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
                       disabled={isSubmitting || !token}
                     />
                     <button
@@ -212,8 +203,8 @@ const ResetPassword = () => {
                       )}
                     </button>
                   </div>
-                  {validationErrors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                  {errors?.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
                   )}
                 </div>
 

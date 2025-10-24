@@ -6,6 +6,7 @@ import { PatientProvider } from './context/PatientContext';
 import { ReportProvider } from './context/ReportContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { UserProvider } from './context/UserContext';
+import { ForgotPasswordProvider } from './context/ForgotPasswordContext';
 
 // Layout Components
 import Header from './components/Common/Header';
@@ -276,17 +277,19 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <ClinicProvider>
-          <PatientProvider>
-            <ReportProvider>
-              <SettingsProvider>
-                <UserProvider>
-                  <AppContent />
-                </UserProvider>
-              </SettingsProvider>
-            </ReportProvider>
-          </PatientProvider>
-        </ClinicProvider>
+        <ForgotPasswordProvider>
+          <ClinicProvider>
+            <PatientProvider>
+              <ReportProvider>
+                <SettingsProvider>
+                  <UserProvider>
+                    <AppContent />
+                  </UserProvider>
+                </SettingsProvider>
+              </ReportProvider>
+            </PatientProvider>
+          </ClinicProvider>
+        </ForgotPasswordProvider>
       </AuthProvider>
     </Router>
   );
