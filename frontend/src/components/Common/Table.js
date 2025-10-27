@@ -74,7 +74,8 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
   };
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow-card">
+    <div className="overflow-x-auto bg-white  shadow-card">
+      
       <table className="min-w-full divide-y divide-gray-200 ">
         <thead className="bg-primary text-white">
           <tr>

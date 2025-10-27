@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ClinicProvider } from './context/ClinicContext';
+import { ClinicGroupProvider } from './context/ClinicGroupContext';
 import { PatientProvider } from './context/PatientContext';
 import { ReportProvider } from './context/ReportContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -24,6 +25,7 @@ import ResetPassword from './components/Auth/ResetPassword';
 import Dashboard from './components/Dashboard/Dashboard';
 import ClinicsList from './components/Clinics/ClinicsList';
 import ArchiveClinics from './components/Clinics/ArchiveClinics';
+import ClinicGroupList from './components/ClinicGroups/ClinicGroupList';
 import PatientsList from './components/Patients/PatientsList';
 import PatientForm from './components/Patients/PatientForm';
 import Reports from './components/Reports/Reports';
@@ -179,6 +181,14 @@ const createProtectedRoutes = (prefix, roleId) => {
         }
       />
       <Route
+        path={`${basePath}/clinic-groups`}
+        element={
+          <ProtectedRoute requiredRole={roleId}>
+            <MainLayout><ClinicGroupList /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path={`${basePath}/settings`}
         element={
           <ProtectedRoute requiredRole={roleId}>
@@ -279,15 +289,17 @@ function App() {
       <AuthProvider>
         <ForgotPasswordProvider>
           <ClinicProvider>
-            <PatientProvider>
-              <ReportProvider>
-                <SettingsProvider>
-                  <UserProvider>
-                    <AppContent />
-                  </UserProvider>
-                </SettingsProvider>
-              </ReportProvider>
-            </PatientProvider>
+            <ClinicGroupProvider>
+              <PatientProvider>
+                <ReportProvider>
+                  <SettingsProvider>
+                    <UserProvider>
+                      <AppContent />
+                    </UserProvider>
+                  </SettingsProvider>
+                </ReportProvider>
+              </PatientProvider>
+            </ClinicGroupProvider>
           </ClinicProvider>
         </ForgotPasswordProvider>
       </AuthProvider>

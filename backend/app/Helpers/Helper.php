@@ -16,6 +16,7 @@ use App\Models\Country;
 use App\Models\State;
 use App\Models\Patient;
 use App\Models\Permission;
+use App\Models\ClinicGroup;
 use Illuminate\Http\UploadedFile;
 use App\Models\PdfTemplate;
 use Illuminate\Support\Facades\Http;
@@ -1211,6 +1212,84 @@ class Helper{
 
 
 	 /*
+	 *-----------------------------------------
+	 * Start: Get Clinic Groups
+	 * -----------------------------------------
+	 */ 
+	public static function getClinicGroups($isAdmin = true,$filters = [])
+	{
+		$query = ClinicGroup::orderBy('id','DESC'); 
+		if (isset($filters['active']) && strtolower($filters['active']) != 'all') {
+
+			$query->where('active',$filters['active']);
+		}
+		 
+		if(isset($filters['is_archived'])){
+			$query->where('is_archived',$filters['is_archived']);
+		}
+		
+		if(!empty($filters['q'])){
+			 
+			$query->where(function ($q) use ($filters) {
+				$q->where('name', 'LIKE', '%' . $filters['q'] . '%');
+				 
+			});
+		}
+		
+		if(empty($filters['paginate']) || $filters['paginate'] === false){
+			$clinicGroups = $query->get();
+		} else {
+			 
+			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$page = $filters['page'] ?? 1;
+			$clinicGroups = $query->paginate($perPage, ['*'], 'page', $page);
+		}
+		  
+		return ['clinicGroups' => $clinicGroups];
+	}
+	
+	 /*
+	 *-----------------------------------------
+	 * End: Get Clinic Groups
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *---------------------------------------
+	 * Start: Get clinic group by id
+	 * -------------------------------------
+	 */
+	public static function getClinicGroupById($id)
+	{
+		$clinicGroup = ClinicGroup::find($id);
+		return ['clinicGroup' => $clinicGroup];
+	} 
+	 /*
+	 *---------------------------------------
+	 * End: Get clinic group by id
+	 * -------------------------------------
+	 */
+	 
+	 /*
+	 *---------------------------------
+	 * Start: Gen clinic group code  
+	 * --------------------------------
+	 */
+	public static function genClinicGroupCode()
+	{
+		$count = ClinicGroup::count(); 
+		$newCount = ($count + 1);
+		// Generate the clinic group code, ensuring the number is zero-padded
+		$clinicGroupCode = 'CGRP-' . str_pad($newCount, 3, '0', STR_PAD_LEFT);
+		return ['code' => $clinicGroupCode];
+	}
+	 /*
+	 *---------------------------------
+	 * End: Gen clinic group code  
+	 * --------------------------------
+	 */
+
+	 /*
 	 *---------------------------------------
 	 * Start: Get clinics
 	 * -------------------------------------
@@ -1268,7 +1347,7 @@ class Helper{
 	 * -------------------------------------
 	 */
 	
-/*
+	/*
 	 *---------------------------------------
 	 * Start: Get clinic image
 	 * -------------------------------------
@@ -1716,6 +1795,7 @@ class Helper{
 			5 => 'Remark',
 			6 => 'Reports',
 			7 => 'PDF Template',
+			8 => 'Clinics Group',
 			 
 		];
 	}
@@ -1744,6 +1824,13 @@ class Helper{
 		return false;
 	}
 	/********* End:Check role permission **************/
+	
+	/********* Start:Permission Message **************/ 
+	public static function permissionMsg()
+	{  
+		return ['message' => "You do not have the required permission to perform this action. Please contact the administrator for assistance."];
+	}
+	/********* End:Permission Message **************/
 	
 	
 	/********* Start:Check the Orvos Doctor Licence Number Expire or not **************/
@@ -2494,6 +2581,89 @@ class Helper{
 		return ['encoded' => base64_encode($data . '::' . $password)];
 	}	
 	
+	
+	/*
+	 *-----------------------------------------
+	 * End: Alert Message
+	 * -----------------------------------------
+	 */
+	 
+	public static function alertMsg($action, $moduleName, $type)
+	{
+		$action = strtolower($action);
+		$type = strtolower($type);
+		$moduleNameFormatted = ucfirst($moduleName);
+		$errMsg = 'Please verify your input and try again, or contact the system administrator if the issue persists.';
+
+		$actions = [
+			'create' => 'created',
+			'edit'   => 'edited',
+			'update' => 'updated',
+			'delete' => 'deleted',
+		];
+
+		if (!isset($actions[$action])) {
+			return ['message' => 'Invalid action specified.'];
+		}
+
+		if ($type === 'success') {
+			$message = "{$moduleNameFormatted} {$actions[$action]} successfully.";
+		} else {
+			$message = "Failed to {$action} " . strtolower($moduleName) . ". {$errMsg}";
+		}
+
+		return ['message' => $message];
+	}
+
+	/*
+	 *-----------------------------------------
+	 * End: Alert Message
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get Is Active Status
+	 * -----------------------------------------
+	 */
+	 
+	public static function  getIsActiveStatus()
+	{
+		return [
+			0 => ['name' => 'inactive'],
+			1 => ['name' => 'active'],
+		];
+	}	
+	 /*
+	 *-----------------------------------------
+	 * End: Get Is Active Status
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get Is Active Status By Id
+	 * -----------------------------------------
+	 */
+	 
+	public static function  getIsActiveStatusById($id)
+	{
+		$statues = self::getIsActiveStatus();
+		foreach($statues as $sKey => $status){
+			if($sKey == $id){
+				return ['status' => 200,'status' => $status];
+			}
+		}
+		
+		return ['status' => 404];
+		
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Get Is Active Status By Id
+	 * -----------------------------------------
+	 */
 }
 
 	

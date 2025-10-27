@@ -18,6 +18,7 @@ Route::middleware('auth:api')->group(function () {
 	Route::post('users/{id}', 'App\Http\Controllers\Api\UserController@update');
 	Route::resource('change-password', 'App\Http\Controllers\Api\ChangePasswordController');
 	Route::resource('roles', 'App\Http\Controllers\Api\RoleController');
+	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	
 });
   

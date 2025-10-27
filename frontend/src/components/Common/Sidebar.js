@@ -12,6 +12,7 @@ import {
   PlusIcon,
   ChevronRightIcon,
   Bars3Icon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -20,6 +21,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const menuItems = [
     { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" /> },
+    { title: 'Clinics Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
     { title: 'Clinics', basePath: '/clinics', icon: <BuildingStorefrontIcon className="w-5 h-5" /> },
     {
       title: 'Patients',
