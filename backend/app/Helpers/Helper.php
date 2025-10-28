@@ -1321,8 +1321,7 @@ class Helper{
 			
 			$clinics = $query->paginate();
 		}
-		
-		
+				
 		return ['clinics' => $clinics];
 	} 
 	 /*

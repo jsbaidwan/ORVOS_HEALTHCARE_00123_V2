@@ -14,7 +14,6 @@ import {
   ChevronRightIcon,
   Bars3Icon,
   BuildingOfficeIcon,
-  
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {

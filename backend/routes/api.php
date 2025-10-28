@@ -13,7 +13,6 @@ use App\Models\Permission;
 $PRFIX_SUPER_ADMIN = \Helper::prefix('1')['prefix'];
 $PRFIX_ORVOS_USER = \Helper::prefix('2')['prefix'];
 
-
 Route::middleware('auth:api')->group(function () {
 	Route::resource('users','App\Http\Controllers\Api\UserController');
 	Route::post('users/{id}', 'App\Http\Controllers\Api\UserController@update');
@@ -22,19 +21,19 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	
 	Route::get('get-permissions', function(Request $request){
-		$roleId =  \Auth::user()->role_id;
+		$roleId = \Auth::user()->role_id;
 		$permissions = Permission::where('role_id',$roleId)->get();
 		if(\Auth::user()->role_id == 1){
 			$permissions = Permission::all()->map(function ($permission) use ($roleId) {
 				return [
-					'role_id'   => $roleId,
+					'role_id' => $roleId,
 					'module_id' => $permission->module_id,
-					'read'      => 1,
-					'write'     => 1,
-					'create'    => 1,
-					'delete'    => 1,
-					'created_at'=> $permission->created_at,
-					'updated_at'=> $permission->updated_at,
+					'read' => 1,
+					'write' => 1,
+					'create' => 1,
+					'delete' => 1,
+					'created_at' => $permission->created_at,
+					'updated_at' => $permission->updated_at,
 				];
 			});
 		}
