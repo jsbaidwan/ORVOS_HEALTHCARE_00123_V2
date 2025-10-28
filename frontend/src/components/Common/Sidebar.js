@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
+import { usePermissions } from '../../context/PermissionsContext';
 import {
   HomeIcon,
   BuildingStorefrontIcon,
@@ -13,34 +14,55 @@ import {
   ChevronRightIcon,
   Bars3Icon,
   BuildingOfficeIcon,
+  
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   const getRoutePath = useRoutePath();
-
+  const { permission } = usePermissions();
   const menuItems = [
-    { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" /> },
-    { title: 'Clinics Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" /> },
-    { title: 'Clinics', basePath: '/clinics', icon: <BuildingStorefrontIcon className="w-5 h-5" /> },
+    { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" />, module_id: true }, // No module for dashboard
+    { title: 'Clinic Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" />, module_id: 8 },
+    { title: 'Clinics', basePath: '/clinics', icon: <BuildingStorefrontIcon className="w-5 h-5" />, module_id: 1 },
     {
       title: 'Patients',
       basePath: '/patients',
       icon: <UserGroupIcon className="w-5 h-5" />,
+      module_id: 2,
       subItems: [
-        { title: 'Pending Patients', basePath: '/patients/pending' },
-        { title: 'Completed Patients', basePath: '/patients/completed' },
-        { title: 'Add Patient', basePath: '/patients/add', icon: <PlusIcon className="w-4 h-4" /> },
+        { title: 'Pending Patients', basePath: '/patients/pending', module_id: 2 },
+        { title: 'Completed Patients', basePath: '/patients/completed', module_id: 2 },
+        { title: 'Add Patient', basePath: '/patients/add', icon: <PlusIcon className="w-4 h-4" />, module_id: 2 },
       ],
     },
-    { title: 'Reports', basePath: '/reports', icon: <DocumentChartBarIcon className="w-5 h-5" /> },
-    { title: 'Users', basePath: '/users', icon: <UserGroupIcon className="w-5 h-5" /> },
-    { title: 'Settings', basePath: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" /> },
-    { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" /> },
+    { title: 'Reports', basePath: '/reports', icon: <DocumentChartBarIcon className="w-5 h-5" />, module_id: 6 },
+    { title: 'Users', basePath: '/users', icon: <UserGroupIcon className="w-5 h-5" />, module_id: 3 },
+    { title: 'Settings', basePath: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, module_id: true },
+    { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
   ];
 
+  const filteredMenuItems = menuItems
+  .filter(item => {
+
+    // Always show menu items with no module_id
+    if (!item.module_id) return true;
+     
+    // Show only if read permission exists
+    return permission(item.module_id, 'read');
+  })
+  .map(item => ({
+    ...item,
+    subItems: item.subItems
+      ? item.subItems.filter(sub => {
+          if (!sub.module_id) return true;
+          return permission(sub.module_id, 'read');
+        })
+      : null,
+  }));
+ 
   // Add actual paths
-  const menuItemsWithPaths = menuItems.map(item => ({
+  const menuItemsWithPaths = filteredMenuItems.map(item => ({
     ...item,
     path: getRoutePath(item.basePath),
     subItems: item.subItems?.map(sub => ({

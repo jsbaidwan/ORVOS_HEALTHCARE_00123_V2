@@ -8,6 +8,7 @@ import { ReportProvider } from './context/ReportContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { UserProvider } from './context/UserContext';
 import { ForgotPasswordProvider } from './context/ForgotPasswordContext';
+import { PermissionsProvider,usePermissions } from './context/PermissionsContext';
 
 // Layout Components
 import Header from './components/Common/Header';
@@ -42,7 +43,7 @@ const USER_PREFIX = process.env.REACT_APP_USER_ROUTE_PREFIX || '';
 // Support Page Wrapper moved to its own component
 
 // Protected Route Component
-const ProtectedRoute = ({ children, requiredRole }) => {
+const ProtectedRoute = ({ children, requiredRole,permission }) => {
   const { isAuthenticated, loading, user } = useAuth();
  
   if (loading) {
@@ -52,12 +53,15 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
- 
+  
+  if(!permission){
+    return <Navigate to="/" replace />;
+  }
+
   // Check role if specified
   if (requiredRole && user?.role_id !== requiredRole) {
     // Redirect to appropriate dashboard
     const prefix = user?.role_id === 1 ? `/${ADMIN_PREFIX}` : (USER_PREFIX ? `/${USER_PREFIX}` : '');
-   
     return <Navigate to={`${prefix}/dashboard`} replace />;
   }
 
@@ -95,7 +99,7 @@ const MainLayout = ({ children }) => {
 };
 
 // Create protected route wrapper for both user and admin
-const createProtectedRoutes = (prefix, roleId) => {
+const createProtectedRoutes = (prefix, roleId,permission) => {
   const basePath = prefix ? `/${prefix}` : '';
   
   return (
@@ -103,7 +107,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/dashboard`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(true,'read')} requiredRole={roleId}>
             <MainLayout><Dashboard /></MainLayout>
           </ProtectedRoute>
         }
@@ -111,7 +115,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/clinics`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(1,'read')} requiredRole={roleId}>
             <MainLayout><ClinicsList /></MainLayout>
           </ProtectedRoute>
         }
@@ -119,7 +123,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/clinics/archived`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(1,'read')} requiredRole={roleId}>
             <MainLayout><ArchiveClinics /></MainLayout>
           </ProtectedRoute>
         }
@@ -127,7 +131,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/patients`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2,'read')} requiredRole={roleId}>
             <MainLayout><PatientsList status="all" /></MainLayout>
           </ProtectedRoute>
         }
@@ -135,7 +139,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/patients/pending`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2,'read')} requiredRole={roleId}>
             <MainLayout><PatientsList status="pending" /></MainLayout>
           </ProtectedRoute>
         }
@@ -143,7 +147,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/patients/completed`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2,'read')} requiredRole={roleId}>
             <MainLayout><PatientsList status="completed" /></MainLayout>
           </ProtectedRoute>
         }
@@ -151,7 +155,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/patients/add`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2,'create')} requiredRole={roleId}>
             <MainLayout><PatientForm /></MainLayout>
           </ProtectedRoute>
         }
@@ -159,7 +163,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/patients/edit/:id`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2,'edit')} requiredRole={roleId}>
             <MainLayout><PatientForm /></MainLayout>
           </ProtectedRoute>
         }
@@ -167,7 +171,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/reports`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(6,'read')} requiredRole={roleId}>
             <MainLayout><Reports /></MainLayout>
           </ProtectedRoute>
         }
@@ -175,7 +179,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/users`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(3,'read')} requiredRole={roleId}>
             <MainLayout><UsersList /></MainLayout>
           </ProtectedRoute>
         }
@@ -183,7 +187,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/clinic-groups`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(8,'read')} requiredRole={roleId}>
             <MainLayout><ClinicGroupList /></MainLayout>
           </ProtectedRoute>
         }
@@ -191,7 +195,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/settings`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(true,'read')} requiredRole={roleId}>
             <MainLayout><Settings /></MainLayout>
           </ProtectedRoute>
         }
@@ -199,7 +203,7 @@ const createProtectedRoutes = (prefix, roleId) => {
       <Route
         path={`${basePath}/support`}
         element={
-          <ProtectedRoute requiredRole={roleId}>
+          <ProtectedRoute permission={permission(true,'read')} requiredRole={roleId}>
             <MainLayout><Support /></MainLayout>
           </ProtectedRoute>
         }
@@ -211,7 +215,8 @@ const createProtectedRoutes = (prefix, roleId) => {
 // App Content (wrapped with auth context)
 const AppContent = () => {
   const { isAuthenticated, loading, user } = useAuth();
-
+  const { permission } = usePermissions();
+   
   if (loading) {
     return <Loader />;
   }
@@ -261,10 +266,10 @@ const AppContent = () => {
       />
 
       {/* Admin Protected Routes (with admin prefix) */}
-      {createProtectedRoutes(ADMIN_PREFIX, 1)}
+      {createProtectedRoutes(ADMIN_PREFIX, 1,permission)}
 
       {/* User Protected Routes (with user prefix or no prefix) */}
-      {createProtectedRoutes(USER_PREFIX, user?.role_id || '')}
+      {createProtectedRoutes(USER_PREFIX, user?.role_id !== 1 ? user?.role_id : 2,permission)}
 
       {/* Default redirects */}
       <Route 
@@ -288,6 +293,7 @@ function App() {
     <Router>
       <AuthProvider>
         <ForgotPasswordProvider>
+          <PermissionsProvider>
           <ClinicProvider>
             <ClinicGroupProvider>
               <PatientProvider>
@@ -301,6 +307,7 @@ function App() {
               </PatientProvider>
             </ClinicGroupProvider>
           </ClinicProvider>
+          </PermissionsProvider>
         </ForgotPasswordProvider>
       </AuthProvider>
     </Router>

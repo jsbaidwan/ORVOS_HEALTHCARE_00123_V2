@@ -18,7 +18,7 @@ class ClinicGroupController extends Controller
      */
     public function index(Request $request)
     {  
-		$haveAccess = \Helper::permission(1,'read');
+		$haveAccess = \Helper::permission(8,'read');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
@@ -38,14 +38,24 @@ class ClinicGroupController extends Controller
      */
 	public function store(Request $request)
     {  
-		$haveAccess = \Helper::permission(1,'create');
+		$haveAccess = \Helper::permission(8,'create');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 		
+		$rules = ClinicGroup::rules();
+		
+		$validator = Validator::make($input, $rules);
+		 
+		if ($validator->fails()) { 
+			return response()->json(['message' => $validator->errors()], 422);
+		 
+		}
+		
 		$input['user_id'] = \Auth::user()->id;
+		$input['code'] = \Helper::genClinicGroupCode()['code'];
 		ClinicGroup::create($input);
 		 
         return response()->json(['message' => \Helper::alertMsg('create','Clinic Group','success')['message']], 200);  
@@ -60,7 +70,7 @@ class ClinicGroupController extends Controller
 
     public function edit($id)
     {  
-		$haveAccess = \Helper::permission(1,'write');
+		$haveAccess = \Helper::permission(8,'write');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
@@ -79,12 +89,22 @@ class ClinicGroupController extends Controller
      */
 	public function update(Request $request,$id)
     {  
-		$haveAccess = \Helper::permission(1,'write');
+		$haveAccess = \Helper::permission(8,'write');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+		
+		$rules = ClinicGroup::rules($id);
+		
+		$validator = Validator::make($input, $rules);
+		 
+		if ($validator->fails()) { 
+			return response()->json(['message' => $validator->errors()], 422);
+		 
+		}
+		
 		$clinicGroup = \Helper::getClinicGroupById($id)['clinicGroup'];
 		if(!$clinicGroup){
 			return response()->json(['message' => \Helper::alertMsg('update','Clinic Group','error')['message']], 404);
@@ -104,7 +124,7 @@ class ClinicGroupController extends Controller
 	 
     public function destroy(Request $request, $id)
     {
-		$haveAccess = \Helper::permission(1,'delete');
+		$haveAccess = \Helper::permission(8,'delete');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}

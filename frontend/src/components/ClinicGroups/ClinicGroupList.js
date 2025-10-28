@@ -7,12 +7,17 @@ import ClinicGroupForm from './ClinicGroupForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { useLocation } from 'react-router-dom';
+import { useLocation,useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useLoader } from '../../context/LoaderContext';
+import { useRoutePath } from '../../hooks/useRoutePath';
 //import { useLoader } from '../../context/LoaderContext';
+import ErrorHandle from '../Common/ErrorHandle';
 
 const ClinicGroupList = () => {
   const {
     clinicGroups,
+    setClinicGroups,
     pagination,
     getClinicGroups,
     deleteClinicGroup,
@@ -24,9 +29,11 @@ const ClinicGroupList = () => {
   const [editingClinicGroup, setEditingClinicGroup] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clinicGroupToDelete, setClinicGroupToDelete] = useState(null);
+  const { showLoader, hideLoader } = useLoader();
+  const getRoutePath = useRoutePath();
+  const navigate = useNavigate();
+  const [errors,setErrors] = useState(null);
   
-  //const { showLoader, hideLoader } = useLoader();
-
   useEffect(() => {
      
     const loadData = async () => {
@@ -45,11 +52,16 @@ const ClinicGroupList = () => {
   
       try {
         // showLoader();
-        await getClinicGroups(page, filters, true);
+        const response = await getClinicGroups(page, filters, true);
+        if(response?.status && response?.status !== 200){
+          setClinicGroups([])
+          setErrors({general:response?.message});
+        }
+         
         // hideLoader();
       } catch (error) {
         // hideLoader();
-        console.error(error);
+        setErrors({general:error});
       }
     };
   
@@ -86,13 +98,17 @@ const ClinicGroupList = () => {
         newUrl.searchParams.delete('active');
       }
     }
-    
+  
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
+    const response = await getClinicGroups(1, filters,true);
+
+    if(response?.status && response?.status !== 200){
+      
+      setClinicGroups([])
+      setErrors({general:response?.message});
      
-    await getClinicGroups(1, filters,true);
-   
-    
+    }
   };
 
   const columns = [
@@ -101,7 +117,17 @@ const ClinicGroupList = () => {
       accessor: 'name',
       render: (row) => (
         <div>
-          <p className="font-semibold text-gray-900">{row.name}</p>
+          <div className="flex items-center">
+            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">{row.name.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{row?.name}</div>
+              <div className="text-sm text-gray-500">
+                {row.code || '-'}
+                </div>
+              </div>
+            </div>
         </div>
       ),
     },
@@ -109,8 +135,8 @@ const ClinicGroupList = () => {
       header: 'Description',
       accessor: 'description',
       render: (row) => (
-        <div className="max-w-xs">
-          <p className="text-gray-900 text-sm line-clamp-2">{row.description || '-'}</p>
+        <div className="max-w-sm">
+          <p className="text-gray-900 text-sm">{row.description || '-'}</p>
         </div>
       ),
     },
@@ -135,11 +161,11 @@ const ClinicGroupList = () => {
     {
       header: 'Created At',
       accessor: 'created_at',
-      sortValue: (row) => new Date(row.created_at).getTime(),
+      sortValue: (row) => row?.formated_created_at,
       render: (row) => (
         <div>
           <p className="text-gray-900 text-sm">
-            {new Date(row.created_at).toLocaleDateString()}
+            {row?.formated_created_at}
           </p>
         </div>
       ),
@@ -223,12 +249,21 @@ const ClinicGroupList = () => {
 
   const confirmDelete = async () => {
     if (clinicGroupToDelete) {
-      const result = await deleteClinicGroup(clinicGroupToDelete.id);
+      showLoader();
+      try {
+        const result = await deleteClinicGroup(clinicGroupToDelete.id);
       if (result && result.status === 200) {
+        toast.success(result?.message);
         setShowDeleteConfirm(false);
         setClinicGroupToDelete(null);
+        navigate(getRoutePath('/clinic-groups'));
       } else {
-        console.error('Failed to delete:', result?.message);
+        toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
       }
     }
   };
@@ -259,7 +294,7 @@ const ClinicGroupList = () => {
 
   return (
     <div className="py-6">
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 md:px-8">
+      
         <Breadcrumb />
         <div className="mb-3">
           <div className="flex justify-between items-center">
@@ -276,12 +311,11 @@ const ClinicGroupList = () => {
             </button>
           </div>
         </div>
-      </div>
-      
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 md:px-8">
+         
+        <ErrorHandle errors={errors} />
         <Filters filters={filterConfig} onFilterChange={filtersData} />
-
-        <div className='bg-white rounded-lg shadow-sm'>
+        
+        <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm'>
           <div className="px-4 py-5 sm:px-6" bis_skin_checked="1">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
             Clinic Groups</h3>
@@ -304,7 +338,7 @@ const ClinicGroupList = () => {
           lastPage={pagination.lastPage}
           onPageChange={handlePageChange}
         />
-      </div>
+       
 
       {/* Add/Edit Clinic Group Modal */}
       <Modal

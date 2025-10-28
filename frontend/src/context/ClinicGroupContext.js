@@ -66,10 +66,10 @@ export const ClinicGroupProvider = ({ children }) => {
                 return responseData;
             }
         } else {
-            handleApiError(response.error, logout);
+           return handleApiError(response.error, logout);
         }
     } catch (err) {
-      handleApiError(err, logout);
+      return handleApiError(err, logout);
     }
   }, [getToken, logout]);
 
@@ -89,7 +89,7 @@ export const ClinicGroupProvider = ({ children }) => {
        
       }
     } catch (err) {
-      console.error('Error fetching clinic group by ID:', err);
+      
       return handleApiError(err, logout);
     }
   }, [getToken, logout]);
@@ -111,7 +111,6 @@ export const ClinicGroupProvider = ({ children }) => {
         return handleApiError(response.error, logout);
       }
     } catch (err) {
-      console.error('Error adding clinic group:', err);
       return handleApiError(err, logout);
     }
   };
@@ -133,7 +132,6 @@ export const ClinicGroupProvider = ({ children }) => {
         return handleApiError(response.error, logout);
       }
     } catch (err) {
-      console.error('Error updating clinic group:', err);
       return handleApiError(err, logout);
     }
   };
@@ -148,13 +146,11 @@ export const ClinicGroupProvider = ({ children }) => {
       const response = await api.call(`clinic-groups/${id}`, 'DELETE', null, true);
       
       if (response.status === 200) {
-       
         return { status: response.status, message: response.data?.message || 'Clinic group deleted successfully' };
       } else {
         return handleApiError(response.error, logout);
       }
     } catch (err) {
-      console.error('Error deleting clinic group:', err);
       return handleApiError(err, logout);
     }
   };
@@ -162,6 +158,7 @@ export const ClinicGroupProvider = ({ children }) => {
 
   const value = {
     clinicGroups,
+    setClinicGroups,
     pagination,
     getClinicGroups,
     getClinicGroupById,

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('clinic_groups', function (Blueprint $table) {
 			$table->increments('id');
 			$table->integer('user_id')->nullable();
+			$table->text('code')->nullable();
 			$table->string('name')->nullable();
 			$table->text('description')->nullable();
 			$table->string('image')->nullable();

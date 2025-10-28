@@ -2596,6 +2596,7 @@ class Helper{
 		$errMsg = 'Please verify your input and try again, or contact the system administrator if the issue persists.';
 
 		$actions = [
+			'get' => 'get',
 			'create' => 'created',
 			'edit'   => 'edited',
 			'update' => 'updated',

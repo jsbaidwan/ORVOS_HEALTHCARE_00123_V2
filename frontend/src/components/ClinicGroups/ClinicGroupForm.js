@@ -8,6 +8,8 @@ import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
+import ErrorHandle from '../Common/ErrorHandle';
+import { PlusIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 // Validation schema
 const clinicGroupSchema = yup.object({
   name: yup
@@ -52,15 +54,18 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
   
   useEffect(() => {
     const loadDefaults = async () => {
-      const data = await getDefaultValues(clinicGroup?.id);
+      showLoader()
+      //const data = await getDefaultValues(clinicGroup?.id);
+      const data = clinicGroup;
       reset(data);
+      hideLoader()
     };
     if(loadDefaultsRef.current === true){
       loadDefaults();
       loadDefaultsRef.current = false;
     }
 
-  }, [clinicGroup?.id, reset,getDefaultValues]);
+  }, [clinicGroup, reset,getDefaultValues,showLoader,hideLoader]);
   
   const onSubmit = async (data) => {
     const clinicGroupData = {
@@ -95,6 +100,7 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <ErrorHandle errors={errors} />
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
           Name <span className="text-red-500">*</span>
@@ -136,15 +142,17 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
       </div>
 
       <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="active"
-          {...register('active')}
-          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-        />
-        <label htmlFor="active" className="text-sm font-medium text-gray-700">
-          Active
+        <label htmlFor="active" className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            id="active"
+            {...register('active')}
+            className="sr-only peer"
+          />
+          <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
+          <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
         </label>
+        <span className="text-sm font-medium text-gray-700">Active</span>
       </div>
 
       {errors?.submit && (
@@ -165,10 +173,22 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
         </button>
         <button
           type="submit"
-          className="btn-primary"
+          className="btn-primary flex items-center justify-center"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Processing...' : clinicGroup ? 'Update Clinic Group' : 'Add Clinic Group'}
+          {isSubmitting ? (
+            'Processing...'
+          ) : clinicGroup ? (
+            <>
+              <PencilSquareIcon className="w-4 h-4 mr-2" />
+              Update Clinic Group
+            </>
+          ) : (
+            <>
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Clinic Group
+            </>
+          )}
         </button>
       </div>
     </form>

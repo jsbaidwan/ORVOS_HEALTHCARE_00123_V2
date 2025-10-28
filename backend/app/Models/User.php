@@ -84,8 +84,7 @@ class User extends Authenticatable
     {
         return $this->hasOne('App\Models\Role','id','role_id');
     }
-	 
-	
+	  
 	public function getGoogleMapApiKeyAttribute()
 	{ 
 		$apiKey = \Helper::googleMapApiKey()['google_map_api_key'];
@@ -93,7 +92,7 @@ class User extends Authenticatable
 		return  \Helper::encodeData($apiKey)['encoded'];
 		 
 	}
-	
+	 
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (!empty($this->created_at)) {

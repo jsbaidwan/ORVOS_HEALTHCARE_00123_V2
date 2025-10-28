@@ -17,7 +17,7 @@ const Filters = ({ filters = [], onFilterChange }) => {
                   placeholder={filter.placeholder}
                   value={filter.value}
                   onChange={(e) => handleInputChange(filter.key, e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             );
@@ -29,7 +29,7 @@ const Filters = ({ filters = [], onFilterChange }) => {
                 <select
                   value={filter.value}
                   onChange={(e) => handleInputChange(filter.key, e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   {filter.options.map((option) => (
                     <option key={option.value} value={option.value}>

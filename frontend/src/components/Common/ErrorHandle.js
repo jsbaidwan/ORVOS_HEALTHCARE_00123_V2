@@ -8,10 +8,10 @@ const ErrorHandle = ({
   title = "Error"
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-
+    
   // Reset visibility when errors change
   useEffect(() => {
-  
+     
     if (errors) {
       setIsVisible(true);
     }

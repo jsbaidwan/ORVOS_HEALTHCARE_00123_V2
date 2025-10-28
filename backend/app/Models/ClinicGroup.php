@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Validation\Rule;
 
 class ClinicGroup extends Authenticatable
 {
@@ -20,15 +21,19 @@ class ClinicGroup extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'user_id','name', 'description','image','active','is_archived'
+        'user_id','name','code','description','image','active','is_archived'
     ];
 	
-	public static $rules = array(
-		
-		'name' => 'required|unique:clinic_groups',
-		'description' => 'required',
-		  
-    );
+	public static function rules($id = null)
+	{
+		return [
+			'name' => [
+				'required',
+				Rule::unique('clinic_groups', 'name')->ignore($id),
+			],
+			'description' => 'required',
+		];
+	}
 	
 	public function getIsActiveStatusAttribute()
 	{
