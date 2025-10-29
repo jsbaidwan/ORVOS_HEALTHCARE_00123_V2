@@ -94,7 +94,6 @@ const UserLogin = () => {
   return (
     
     <div className="min-h-[70vh] sm:min-h-[70vh] bg-white flex items-center justify-center px-4 py-5 sm:py-10">
-
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         {/* <div className="text-center mb-8">

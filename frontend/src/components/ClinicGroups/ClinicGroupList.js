@@ -66,7 +66,6 @@ const ClinicGroupList = () => {
            setErrors({general:response?.message});
          
         }
-       
         setIsDataLoaded(true);
         // hideLoader();
       } catch (error) {

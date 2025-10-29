@@ -98,7 +98,6 @@ const ForgotPassword = () => {
                   Enter your email address and we'll send you a link to reset your password.
                 </p>
               </div>
-
               
               {/* Display form errors from context */}
               <ErrorHandle errors={errors} title="ERROR:- Password Reset Failed" />
@@ -192,12 +191,9 @@ const ForgotPassword = () => {
             </div>
           )}
         </div>
- 
       </div>
     </div>
   );
 };
 
 export default ForgotPassword;
-
-
