@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }) => {
+const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',isDataLoaded }) => {
+ 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
  
   // Sort data based on current sort configuration
@@ -38,9 +39,11 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
   const [loading, setLoading] = useState(() => (sortedData.length > 0 ? false : true));
   
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+    if(isDataLoaded){
+      setLoading(false)
+    }
+     
+  }, [isDataLoaded]);
 
   // Handle column header click for sorting
   const handleSort = (accessor, sortable) => {
@@ -91,7 +94,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
                   column.sortable !== false
-                    ? 'cursor-pointer select-none text-white border-r border-white hover:bg-primary-600 transition-colors duration-150'
+                    ? 'cursor-pointer select-none   border-r   hover:bg-primary-600 transition-colors duration-150'
                     : ''
                 }`}
               >
@@ -104,10 +107,10 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
           </tr>
         </thead>
   
-        <tbody className={`${loading ? 'animate-pulse' : ''}`}>
+        <tbody className={`${loading ? 'blur-sm animate-pulse' : ''}`}>
           {/* 🌀 Show skeleton while loading */}
           {loading ? (
-            Array.from({ length: 4 }).map((_, rowIndex) => (
+            Array.from({ length: 2 }).map((_, rowIndex) => (
               <tr key={rowIndex} className="divide-x divide-gray-100">
                 {columns.map((_, colIndex) => (
                   <td key={colIndex} className="px-6 py-4">
@@ -116,7 +119,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
                 ))}
               </tr>
             ))
-          ) : sortedData.length === 0 ? (
+          ) : sortedData?.length === 0 ? (
             // ❌ No data
             <tr>
               <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
@@ -130,7 +133,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available' }
             </tr>
           ) : (
             // ✅ Actual table data
-            sortedData.map((row, rowIndex) => (
+            sortedData?.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
                 onClick={() => onRowClick && onRowClick(row)}

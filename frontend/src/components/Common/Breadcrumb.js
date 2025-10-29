@@ -56,8 +56,8 @@ const Breadcrumb = () => {
       case 'edit':
         return null; // handled by numeric id as Edit
       default:
-        if (!isNaN(parseInt(segment, 10))) {
-          return 'Edit';
+        if (!isNaN(parseInt(segment, 10)) && index === segments.length - 1) {
+          return ''; // ignore last segment if it's a number
         }
         return segment.charAt(0).toUpperCase() + segment.slice(1);
     }
@@ -74,6 +74,12 @@ const Breadcrumb = () => {
 
   // Helper to reconstruct a link path including any leading prefixes
   const buildPathThroughIndex = (rawIndexInclusive) => `/${rawSegments.slice(0, rawIndexInclusive + 1).join('/')}`;
+  const visibleItems = displayItems.filter(({ seg }) => seg.trim() && isNaN(seg));
+  const formatName = (name) => {
+    return name
+      .replace(/-/g, ' ') // replace dashes with spaces
+      .replace(/\b\w/g, (c) => c.toUpperCase()); // capitalize each word
+  };
 
   return (
     <nav className="flex mb-4 bg-white p-4 rounded-lg shadow-sm" aria-label="Breadcrumb">
@@ -84,23 +90,27 @@ const Breadcrumb = () => {
             <span className="sr-only">Home</span>
           </Link>
         </li>
-        {displayItems.map(({ seg, idx: rawIdx, name }, displayIdx) => {
-          const isLast = displayIdx === displayItems.length - 1;
+        
+        {visibleItems.map(({ seg, idx: rawIdx, name }, i) => {
+          const isLast = i === visibleItems.length - 1;
           const toPath = buildPathThroughIndex(rawIdx);
+
           return (
             <li key={`${toPath}-${seg}`}>
               <div className="flex items-center">
                 <ChevronRightIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 {isLast ? (
-                  <span className="ml-2 text-sm font-medium text-gray-500">{name}</span>
+                  <span className="ml-2 text-sm font-medium text-gray-500">{formatName(name)}</span>
+                ) : toPath === '/patients' ? (
+                  <Link
+                    to={`${toPath}${routePathParam ? '/' + routePathParam : ''}`}
+                    className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]"
+                  >
+                    {formatName(name)}
+                  </Link>
                 ) : (
-                  
-                  toPath === '/patients' ?
-                  <Link to={toPath + (routePathParam ? '/' + routePathParam : '')} className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]">
-                    {name} 
-                  </Link>  
-                  : <Link to={toPath} className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]">
-                    {name}
+                  <Link to={toPath} className="ml-2 text-sm font-medium text-[#009efb] hover:text-[#0089db]'">
+                    {formatName(name)}
                   </Link>
                 )}
               </div>

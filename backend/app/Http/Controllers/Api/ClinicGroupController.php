@@ -61,6 +61,26 @@ class ClinicGroupController extends Controller
         return response()->json(['message' => \Helper::alertMsg('create','Clinic Group','success')['message']], 200);  
         
     } 
+	 
+	/**
+     * Show the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function show($id)
+    {  
+		$haveAccess = \Helper::permission(8,'write');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
+        $clinicGroup = \Helper::getClinicGroupById($id)['clinicGroup'];
+		if(!$clinicGroup){
+			return response()->json(['message' => \Helper::alertMsg('edit','Clinic Group','error')['message']], 404);
+		}
+		return response()->json(['clinicGroup' => $clinicGroup], 200);
+    }
 	
 	/**
      * Edit the application dashboard.

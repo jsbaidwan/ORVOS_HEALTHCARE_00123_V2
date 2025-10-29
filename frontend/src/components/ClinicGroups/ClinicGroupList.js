@@ -6,8 +6,8 @@ import Modal from '../Common/Modal';
 import ClinicGroupForm from './ClinicGroupForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon } from '@heroicons/react/24/outline';
-import { useLocation,useNavigate } from 'react-router-dom';
+import { PlusIcon,EyeIcon } from '@heroicons/react/24/outline';
+import { useLocation,useNavigate,Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
@@ -33,6 +33,7 @@ const ClinicGroupList = () => {
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
   const [errors,setErrors] = useState(null);
+  const [isDataLoaded,setIsDataLoaded] = useState(false);
   
   useEffect(() => {
      
@@ -53,14 +54,18 @@ const ClinicGroupList = () => {
       try {
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
+       
         if(response?.status && response?.status !== 200){
           setClinicGroups([])
-          setErrors({general:response?.message});
-        }
+           setErrors({general:response?.message});
          
+        }
+       
+        setIsDataLoaded(true);
         // hideLoader();
       } catch (error) {
         // hideLoader();
+        setIsDataLoaded(true);
         setErrors({general:error});
       }
     };
@@ -110,33 +115,33 @@ const ClinicGroupList = () => {
      
     }
   };
-
+  
   const columns = [
     {
       header: 'Name',
       accessor: 'name',
       render: (row) => (
-        <div>
+        <div className='w-48'>
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+            <div className=" h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
               <span className="text-gray-500 text-sm">{row.name.charAt(0).toUpperCase()}</span>
             </div>
             <div>
               <div className="text-sm font-medium text-gray-900">{row?.name}</div>
-              <div className="text-sm text-gray-500">
-                {row.code || '-'}
-                </div>
+              <div className="text-sm ">
+              <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
               </div>
             </div>
+          </div>
         </div>
       ),
     },
     {
       header: 'Description',
-      accessor: 'description',
+      accessor:'description',
       render: (row) => (
-        <div className="max-w-sm">
-          <p className="text-gray-900 text-sm">{row.description || '-'}</p>
+        <div className='w-80'>
+          <p className="text-gray-900 text-sm line-clamp-3">{row.description || '-'}</p>
         </div>
       ),
     },
@@ -195,6 +200,9 @@ const ClinicGroupList = () => {
               />
             </svg>
           </button>
+
+          <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View"> <EyeIcon className="w-5 h-5" /> </Link>
+
           <button
             onClick={() => handleDelete(row)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
@@ -330,6 +338,7 @@ const ClinicGroupList = () => {
             columns={columns}
             data={clinicGroups || []}
             emptyMessage="No clinic groups found"
+            isDataLoaded={isDataLoaded}
           />
         </div>
         
@@ -339,7 +348,6 @@ const ClinicGroupList = () => {
           onPageChange={handlePageChange}
         />
        
-
       {/* Add/Edit Clinic Group Modal */}
       <Modal
         isOpen={showModal}

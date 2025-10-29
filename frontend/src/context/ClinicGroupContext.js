@@ -80,7 +80,7 @@ export const ClinicGroupProvider = ({ children }) => {
       return;
     }
     try {
-      const response = await api.call(`clinic-groups/${id}/edit`, 'GET', null, true);
+      const response = await api.call(`clinic-groups/${id}`, 'GET', null, true);
 
       if (response.status === 200) {
         return response.data.clinicGroup;
