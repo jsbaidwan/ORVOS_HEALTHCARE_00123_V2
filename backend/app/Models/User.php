@@ -30,7 +30,6 @@ class User extends Authenticatable
 		'timezone',
 		'country_code',	
 		'remember_token'
-		 
     ];
 
     /**
@@ -51,8 +50,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-		'company_ids' => 'array',
-		  
+		'company_ids' => 'array',  
     ];
 	
 	public static $rules = [

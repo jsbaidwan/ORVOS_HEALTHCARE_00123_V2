@@ -1175,7 +1175,7 @@ class Helper{
 	 */
 	public static function googleApiKey()
 	{
-		return ['key' => 'AIzaSyCtg6oeRPEkRL9_CE-us3QdvXjupbgG14A'];
+		return ['key' => env('GOOGLE_MAP_API_KEY')];
 	}
 	 /*
 	 *---------------------------------------

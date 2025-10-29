@@ -13,6 +13,7 @@ import { useLoader } from '../../context/LoaderContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 //import { useLoader } from '../../context/LoaderContext';
 import ErrorHandle from '../Common/ErrorHandle';
+import { useTitle } from '../../context/TitleContext';
 
 const ClinicGroupList = () => {
   const {
@@ -34,7 +35,12 @@ const ClinicGroupList = () => {
   const navigate = useNavigate();
   const [errors,setErrors] = useState(null);
   const [isDataLoaded,setIsDataLoaded] = useState(false);
+  const { setPageTitle } = useTitle();
   
+  useEffect(() => {
+    setPageTitle('Clinic Groups');
+  }, [setPageTitle]);
+
   useEffect(() => {
      
     const loadData = async () => {
