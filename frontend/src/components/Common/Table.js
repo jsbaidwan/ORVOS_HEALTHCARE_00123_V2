@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',isDataLoaded }) => {
+const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',isDataLoaded,permissions }) => {
  
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
  
@@ -82,13 +82,47 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
       </svg>
     );
   };
+ 
+ let blockedTitles = [];
+  if(permissions?.read === false){
+    blockedTitles = ['view','edit', 'delete', 'archive', 'unarchive'];
+  }
 
+  if(permissions?.write === false){
+    blockedTitles = ['edit', 'delete', 'archive', 'unarchive'];
+  }
+
+  let filteredColumns = columns.map(col => {
+    if (col.accessor === 'actions' && typeof col.render === 'function') {
+      const OriginalRender = col.render;
+  
+      col.render = (row) => {
+        const element = OriginalRender(row);
+  
+        if (element?.props?.children) {
+          // List all title 
+  
+          const newChildren = React.Children.toArray(element.props.children)
+            .filter(child => {
+              const title = child?.props?.title?.toLowerCase?.() || '';
+              return !blockedTitles.includes(title);
+            });
+  
+          return React.cloneElement(element, {}, newChildren);
+        }
+  
+        return element;
+      };
+    }
+    return col;
+  });
+ 
   return (
     <div className="overflow-x-auto bg-white shadow-card">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-primary text-white">
           <tr>
-            {columns.map((column, index) => (
+            {filteredColumns.map((column, index) => (
               <th
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
@@ -112,7 +146,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
           {loading ? (
             Array.from({ length: 2 }).map((_, rowIndex) => (
               <tr key={rowIndex} className="divide-x divide-gray-100">
-                {columns.map((_, colIndex) => (
+                {filteredColumns.map((_, colIndex) => (
                   <td key={colIndex} className="px-6 py-4">
                     <div className="h-10 w-full bg-gray-200 rounded-md"></div>
                   </td>
@@ -122,7 +156,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
           ) : sortedData?.length === 0 ? (
             // ❌ No data
             <tr>
-              <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
+              <td colSpan={filteredColumns.length} className="px-6 py-8 text-center text-gray-500">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                     <PlusIcon className="w-8 h-8 text-gray-500" />
@@ -143,7 +177,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
                     : 'odd:bg-white even:bg-gray-50 hover:bg-primary-50'
                 } transition-colors duration-150`}
               >
-                {columns.map((column, colIndex) => (
+                {filteredColumns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-normal text-sm break-words">
                     {column.render ? column.render(row) : row[column.accessor]}
                   </td>

@@ -41,6 +41,49 @@ Route::middleware('auth:api')->group(function () {
 		 
 	});
 	
+	
+	Route::post('archive', function(Request $request){
+		
+		$input = $request->all();
+		if(!$input['module'] || !$input['id']){
+			 
+			return response()->json(['message' => 'The Module and id field is required.'],422,[],JSON_UNESCAPED_SLASHES); 
+		}
+		
+		$fModule = ucwords(rtrim(str_replace('-', ' ', $input['module']), 's')); 
+		$module = 'App\\Models\\' . str_replace(' ', '', $fModule);
+
+		$moduleData = $module::find($input['id']);	
+		if(!$moduleData){
+			return response()->json(['message' => \Helper::alertMsg('archive',$fModule,'error')['message']], 404);
+		}
+		
+		$moduleData->update(['is_archived' => 1]);
+		
+		return response()->json(['message' => \Helper::alertMsg('archive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
+	});
+	
+	Route::post('unarchive', function(Request $request){
+		
+		$input = $request->all();
+		if(!$input['module'] || !$input['id']){
+			 
+			return response()->json(['message' => 'The Module and id field is required.'],422,[],JSON_UNESCAPED_SLASHES); 
+		}
+		
+		$fModule = ucwords(rtrim(str_replace('-', ' ', $input['module']), 's')); 
+		$module = 'App\\Models\\' . str_replace(' ', '', $fModule);
+
+		$moduleData = $module::find($input['id']);	
+		if(!$moduleData){
+			return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'error')['message']], 404);
+		}
+		
+		$moduleData->update(['is_archived' => 0]);
+		
+		return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
+	});
+	
 });
   
 Route::get('countries', function(){

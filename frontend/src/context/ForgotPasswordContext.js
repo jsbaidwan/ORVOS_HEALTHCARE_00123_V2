@@ -78,14 +78,12 @@ export const ForgotPasswordProvider = ({ children }) => {
     setEmail('');
   };
 
-
   return (
     <ForgotPasswordContext.Provider
       value={{
         // State
         isSubmitting,
         email,
-        
         // Actions
         sendResetEmail,
         resetPassword,

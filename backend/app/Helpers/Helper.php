@@ -2600,6 +2600,8 @@ class Helper{
 			'edit'   => 'edited',
 			'update' => 'updated',
 			'delete' => 'deleted',
+			'archive' => 'archived',
+			'unarchive' => 'unarchived',
 		];
 
 		if (!isset($actions[$action])) {

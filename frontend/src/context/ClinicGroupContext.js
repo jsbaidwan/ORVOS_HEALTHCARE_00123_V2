@@ -94,7 +94,6 @@ export const ClinicGroupProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-   
   const addClinicGroup = async (clinicGroupData) => {
    
     const api = Api(() => getToken());
@@ -136,6 +135,44 @@ export const ClinicGroupProvider = ({ children }) => {
     }
   };
 
+  const archiveClinicGroup = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) {
+      return;
+    }
+
+    try {
+      const response = await api.call(`archive`, 'POST', {module:'clinic-groups','id':id}, true);
+      
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic group archived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
+  const unarchiveClinicGroup = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) {
+      return;
+    }
+
+    try {
+      const response = await api.call(`unarchive`, 'POST', {module:'clinic-groups','id':id}, true);
+      
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic group unarchived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
   const deleteClinicGroup = async (id) => {
     const api = Api(() => getToken());
     if (!api) {
@@ -154,8 +191,7 @@ export const ClinicGroupProvider = ({ children }) => {
       return handleApiError(err, logout);
     }
   };
- 
-
+  
   const value = {
     clinicGroups,
     setClinicGroups,
@@ -165,6 +201,8 @@ export const ClinicGroupProvider = ({ children }) => {
     addClinicGroup,
     updateClinicGroup,
     deleteClinicGroup,
+    archiveClinicGroup,
+    unarchiveClinicGroup,
   };
 
   return <ClinicGroupContext.Provider value={value}>{children}</ClinicGroupContext.Provider>;

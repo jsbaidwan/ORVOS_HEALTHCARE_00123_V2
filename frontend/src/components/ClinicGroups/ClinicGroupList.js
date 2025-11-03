@@ -6,7 +6,7 @@ import Modal from '../Common/Modal';
 import ClinicGroupForm from './ClinicGroupForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon,EyeIcon } from '@heroicons/react/24/outline';
+import { PlusIcon,EyeIcon,ArchiveBoxIcon  } from '@heroicons/react/24/outline';
 import { useLocation,useNavigate,Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -14,6 +14,7 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 //import { useLoader } from '../../context/LoaderContext';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
+import { usePermissions } from '../../context/PermissionsContext';
 
 const ClinicGroupList = () => {
   const {
@@ -21,28 +22,29 @@ const ClinicGroupList = () => {
     setClinicGroups,
     pagination,
     getClinicGroups,
-    deleteClinicGroup,
+    archiveClinicGroup,
   } = useClinicGroup();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingClinicGroup, setEditingClinicGroup] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [clinicGroupToDelete, setClinicGroupToDelete] = useState(null);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [clinicGroupToArchive, setClinicGroupToArchive] = useState(null);
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
   const [errors,setErrors] = useState(null);
   const [isDataLoaded,setIsDataLoaded] = useState(false);
   const { setPageTitle } = useTitle();
+  const { permission } = usePermissions();
   
   useEffect(() => {
     setPageTitle('Clinic Groups');
   }, [setPageTitle]);
 
   useEffect(() => {
-     
+    
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
@@ -56,7 +58,7 @@ const ClinicGroupList = () => {
       const filters = {};
       if (q) filters.q = q;
       if (active && active !== 'all') filters.active = active;
-  
+      filters.is_archived = 0;
       try {
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
@@ -90,6 +92,7 @@ const ClinicGroupList = () => {
     
     const newUrl = new URL(window.location);
     let filters = {};
+    filters.is_archived = 0;
     
     if (key === 'q') {
       filters.q = value;
@@ -209,23 +212,11 @@ const ClinicGroupList = () => {
           <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View"> <EyeIcon className="w-5 h-5" /> </Link>
 
           <button
-            onClick={() => handleDelete(row)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-            title="Delete"
+            onClick={() => handleArchive(row)}
+            className="p-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
+            title="Archive"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+             <ArchiveBoxIcon  className="w-5 h-5 text-red-600" />
           </button>
         </div>
       ),
@@ -234,6 +225,7 @@ const ClinicGroupList = () => {
 
   const handlePageChange = async (page) => {
     let filters = {};
+    filters.is_archived = 0;
     
     if(searchTerm) {
       filters.q = searchTerm;
@@ -255,23 +247,23 @@ const ClinicGroupList = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (clinicGroup) => {
-    setShowDeleteConfirm(true);
-    setClinicGroupToDelete(clinicGroup);
+  const handleArchive = (clinicGroup) => {
+    setShowArchiveConfirm(true);
+    setClinicGroupToArchive(clinicGroup);
   };
 
-  const confirmDelete = async () => {
-    if (clinicGroupToDelete) {
+  const confirmArchive = async () => {
+    if (clinicGroupToArchive) {
       showLoader();
       try {
-        const result = await deleteClinicGroup(clinicGroupToDelete.id);
-      if (result && result.status === 200) {
-        toast.success(result?.message);
-        setShowDeleteConfirm(false);
-        setClinicGroupToDelete(null);
-        navigate(getRoutePath('/clinic-groups'));
-      } else {
-        toast.error(result?.message);
+        const result = await archiveClinicGroup(clinicGroupToArchive.id);
+        if (result && result.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setClinicGroupToArchive(null);
+          navigate(getRoutePath('/clinic-groups'));
+        } else {
+          toast.error(result?.message);
         }
       } catch (error) {
         toast.error(error?.message);
@@ -307,7 +299,6 @@ const ClinicGroupList = () => {
 
   return (
     <div className="py-6">
-      
         <Breadcrumb />
         <div className="mb-3">
           <div className="flex justify-between items-center">
@@ -344,6 +335,7 @@ const ClinicGroupList = () => {
             data={clinicGroups || []}
             emptyMessage="No clinic groups found"
             isDataLoaded={isDataLoaded}
+            permissions={{'read': permission(8,'read'),'write': permission(8,'write')}}
           />
         </div>
         
@@ -366,33 +358,33 @@ const ClinicGroupList = () => {
         />
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       <Modal
-        isOpen={showDeleteConfirm}
+        isOpen={showArchiveConfirm}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setClinicGroupToDelete(null);
+          setShowArchiveConfirm(false);
+          setClinicGroupToArchive(null);
         }}
-        title="Confirm Delete"
+        title="Confirm Archive"
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete <strong>{clinicGroupToDelete?.name}</strong>? This
+            Are you sure you want to archive <strong>{clinicGroupToArchive?.name}</strong>? This
             action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button
               onClick={() => {
-                setShowDeleteConfirm(false);
-                setClinicGroupToDelete(null);
+                setShowArchiveConfirm(false);
+                setClinicGroupToArchive(null);
               }}
               className="btn-secondary"
             >
               Cancel
             </button>
-            <button onClick={confirmDelete} className="btn-danger">
-              Delete
+            <button onClick={confirmArchive} className="btn-danger">
+              Archive
             </button>
           </div>
         </div>
