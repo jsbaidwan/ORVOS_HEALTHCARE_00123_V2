@@ -27,6 +27,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import ClinicsList from './components/Clinics/ClinicsList';
 import ArchiveClinics from './components/Clinics/ArchiveClinics';
 import ClinicGroupList from './components/ClinicGroups/ClinicGroupList';
+import ArchiveClinicGroups from './components/ClinicGroups/ArchiveClinicGroups';
 import ClinicGroupView from './components/ClinicGroups/ClinicGroupView';
 import PatientsList from './components/Patients/PatientsList';
 import PatientForm from './components/Patients/PatientForm';
@@ -193,6 +194,16 @@ const createProtectedRoutes = (prefix, roleId,permission) => {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path={`${basePath}/clinic-groups/archived`}
+        element={
+          <ProtectedRoute permission={permission(8,'read')} requiredRole={roleId}>
+            <MainLayout><ArchiveClinicGroups /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path={`${basePath}/clinic-groups/view/:id`}
         element={

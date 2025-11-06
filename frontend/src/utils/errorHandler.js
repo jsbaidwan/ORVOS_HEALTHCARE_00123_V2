@@ -22,7 +22,6 @@ export const handleApiError = (error, logout = null) => {
     };
   }
    
-  
   // Handle validation errors (422)
   if (error?.status === 422 && error?.validationErrors) {
     return {

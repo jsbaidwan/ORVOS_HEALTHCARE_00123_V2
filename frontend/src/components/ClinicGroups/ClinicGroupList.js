@@ -6,7 +6,7 @@ import Modal from '../Common/Modal';
 import ClinicGroupForm from './ClinicGroupForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon,EyeIcon,ArchiveBoxIcon  } from '@heroicons/react/24/outline';
+import { PlusIcon,EyeIcon,ArchiveBoxIcon,ArrowLeftIcon,ArrowUpCircleIcon  } from '@heroicons/react/24/outline';
 import { useLocation,useNavigate,Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -16,13 +16,14 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 
-const ClinicGroupList = () => {
+const ClinicGroupList = ({ archived = false }) => {
   const {
     clinicGroups,
     setClinicGroups,
     pagination,
     getClinicGroups,
     archiveClinicGroup,
+    unarchiveClinicGroup,
   } = useClinicGroup();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +39,7 @@ const ClinicGroupList = () => {
   const [isDataLoaded,setIsDataLoaded] = useState(false);
   const { setPageTitle } = useTitle();
   const { permission } = usePermissions();
-  
+  const [tab, setTab] = useState(1);  
   useEffect(() => {
     setPageTitle('Clinic Groups');
   }, [setPageTitle]);
@@ -58,7 +59,8 @@ const ClinicGroupList = () => {
       const filters = {};
       if (q) filters.q = q;
       if (active && active !== 'all') filters.active = active;
-      filters.is_archived = 0;
+      filters.is_archived = archived;
+      filters.active = tab;
       try {
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
@@ -79,7 +81,7 @@ const ClinicGroupList = () => {
   
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [useLocation()]);
+  }, [useLocation(),tab]);
    
   const filtersData = async (key, value) => {
     // Update the state first
@@ -92,7 +94,8 @@ const ClinicGroupList = () => {
     
     const newUrl = new URL(window.location);
     let filters = {};
-    filters.is_archived = 0;
+    filters.is_archived = archived;
+    filters.active = tab;
     
     if (key === 'q') {
       filters.q = value;
@@ -210,13 +213,13 @@ const ClinicGroupList = () => {
           </button>
 
           <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View"> <EyeIcon className="w-5 h-5" /> </Link>
-
+ 
           <button
             onClick={() => handleArchive(row)}
-            className="p-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
-            title="Archive"
+            className="p-2 hover:bg-warning-50 rounded-lg transition-colors duration-200"
+            title={archived ? 'Unarchive' : 'Archive'}
           >
-             <ArchiveBoxIcon  className="w-5 h-5 text-red-600" />
+             {archived ? <ArrowUpCircleIcon  className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon  className="w-5 h-5 text-warning" />}
           </button>
         </div>
       ),
@@ -225,7 +228,8 @@ const ClinicGroupList = () => {
 
   const handlePageChange = async (page) => {
     let filters = {};
-    filters.is_archived = 0;
+    filters.is_archived = archived;
+    filters.active = tab;
     
     if(searchTerm) {
       filters.q = searchTerm;
@@ -248,6 +252,7 @@ const ClinicGroupList = () => {
   };
 
   const handleArchive = (clinicGroup) => {
+    
     setShowArchiveConfirm(true);
     setClinicGroupToArchive(clinicGroup);
   };
@@ -257,6 +262,27 @@ const ClinicGroupList = () => {
       showLoader();
       try {
         const result = await archiveClinicGroup(clinicGroupToArchive.id);
+        if (result && result.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setClinicGroupToArchive(null);
+          navigate(getRoutePath('/clinic-groups'));
+        } else {
+          toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
+      }
+    }
+  };
+
+  const confirmUnarchive = async () => {
+    if (clinicGroupToArchive) {
+      showLoader();
+      try {
+        const result = await unarchiveClinicGroup(clinicGroupToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -285,36 +311,90 @@ const ClinicGroupList = () => {
       placeholder: 'Search clinic groups...',
       value: searchTerm,
     },
-    {
-      key: 'active',
-      type: 'select',
-      value: statusFilter,
-      options: [
-        { value: 'all', label: 'All Status' },
-        { value: '1', label: 'Active' },
-        { value: '0', label: 'Inactive' },
-      ],
-    },
+    // {
+    //   key: 'active',
+    //   type: 'select',
+    //   value: statusFilter,
+    //   options: [
+    //     { value: 'all', label: 'All Status' },
+    //     { value: '1', label: 'Active' },
+    //     { value: '0', label: 'Inactive' },
+    //   ],
+    // },
   ];
 
   return (
     <div className="py-6">
         <Breadcrumb />
+  
         <div className="mb-3">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-gray-900">Clinic Groups</h1>
-            <button
-              onClick={() => {
-                setEditingClinicGroup(null);
-                setShowModal(true);
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Add New Clinic Group
-            </button>
+            <h1 className="text-2xl font-semibold text-gray-900">{archived ? 'Archived' : ''} Clinic Groups</h1>
+
+            <div className="flex flex-wrap justify-end items-center gap-3 w-full">
+              {!archived ? (
+                <>
+                  {/* 📦 Archived Clinic Groups */}
+                  <button
+                    onClick={() => navigate(getRoutePath('/clinic-groups/archived'))}
+                    className="inline-flex items-center justify-center px-4 py-2 btn-warning w-full sm:w-auto text-sm sm:text-base"
+                  >
+                    <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                    Archived Clinic Groups
+                  </button>
+
+                  {/* ➕ Add New Clinic Group */}
+                  <button
+                    onClick={() => {
+                      setEditingClinicGroup(null);
+                      setShowModal(true);
+                    }}
+                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
+                  >
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add New Clinic Group
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* 🔙 Back to List */}
+                  <button
+                    onClick={() => navigate(getRoutePath('/clinic-groups'))}
+                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-default text-sm sm:text-base"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back to List
+                  </button>
+                </>
+              )}
+            </div>
+ 
           </div>
         </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6 ">
+        <button
+          onClick={() => setTab(1)}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${
+            tab === 1
+              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          }`}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => setTab(0)}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${
+            tab === 0
+              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          }`}
+        >
+          Inactive
+        </button>
+      </div>
          
         <ErrorHandle errors={errors} />
         <Filters filters={filterConfig} onFilterChange={filtersData} />
@@ -365,12 +445,12 @@ const ClinicGroupList = () => {
           setShowArchiveConfirm(false);
           setClinicGroupToArchive(null);
         }}
-        title="Confirm Archive"
+        title={`Confirm ${archived ? 'Unarchive' : 'Archive'}`} 
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to archive <strong>{clinicGroupToArchive?.name}</strong>? This
+            Are you sure you want to  {archived ? 'unarchive' : 'archive'} <strong>{clinicGroupToArchive?.name}</strong>? This
             action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
@@ -383,8 +463,8 @@ const ClinicGroupList = () => {
             >
               Cancel
             </button>
-            <button onClick={confirmArchive} className="btn-danger">
-              Archive
+            <button onClick={archived ? confirmUnarchive : confirmArchive} className="btn-danger">
+            {archived ? 'Unarchive' : 'Archive'}
             </button>
           </div>
         </div>

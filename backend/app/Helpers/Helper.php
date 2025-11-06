@@ -1227,6 +1227,10 @@ class Helper{
 		if(isset($filters['is_archived'])){
 			$query->where('is_archived',$filters['is_archived']);
 		}
+		 
+		if(isset($filters['active'])){
+			$query->where('active',$filters['active']);
+		}
 		
 		if(!empty($filters['q'])){
 			 
