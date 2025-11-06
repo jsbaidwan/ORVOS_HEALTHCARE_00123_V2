@@ -38,6 +38,9 @@ import UsersList from './components/Users/UsersList';
 // Support Components
 import Support from './components/Support/Support';
 
+// Hooks
+import useAutoLogoutOnIdle from './hooks/useAutoLogoutOnIdle';
+
 // Get route prefixes from environment
 const ADMIN_PREFIX = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
 const USER_PREFIX = process.env.REACT_APP_USER_ROUTE_PREFIX || '';
@@ -236,7 +239,7 @@ const createProtectedRoutes = (prefix, roleId,permission) => {
 const AppContent = () => {
   const { isAuthenticated, loading, user } = useAuth();
   const { permission } = usePermissions();
-   
+  useAutoLogoutOnIdle();
   if (loading) {
     return <Loader />;
   }
@@ -309,6 +312,7 @@ const AppContent = () => {
 
 // Main App Component
 function App() {
+ 
   return (
     <Router>
       <AuthProvider>
