@@ -8,8 +8,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Permission;
-
+  
 $PRFIX_SUPER_ADMIN = \Helper::prefix('1')['prefix'];
 $PRFIX_ORVOS_USER = \Helper::prefix('2')['prefix'];
 
@@ -19,28 +18,11 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('change-password', 'App\Http\Controllers\Api\ChangePasswordController');
 	Route::resource('roles', 'App\Http\Controllers\Api\RoleController');
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
+	Route::resource('clinics', 'App\Http\Controllers\Api\ClinicController');
 	
 	Route::get('get-permissions', function(Request $request){
-		$roleId = \Auth::user()->role_id;
-		$permissions = Permission::where('role_id',$roleId)->get();
-		if(\Auth::user()->role_id == 1){
-			$permissions = Permission::all()->map(function ($permission) use ($roleId) {
-				return [
-					'role_id' => $roleId,
-					'module_id' => $permission->module_id,
-					'read' => 1,
-					'write' => 1,
-					'create' => 1,
-					'delete' => 1,
-					'created_at' => $permission->created_at,
-					'updated_at' => $permission->updated_at,
-				];
-			});
-		}
-		return response()->json(['permissions' => $permissions], 200);
-		 
+		return \Helper::permission();
 	});
-	
 	
 	Route::post('archive', function(Request $request){
 		
@@ -59,6 +41,13 @@ Route::middleware('auth:api')->group(function () {
 		}
 		
 		$moduleData->update(['is_archived' => 1]);
+		
+		\Log::save(
+			$fModule.' Archived.',
+			'The ' . $fModule . ' has been archived by ' . \Auth::user()->first_name . ' ' . \Auth::user()->last_name . '.',
+			str_replace(' ', '', $fModule),
+			$moduleData->id
+		);
 		
 		return response()->json(['message' => \Helper::alertMsg('archive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
 	});
@@ -80,7 +69,13 @@ Route::middleware('auth:api')->group(function () {
 		}
 		
 		$moduleData->update(['is_archived' => 0]);
-		
+		$user = \Auth::user();
+		\Log::save(
+			$fModule.' Unarchived.',
+			'The ' . $fModule . ' has been unarchived by ' . \Auth::user()->first_name . ' ' . \Auth::user()->last_name . '.',
+			str_replace(' ', '', $fModule),
+			$moduleData->id
+		);
 		return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
 	});
 	

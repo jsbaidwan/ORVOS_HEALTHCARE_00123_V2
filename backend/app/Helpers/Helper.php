@@ -1317,13 +1317,13 @@ class Helper{
 			$query->whereIn('id',\Auth::user()->clinicUsers->pluck('clinic_id'));
 		}
 		
-		if(isset($filters['paginate']) && $filters['paginate'] == false){
-			
+		if(empty($filters['paginate']) || $filters['paginate'] === false){
 			$clinics = $query->get();
+		} else {
 			 
-		}else{
-			
-			$clinics = $query->paginate();
+			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$page = $filters['page'] ?? 1;
+			$clinics = $query->paginate($perPage, ['*'], 'page', $page);
 		}
 				
 		return ['clinics' => $clinics];
@@ -1805,26 +1805,44 @@ class Helper{
 	/********* End:All modules listing **************/
 	
 	/********* Start:Check role permission **************/ 
-	public static function permission($moduleId,$field)
+	public static function permission()
 	{ 
-		if( !\Auth::user() ){
-			return false;
+		$roleId = \Auth::user()->role_id;
+		$permissions = Permission::where('role_id',$roleId)->get();
+		if(\Auth::user()->role_id == 1){
+			$permissions = Permission::all()->map(function ($permission) use ($roleId) {
+				return [
+					'role_id' => $roleId,
+					'module_id' => $permission->module_id,
+					'read' => 1,
+					'write' => 1,
+					'create' => 1,
+					'delete' => 1,
+					'created_at' => $permission->created_at,
+					'updated_at' => $permission->updated_at,
+				];
+			});
 		}
-		if( \Auth::user()->hasRole('super-admin')){
-			return true;
-		}else{
-			
-			$haveAccess = Permission::where('module_id',$moduleId)
-			->where($field,1)
-			->where('role_id',\Auth::user()->role_id)
-			->first();
-			 
-			if($haveAccess){
-				return true;
-			}
-		}
+		return response()->json(['permissions' => $permissions], 200);
 		
-		return false;
+		// if( !\Auth::user() ){
+			// return false;
+		// }
+		// if( \Auth::user()->hasRole('super-admin')){
+			// return true;
+		// }else{
+			
+			// $haveAccess = Permission::where('module_id',$moduleId)
+			// ->where($field,1)
+			// ->where('role_id',\Auth::user()->role_id)
+			// ->first();
+			 
+			// if($haveAccess){
+				// return true;
+			// }
+		// }
+		
+		// return false;
 	}
 	/********* End:Check role permission **************/
 	
@@ -1889,12 +1907,20 @@ class Helper{
 	
 	/********* End:Generate Signed URL **************/
 
-	public static function changeDateFormat($date)
+	public static function changeDateFormat($date,$format = 'Y-m-d')
 	{
 		if(empty($date)){
 			return['date' => $date];
 		} 
-		$newDate = \Carbon\Carbon::createFromFormat('m-d-Y', $date)->format('Y-m-d');
+		$newDate = \Carbon\Carbon::now();
+		if(strtolower($format) == 'y-m-d'){
+			$newDate = \Carbon\Carbon::createFromFormat('m-d-Y', $date)->format('Y-m-d');
+		}else{
+			
+			$newDate = \Carbon\Carbon::parse($date)->format($format);
+			 
+		}
+		
 		return['date' => $newDate];
 	}
 

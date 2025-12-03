@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useClinic } from '../../context/ClinicContext';
 import FormField from '../UI/FormField';
+import { useGoogleAutocomplete } from "../../hooks/useGoogleAutocomplete";
 
 const ClinicForm = ({ clinic, onClose }) => {
   const { addClinic, updateClinic } = useClinic();
@@ -17,6 +18,8 @@ const ClinicForm = ({ clinic, onClose }) => {
     status: clinic?.status || 'Active',
     dateOfInitiation: clinic?.dateOfInitiation || '',
   });
+
+  useGoogleAutocomplete(formData);
 
   const states = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',

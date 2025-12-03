@@ -360,7 +360,7 @@ const ClinicGroupList = ({ archived = false }) => {
                   {/* 🔙 Back to List */}
                   <button
                     onClick={() => navigate(getRoutePath('/clinic-groups'))}
-                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-default text-sm sm:text-base"
+                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
                   >
                     <ArrowLeftIcon className="w-4 h-4 mr-2" />
                     Back to List

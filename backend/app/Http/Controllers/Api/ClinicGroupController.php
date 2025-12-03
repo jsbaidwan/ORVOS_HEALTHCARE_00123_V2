@@ -56,7 +56,14 @@ class ClinicGroupController extends Controller
 		
 		$input['user_id'] = \Auth::user()->id;
 		$input['code'] = \Helper::genClinicGroupCode()['code'];
-		ClinicGroup::create($input);
+		$clinicGroup = ClinicGroup::create($input);
+		
+		\Log::save(
+			'Clinic Group Created.',
+			'The Clinic Group has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'ClinicGroup',
+			$clinicGroup->id
+		);
 		 
         return response()->json(['message' => \Helper::alertMsg('create','Clinic Group','success')['message']], 200);  
         
@@ -131,6 +138,13 @@ class ClinicGroupController extends Controller
 		}
 		
 		$clinicGroup->update($input);
+		
+		\Log::save(
+			'Clinic Group Updated.',
+			'The Clinic Group has been updated by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'ClinicGroup',
+			$clinicGroup->id
+		);
 		 
         return response()->json(['message' => \Helper::alertMsg('update','Clinic Group','success')['message']], 200); 
          
@@ -155,6 +169,13 @@ class ClinicGroupController extends Controller
 		}
 		
 		$clinicGroup->delete();
+		
+		\Log::save(
+			'Clinic Group Deleted.',
+			'The Clinic Group has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'ClinicGroup', 
+			$clinicGroup->id
+		);
 		 
         return response()->json(['message' => \Helper::alertMsg('delete','Clinic Group','success')['message']], 200); 
     }
