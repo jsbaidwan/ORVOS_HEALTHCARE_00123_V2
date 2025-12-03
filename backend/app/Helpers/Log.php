@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use Auth;
 use Illuminate\Http\Request;
-use App\Models\Log as LogModel;;
+use App\Models\Log as LogModel;
 
 class Log{
 	 
