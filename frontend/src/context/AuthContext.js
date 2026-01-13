@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     
     let endpoint = 'login'
-    const url = credentials?.is_admin ? 'admin/'+endpoint : endpoint;
+    const url = credentials?.is_admin ? `${process.env.REACT_APP_ADMIN_ROUTE_PREFIX}/${endpoint}` : endpoint;
     delete credentials.is_admin;
      
     let formData = new FormData();
