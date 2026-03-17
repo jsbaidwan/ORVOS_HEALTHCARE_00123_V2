@@ -12,21 +12,32 @@ const FormField = ({
   rows = 4,
   error,
   disabled = false,
+  inputClassName = '',
+  registration,
 }) => {
+  const inputProps = registration
+    ? { ...registration }
+    : type === 'checkbox'
+    ? { name, checked: value, onChange }
+    : type === 'file'
+    ? { name, onChange }
+    : { name, value, onChange };
+
+  const errorClass = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '';
+  const disabledClass = disabled ? 'bg-gray-100 cursor-not-allowed' : '';
+
   const renderInput = () => {
     switch (type) {
       case 'textarea':
         return (
           <textarea
             id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
+            {...inputProps}
             placeholder={placeholder}
             required={required}
             rows={rows}
             disabled={disabled}
-            className={`input-field resize-none ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`input-field resize-none ${errorClass} ${disabledClass} ${inputClassName}`}
           />
         );
 
@@ -34,16 +45,14 @@ const FormField = ({
         return (
           <select
             id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
+            {...inputProps}
             required={required}
             disabled={disabled}
-            className={`input-field ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
           >
             <option value="">Select {label}</option>
             {options.map((option, index) => (
-              <option key={index} value={option.value || option}>
+              <option key={index} value={option.value ?? option}>
                 {option.label || option}
               </option>
             ))}
@@ -55,12 +64,11 @@ const FormField = ({
           <input
             type="file"
             id={name}
-            name={name}
-            onChange={onChange}
+            {...inputProps}
             required={required}
             disabled={disabled}
             multiple={placeholder?.includes('multiple')}
-            className={`input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 ${error ? 'border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 ${error ? 'border-red-500' : ''} ${disabledClass} ${inputClassName}`}
           />
         );
 
@@ -69,12 +77,10 @@ const FormField = ({
           <input
             type="date"
             id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
+            {...inputProps}
             required={required}
             disabled={disabled}
-            className={`input-field ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
           />
         );
 
@@ -84,9 +90,7 @@ const FormField = ({
             <input
               type="checkbox"
               id={name}
-              name={name}
-              checked={value}
-              onChange={onChange}
+              {...inputProps}
               disabled={disabled}
               className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
             />
@@ -101,13 +105,11 @@ const FormField = ({
           <input
             type={type}
             id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
+            {...inputProps}
             placeholder={placeholder}
             required={required}
             disabled={disabled}
-            className={`input-field ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
           />
         );
     }
@@ -137,5 +139,3 @@ const FormField = ({
 };
 
 export default FormField;
-
-

@@ -1,44 +1,47 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
+let scriptLoadPromise = null;
+
 export function useGoogleAutocomplete({ setValue, standaloneFields = {} }) {
   const { googleMapApiKey } = useAuth();
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(() => !!window.google?.maps);
   const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    if (!googleMapApiKey) return;
+    if (!googleMapApiKey || isReady) return;
 
-    const scriptId = "google-maps-api";
-
-    // Remove existing script if present
-    const existingScript = document.getElementById(scriptId);
-    if (existingScript) {
-      existingScript.remove();
-      if (window.google) delete window.google;
+    if (window.google?.maps) {
+      setIsReady(true);
+      return;
     }
 
-    // Create new script
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapApiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
+    if (!scriptLoadPromise) {
+      scriptLoadPromise = new Promise((resolve, reject) => {
+        const scriptId = "google-maps-api";
+        if (document.getElementById(scriptId)) {
+          resolve();
+          return;
+        }
 
-    script.onload = () => setIsReady(true);
-    script.onerror = (err) => setLoadError(err);
+        const script = document.createElement("script");
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapApiKey}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
 
-    document.head.appendChild(script);
-
-    // Cleanup on unmount
-    return () => {
-      script.remove();
-      if (window.google) delete window.google;
-    };
-  }, [googleMapApiKey]);
+    scriptLoadPromise
+      .then(() => setIsReady(true))
+      .catch((err) => setLoadError(err));
+  }, [googleMapApiKey, isReady]);
 
   useEffect(() => {
-    if (!isReady || !window.google) return;
+    if (!isReady || !window.google?.maps?.places) return;
 
     const initAutocomplete = (input) => {
       if (input.dataset.autocompleteInitialized) return;
@@ -74,9 +77,9 @@ export function useGoogleAutocomplete({ setValue, standaloneFields = {} }) {
              
           }
         } else {
-          Object.entries(standaloneFields).forEach(([key, selector]) => {
-            if (selector) setValue(key, selector.value || "", { shouldValidate: true });
-          });
+          if (standaloneFields.address) setValue(standaloneFields.address, place.formatted_address || "", { shouldValidate: true });
+          if (standaloneFields.city) setValue(standaloneFields.city, city, { shouldValidate: true });
+          if (standaloneFields.state) setValue(standaloneFields.state, state, { shouldValidate: true });
         }
 
         input.value = place.formatted_address || "";

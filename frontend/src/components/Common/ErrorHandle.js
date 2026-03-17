@@ -31,6 +31,17 @@ const ErrorHandle = ({
     ) : null
   );
 
+  const extractMessages = (value) => {
+    if (typeof value === 'string') return [value];
+    if (React.isValidElement(value)) return [value];
+    if (value?.message && typeof value.message === 'string') return [value.message];
+    if (Array.isArray(value)) return value.flatMap(item => extractMessages(item));
+    if (typeof value === 'object' && value !== null) {
+      return Object.values(value).flatMap(v => extractMessages(v));
+    }
+    return [];
+  };
+
   const renderErrors = () => {
     if (React.isValidElement(errors)) return errors;
 
@@ -44,7 +55,8 @@ const ErrorHandle = ({
     }
    
     if (Array.isArray(errors)) {
-      return errors.map((msg, i) => (
+      const msgs = errors.flatMap(item => extractMessages(item));
+      return msgs.map((msg, i) => (
         <div key={i} className="flex items-start">
           {renderIcon()}
           <p className={errorTextClass}>{msg}</p>
@@ -54,9 +66,8 @@ const ErrorHandle = ({
 
     if (typeof errors === 'object') {
       return Object.entries(errors).map(([field, value], i) => {
-        const messages = value?.message
-          ? Array.isArray(value.message) ? value.message : [value.message]
-          : Array.isArray(value) ? value : [value];
+        const messages = extractMessages(value);
+        if (messages.length === 0) return null;
 
         return (
           <div key={field || i} className="mb-2">
