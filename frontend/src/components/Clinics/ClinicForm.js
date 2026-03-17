@@ -309,7 +309,7 @@ const ClinicForm = ({ clinic, onClose }) => {
           type="checkbox"
           registration={register('is_dicom_enabled')}
         />
-        <em className='text-sm text-gray-500'>(Enabling DICOM automatically hides the Medical Condition section on both the Patient Form and the Orvos Diagnosis Report.)</em>
+        <em className='text-gray-500 text-xs'>(Enabling DICOM automatically hides the Medical Condition section on both the Patient Form and the Orvos Diagnosis Report.)</em>
       </div>
 
       {isDicomEnabled && (
