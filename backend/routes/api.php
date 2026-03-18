@@ -86,6 +86,22 @@ Route::get('countries', function(){
 	return response()->json(['countries' => $countries],200,[],JSON_UNESCAPED_SLASHES);
 }); 
 
+Route::get('states', function(){
+	$states = \Helper::getStates(['country_id' => 231])['states'];
+	return response()->json(['states' => $states],200,[],JSON_UNESCAPED_SLASHES);
+}); 
+
+Route::get('additional-data', function(){
+	 
+	$additionalData = [
+		'countries' => \Helper::getCountries()['countries'],
+		'states' => \Helper::getStates(['country_id' => 231])['states'],
+		'deviceTypes' => \Helper::getDeviceTypes(),
+	];
+	
+	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);
+});
+
 Route::get('get-recaptcha-keys', function(){
 	$siteKey = \Helper::encodeData(\Helper::recaptchaCredentails('v2')['site_key'])['encoded'];
 	$secretKey = \Helper::encodeData(\Helper::recaptchaCredentails('v2')['secret_key'])['encoded'];

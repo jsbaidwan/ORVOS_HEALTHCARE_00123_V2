@@ -2696,6 +2696,51 @@ class Helper{
 	 * End: Get Is Active Status By Id
 	 * -----------------------------------------
 	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get Device Types
+	 * -----------------------------------------
+	 */
+	 
+	public static function  getDeviceTypes()
+	{
+		return [
+			0 => ['name' => 'Volk'],
+			1 => ['name' => 'Eyer2'],
+		];
+	}	
+	 /*
+	 *-----------------------------------------
+	 * End: Get Device Types
+	 * -----------------------------------------
+	 */
+	 
+	 /*
+	 *-----------------------------------------
+	 * Start: Get Device Type By Id
+	 * -----------------------------------------
+	 */
+	 
+	public static function  getDeviceTypeById($id)
+	{
+		$deviceTypes = self::getDeviceTypes();
+		foreach($deviceTypes as $sKey => $type){
+			if($sKey == $id){
+				return ['status' => 200,'deviceType' => $type];
+			}
+		}
+		
+		return ['status' => 404];
+		
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Get Device Type By Id
+	 * 
+	 */
+	 
 }
 
 	

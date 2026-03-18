@@ -11,17 +11,17 @@ export const TitleProvider = ({ children }) => {
 
   // Update document title whenever pageTitle changes
   useEffect(() => {
-    document.title = `${process.env.REACT_APP_APP_NAME} - ${pageTitle}`;
+    document.title = `${process.env.REACT_APP_NAME} - ${pageTitle}`;
   }, [pageTitle]);
 
   return (
     <TitleContext.Provider value={{ pageTitle, setPageTitle }}>
       {/* Optional: also use Helmet for meta description */}
       <Helmet>
-        <title>{`${process.env.REACT_APP_APP_NAME} - ${pageTitle}`}</title>
+        <title>{`${process.env.REACT_APP_NAME} - ${pageTitle}`}</title>
         <meta
           name="description"
-          content={process.env.REACT_APP_APP_DESCRIPTION}
+          content={process.env.REACT_APP_DESCRIPTION}
         />
       </Helmet>
       {children}

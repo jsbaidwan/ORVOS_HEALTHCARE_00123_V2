@@ -553,4 +553,10 @@
   }
 }
 
+button, input, optgroup, select, textarea {
+  font-size: 80% !important;
+}
 
+.react-datepicker-wrapper {
+  width: 100% !important;
+}

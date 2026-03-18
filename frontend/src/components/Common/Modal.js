@@ -36,7 +36,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
         <div className={`inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full ${sizeClasses[size]}`}>
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 bg-primary">
-            <h3 className="text-xl font-semibold">{title}</h3>
+            <h3 className="text-md font-semibold">{title}</h3>
             <button
               onClick={onClose}
               className=" hover:text-primary-600 transition-colors duration-200 p-1 rounded-lg hover:bg-primary-100"

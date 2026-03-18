@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect , useState} from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -14,20 +14,8 @@ import { errorsFormatted } from '../../utils/errorHandler';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { PlusIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
-
-const US_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-];
-
-const DEVICE_TYPES = [
-  { value: 1, label: 'Mobile' },
-  { value: 2, label: 'Desktop' },
-];
-
+import { useGetAdditionalData } from '../../hooks/getAdditionalData';
+  
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
   companyName: yup.string().required('Company Name is required').trim(),
@@ -72,6 +60,18 @@ const ClinicForm = ({ clinic, onClose }) => {
   const { addClinic, updateClinic } = useClinic();
   const { clinicGroups, getClinicGroups } = useClinicGroup();
   const { showLoader, hideLoader } = useLoader();
+  const {  fetchAdditionalData } = useGetAdditionalData();
+  const [deviceTypes, setDeviceTypes] = useState([]);
+  const [states, setStates] = useState([]);
+   
+  useEffect(() => {
+    const getAdditionalData = async () => {
+      const resp = await fetchAdditionalData();
+      setDeviceTypes(resp?.additionalData?.deviceTypes || []);
+      setStates(resp?.additionalData?.states || []);
+    };
+    getAdditionalData();
+  }, [fetchAdditionalData]);
 
   const {
     register,
@@ -120,6 +120,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   });
 
   useEffect(() => {
+    
     getClinicGroups(1, {}, false);
   }, [getClinicGroups]);
 
@@ -214,13 +215,13 @@ const ClinicForm = ({ clinic, onClose }) => {
                 dateFormat="MM-dd-yyyy"
                 placeholderText="MM-DD-YYYY"
                 className={`w-full border ${errors.doi ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                
               />
               {errors.doi && <p className="mt-1 text-sm text-red-600">{errors.doi.message}</p>}
             </div>
           )}
         />
-      </div>
-
+      
       <FormField
         label="Address"
         name="address"
@@ -231,7 +232,7 @@ const ClinicForm = ({ clinic, onClose }) => {
         error={errors.address?.message}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+     
         <FormField
           label="City"
           name="city"
@@ -246,8 +247,11 @@ const ClinicForm = ({ clinic, onClose }) => {
           label="State"
           name="state_id"
           type="select"
-          registration={register('state')}
-          options={US_STATES}
+          registration={register('state_id')}
+          options={states?.map(state => ({
+            value: state.id,
+            label: state.name,
+          }))}
           required
           inputClassName="gm-state"
           error={errors.state_id?.message}
@@ -320,7 +324,10 @@ const ClinicForm = ({ clinic, onClose }) => {
               name="device_type_id"
               type="select"
               registration={register('device_type_id')}
-              options={DEVICE_TYPES}
+              options={deviceTypes?.map(deviceType => ({
+                value: deviceType.id,
+                label: deviceType.name,
+              }))}
               required
               error={errors.device_type_id?.message}
             />
@@ -334,25 +341,9 @@ const ClinicForm = ({ clinic, onClose }) => {
               {fields.map((field, index) => (
                 <div key={field.id}>
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      className={`flex-1 border ${errors.device_ids?.[index]?.value ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
-                      {...register(`device_ids.${index}.value`)}
-                      placeholder="Enter Device ID"
-                    />
-                    {fields.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                      >
-                        Remove
-                      </button>
-                    )}
+                    <FormField name={`device_ids.${index}.value`} type="text" placeholder="Enter Device ID" registration={register(`device_ids.${index}.value`)} error={errors.device_ids?.[index]?.value?.message}/>
+                    <button type="button" onClick={() => remove(index)} className="px-2 py-1 mb-5 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Remove</button>
                   </div>
-                  {errors.device_ids?.[index]?.value && (
-                    <p className="mt-1 text-sm text-red-600">{errors.device_ids[index].value.message}</p>
-                  )}
                 </div>
               ))}
               <button
@@ -392,6 +383,7 @@ const ClinicForm = ({ clinic, onClose }) => {
             <FormField
               label="Fax Number"
               name="fax_number"
+              type="text"
               registration={register('fax_number')}
               placeholder="Enter Fax Number eg:- 34XXXXXXXX"
               required
