@@ -31,13 +31,17 @@ const ErrorHandle = ({
     ) : null
   );
 
-  const extractMessages = (value) => {
+  const extractMessages = (value, depth = 0) => {
+    if (depth > 5) return [];
     if (typeof value === 'string') return [value];
     if (React.isValidElement(value)) return [value];
     if (value?.message && typeof value.message === 'string') return [value.message];
-    if (Array.isArray(value)) return value.flatMap(item => extractMessages(item));
+    if (value?.nodeType || value instanceof Element) return [];
+    if (Array.isArray(value)) return value.flatMap(item => extractMessages(item, depth + 1));
     if (typeof value === 'object' && value !== null) {
-      return Object.values(value).flatMap(v => extractMessages(v));
+      return Object.entries(value)
+        .filter(([key]) => key !== 'ref' && key !== 'root')
+        .flatMap(([, v]) => extractMessages(v, depth + 1));
     }
     return [];
   };

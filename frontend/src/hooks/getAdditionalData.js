@@ -18,11 +18,20 @@ export function useGetAdditionalData() {
 
     try {
       const response = await api.call("additional-data", "GET", null, true);
-      console.log(response)
       if (response.status === 200) {
        
-        setData(response.data);
-        return response.data;
+        const newData = response.data || {};
+
+        // ✅ compare safely using previous state
+        setData(prev => {
+          if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+            return newData;
+          }
+          return prev;
+        });
+
+        return newData;
+         
       } else {
         const err = handleApiError(response.error, logout);
         setError(err);

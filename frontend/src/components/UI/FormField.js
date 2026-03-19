@@ -51,11 +51,15 @@ const FormField = ({
             className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
           >
             <option value="">Select {label}</option>
-            {options.map((option, index) => (
-              <option key={index} value={option.value ?? option}>
-                {option.label || option}
-              </option>
-            ))}
+            {options.map((option, index) => {
+              const optValue = option?.value != null ? option.value : (typeof option !== 'object' ? option : '');
+              return (
+               
+                <option key={index} value={optValue}>
+                  {option?.label || optValue || option}
+                </option>
+              );
+            })}
           </select>
         );
 

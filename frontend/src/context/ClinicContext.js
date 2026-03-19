@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import Api from '../utils/api';
+import { handleApiError } from '../utils/errorHandler';
 
 const ClinicContext = createContext();
 
@@ -11,83 +14,179 @@ export const useClinic = () => {
 };
 
 export const ClinicProvider = ({ children }) => {
-  const [clinics, setClinics] = useState([
-    {
-      id: 1,
-      companyName: 'City Medical Center',
-      pocEmail: 'contact@citymedical.com',
-      phone: '(555) 123-4567',
-      address: '123 Medical Ave',
-      city: 'New York',
-      state: 'NY',
-      zip: '10001',
-      description: 'Premier medical facility serving the community',
-      status: 'Active',
-      dateOfInitiation: '2024-01-15',
-      contractDocuments: [],
-      logo: null,
-      isArchived: false,
-    },
-    {
-      id: 2,
-      companyName: 'Valley Health Clinic',
-      pocEmail: 'info@valleyhealth.com',
-      phone: '(555) 987-6543',
-      address: '456 Health Blvd',
-      city: 'Los Angeles',
-      state: 'CA',
-      zip: '90001',
-      description: 'Comprehensive healthcare services',
-      status: 'Active',
-      dateOfInitiation: '2024-02-20',
-      contractDocuments: [],
-      logo: null,
-      isArchived: false,
-    },
-  ]);
+  const { getToken, logout } = useAuth();
+  const [clinics, setClinics] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 10,
+    total: 0,
+  });
 
-  const addClinic = (clinic) => {
-    const newClinic = {
-      ...clinic,
-      id: Date.now(),
-      isArchived: false,
-    };
-    setClinics([...clinics, newClinic]);
-    return newClinic;
+  const getClinics = useCallback(async (page = 1, filters = {}, paginate) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const data = {
+        paginate,
+        page,
+        ...filters,
+      };
+
+      const endpoint = 'clinics?data=' + encodeURIComponent(JSON.stringify(data));
+      const response = await api.call(endpoint, 'GET', null, true);
+
+      if (response.status === 200) {
+        const responseData = response.data.clinics;
+
+        if (typeof responseData === 'object' && responseData.data && Array.isArray(responseData.data)) {
+          setClinics(responseData.data);
+          setPagination({
+            currentPage: responseData.current_page || 1,
+            lastPage: responseData.last_page || 1,
+            perPage: responseData.per_page || 10,
+            total: responseData.total || 0,
+          });
+          return responseData;
+        } else if (Array.isArray(responseData)) {
+          setClinics(responseData);
+          setPagination({
+            currentPage: 1,
+            lastPage: 1,
+            perPage: responseData.length,
+            total: responseData.length,
+          });
+          return responseData;
+        }
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const getClinicById = useCallback(async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`clinics/${id}/edit`, 'GET', null, true);
+
+      if (response.status === 200) {
+        return response.data.clinic;
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const addClinic = async (clinicData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('clinics', 'POST', clinicData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic created successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const updateClinic = (id, updatedClinic) => {
-    setClinics(clinics.map((clinic) => (clinic.id === id ? { ...clinic, ...updatedClinic } : clinic)));
+  const updateClinic = async (id, clinicData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      let method = 'PUT';
+      if (clinicData instanceof FormData) {
+        clinicData.append('_method', 'PUT');
+        method = 'POST';
+      }
+
+      const response = await api.call(`clinics/${id}`, method, clinicData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic updated successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const deleteClinic = (id) => {
-    setClinics(clinics.filter((clinic) => clinic.id !== id));
+  const archiveClinic = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('archive', 'POST', { module: 'clinics', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic archived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const archiveClinic = (id) => {
-    setClinics(
-      clinics.map((clinic) => (clinic.id === id ? { ...clinic, isArchived: true } : clinic))
-    );
+  const unarchiveClinic = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('unarchive', 'POST', { module: 'clinics', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic unarchived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const getActiveeClinics = () => {
-    return clinics.filter((clinic) => !clinic.isArchived);
-  };
+  const deleteClinic = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
 
-  const getArchivedClinics = () => {
-    return clinics.filter((clinic) => clinic.isArchived);
+    try {
+      const response = await api.call(`clinics/${id}`, 'DELETE', null, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Clinic deleted successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
   const value = {
     clinics,
+    setClinics,
+    pagination,
+    getClinics,
+    getClinicById,
     addClinic,
     updateClinic,
     deleteClinic,
     archiveClinic,
-    getActiveeClinics,
-    getArchivedClinics,
+    unarchiveClinic,
   };
 
   return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;
 };
-

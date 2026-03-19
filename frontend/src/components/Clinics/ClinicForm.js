@@ -13,13 +13,15 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { errorsFormatted } from '../../utils/errorHandler';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
-import { PlusIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { useGetAdditionalData } from '../../hooks/getAdditionalData';
+import { useRoutePath } from '../../hooks/useRoutePath';
+import { useNavigate } from 'react-router-dom';
   
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
-  companyName: yup.string().required('Company Name is required').trim(),
-  pocEmail: yup.string().email('Invalid email address').required('POC Email is required').trim(),
+  name: yup.string().required('Clinic Name is required').trim(),
+  poc_email: yup.string().email('Invalid email address').required('POC Email is required').trim(),
   phone: yup.string(),
   doi: yup
     .date()
@@ -56,22 +58,56 @@ const clinicSchema = yup.object({
   }),
 });
 
+const parseDoi = (doi) => {
+  if (!doi) return null;
+  const str = String(doi);
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    const [m, d, y] = parts.map(Number);
+    const fullYear = y < 100 ? 2000 + y : y;
+    return new Date(fullYear, m - 1, d);
+  }
+  const fallback = new Date(str);
+  return isNaN(fallback.getTime()) ? null : fallback;
+};
+
+const buildDefaults = (data) => ({
+  clinic_group_id: data?.clinic_group_id || '',
+  name: data?.name || '',
+  poc_email: data?.poc_email || '',
+  phone: data?.phone || '',
+  doi: parseDoi(data?.doi),
+  address: data?.address || '',
+  city: data?.city || '',
+  state_id: data?.state_id || '',
+  zip: data?.zip || '',
+  description: data?.description || '',
+  status: data?.status ?? 0,
+  is_dicom_enabled: data?.is_dicom_enabled || false,
+  device_type_id: data?.device_type_id || '',
+  device_ids: Array.isArray(data?.device_ids) && data.device_ids.length
+    ? data.device_ids.map(id => ({ value: id }))
+    : [{ value: '' }],
+  is_patient_report_email_enabled: data?.is_patient_report_email_enabled || false,
+  is_fax_enabled: data?.is_fax_enabled || false,
+  fax_number: data?.fax_number || '',
+});
+
 const ClinicForm = ({ clinic, onClose }) => {
-  const { addClinic, updateClinic } = useClinic();
+  const { addClinic, updateClinic, getClinicById } = useClinic();
   const { clinicGroups, getClinicGroups } = useClinicGroup();
-  const { showLoader, hideLoader } = useLoader();
-  const {  fetchAdditionalData } = useGetAdditionalData();
+  const { hideLoader } = useLoader();
+  const getRoutePath = useRoutePath();
+  const navigate = useNavigate();
+  const { fetchAdditionalData } = useGetAdditionalData();
   const [deviceTypes, setDeviceTypes] = useState([]);
   const [states, setStates] = useState([]);
-   
-  useEffect(() => {
-    const getAdditionalData = async () => {
-      const resp = await fetchAdditionalData();
-      setDeviceTypes(resp?.additionalData?.deviceTypes || []);
-      setStates(resp?.additionalData?.states || []);
-    };
-    getAdditionalData();
-  }, [fetchAdditionalData]);
+  const [files, setFiles] = useState(clinic?.display_files || []);
+  const [removedFiles, setRemovedFiles] = useState([]);
+  const [newFiles, setNewFiles] = useState([]);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [clinicData, setClinicData] = useState(clinic);
 
   const {
     register,
@@ -80,30 +116,11 @@ const ClinicForm = ({ clinic, onClose }) => {
     watch,
     setValue,
     setError,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(clinicSchema),
-    defaultValues: {
-      clinic_group_id: clinic?.clinic_group_id || '',
-      companyName: clinic?.companyName || '',
-      pocEmail: clinic?.pocEmail || '',
-      phone: clinic?.phone || '',
-      doi: clinic?.doi ? new Date(clinic.doi) : null,
-      address: clinic?.address || '',
-      city: clinic?.city || '',
-      state_id: clinic?.state_id || '',
-      zip: clinic?.zip || '',
-      description: clinic?.description || '',
-      status: clinic?.status || 'Active',
-      is_dicom_enabled: clinic?.is_dicom_enabled || false,
-      device_type_id: clinic?.device_type_id || '',
-      device_ids: Array.isArray(clinic?.device_ids) && clinic.device_ids.length
-        ? clinic.device_ids.map(id => ({ value: id }))
-        : [{ value: '' }],
-      is_patient_report_email_enabled: clinic?.is_patient_report_email_enabled || false,
-      is_fax_enabled: clinic?.is_fax_enabled || false,
-      fax_number: clinic?.fax_number || '',
-    },
+    defaultValues: buildDefaults(clinic),
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -118,27 +135,95 @@ const ClinicForm = ({ clinic, onClose }) => {
     setValue,
     standaloneFields: { address: 'address', city: 'city', state_id: 'state_id' },
   });
+ 
+  const handleRemoveFile = (index) => {
+    const removed = files[index];
+    if (removed?.name) {
+      setRemovedFiles(prev => [...prev, removed.name]);
+    }
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
+  const handleRemoveNewFile = (index) => {
+    setNewFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
   useEffect(() => {
+    const loadData = async () => {
     
-    getClinicGroups(1, {}, false);
-  }, [getClinicGroups]);
+      try {
+        const promises = [
+          getClinicGroups(1, {}, false),
+          fetchAdditionalData(),
+        ];
+        if (clinic?.id) {
+          promises.push(getClinicById(clinic.id));
+        }
+
+        const [, resp, fresh] = await Promise.all(promises);
+
+        setDeviceTypes(resp?.additionalData?.deviceTypes || []);
+        setStates(resp?.additionalData?.states || []);
+
+        if (fresh) {
+          setClinicData(fresh);
+          setFiles(fresh.display_files || []);
+          reset(buildDefaults(fresh));
+        }
+      } finally {
+        hideLoader();
+      }
+    };
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data) => {
-    const clinicData = {
-      ...data,
-      device_ids: data.device_ids?.map(d => d.value).filter(Boolean) || [],
-    };
+    const formData = new FormData();
 
-    showLoader();
+    formData.append('clinic_group_id', data.clinic_group_id || '');
+    formData.append('name', data.name?.trim() || '');
+    formData.append('poc_email', data.poc_email?.trim() || '');
+    formData.append('phone', data.phone || '');
+    formData.append('doi', data.doi
+      ? `${String(data.doi.getMonth() + 1).padStart(2, '0')}-${String(data.doi.getDate()).padStart(2, '0')}-${data.doi.getFullYear()}`
+      : '');
+    formData.append('address', data.address?.trim() || '');
+    formData.append('city', data.city?.trim() || '');
+    formData.append('state_id', data.state_id || '');
+    formData.append('zip', data.zip?.trim() || '');
+    formData.append('description', data.description?.trim() || '');
+    formData.append('status', data.status || '');
+    formData.append('is_dicom_enabled', data.is_dicom_enabled ? 1 : 0);
+    formData.append('device_type_id', data.device_type_id || '');
+    formData.append('is_patient_report_email_enabled', data.is_patient_report_email_enabled ? 1 : 0);
+    formData.append('is_fax_enabled', data.is_fax_enabled ? 1 : 0);
+    formData.append('fax_number', data.fax_number || '');
+
+    const deviceIds = data.device_ids?.map(d => d.value).filter(Boolean) || [];
+    deviceIds.forEach(id => formData.append('device_ids[]', id));
+
+    newFiles.forEach(f => formData.append('files[]', f.file));
+
+    removedFiles.forEach(name => formData.append('removed_files[]', name));
+
+    if (imageRemoved) {
+      formData.append('remove_image', '1');
+    }
+
+    if (data.image?.length) {
+      formData.append('image', data.image[0]);
+    }
+
     try {
-      const result = clinic?.id
-        ? await updateClinic(clinic.id, clinicData)
-        : await addClinic(clinicData);
+      const result = clinicData?.id
+        ? await updateClinic(clinicData.id, formData)
+        : await addClinic(formData);
 
       if (result && (result.status === 200 || result.success)) {
         onClose();
         toast.success(result?.message);
+        navigate(getRoutePath('/clinics'));
       } else {
         errorsFormatted(result, setError);
       }
@@ -168,22 +253,22 @@ const ClinicForm = ({ clinic, onClose }) => {
         />
 
         <FormField
-          label="Company Name"
-          name="companyName"
-          registration={register('companyName')}
-          placeholder="Enter Company Name"
+          label="Clinic Name"
+          name="name"
+          registration={register('name')}
+          placeholder="Enter Clinic Name"
           required
-          error={errors.companyName?.message}
+          error={errors.name?.message}
         />
 
         <FormField
           label="POC Email"
-          name="pocEmail"
+          name="poc_email"
           type="email"
-          registration={register('pocEmail')}
+          registration={register('poc_email')}
           placeholder="Enter POC Email"
           required
-          error={errors.pocEmail?.message}
+          error={errors.poc_email?.message}
         />
 
         <Controller
@@ -231,8 +316,7 @@ const ClinicForm = ({ clinic, onClose }) => {
         inputClassName="gmap-autocomplete"
         error={errors.address?.message}
       />
-
-     
+ 
         <FormField
           label="City"
           name="city"
@@ -282,27 +366,131 @@ const ClinicForm = ({ clinic, onClose }) => {
         name="status"
         type="select"
         registration={register('status')}
-        options={['Active', 'Inactive']}
+        options={[{ value: 1, label: 'Active' }, { value: 0, label: 'Inactive' }]}
         required
         error={errors.status?.message}
       />
 
       <div className="border-t border-gray-200 pt-4">
-        <FormField
-          label="Contract Documents"
-          name="contractDocuments"
-          type="file"
-          registration={register('contractDocuments')}
-          placeholder="Upload contract documents (multiple files allowed)"
-        />
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Contract Documents</label>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => {
+              const picked = Array.from(e.target.files || []);
+              setNewFiles(prev => [
+                ...prev,
+                ...picked.map(f => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
+              ]);
+              e.target.value = '';
+            }}
+            className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+          />
+        </div>
+
+        {(files.length > 0 || newFiles.length > 0) && (
+          <ul className="space-y-2">
+            {files.map((file, index) => (
+              file.status === 200 && (
+                
+                <li key={`db-${index}`} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+                  <div className="flex items-center space-x-2 truncate max-w-[70%]">
+                    {/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name) ? (
+                      <img
+                        src={file.src}
+                        alt={file.name}
+                        className="w-8 h-8 rounded object-cover border border-gray-200 mr-2"
+                      />
+                    ): <DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
+                    <a
+                      href={file.src}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline text-sm   max-w-[70%]"
+                    >
+                      {file.name}
+                    </a>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(index)}
+                    className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                  >
+                    Remove
+                  </button>
+                </li>
+              )
+            ))}
+
+            {newFiles.map((file, index) => (
+              <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
+                <div className="flex items-center space-x-2 truncate max-w-[70%]">
+                  {file.file.type?.startsWith('image/') ? (
+                    <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover border border-gray-200" />
+                  ):<DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
+                  <span className="text-sm text-gray-800 truncate"><a href={file.preview} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm   max-w-[70%]">{file.name}</a></span>
+                  <span className="text-xs text-green-600 font-medium whitespace-nowrap">(New)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveNewFile(index)}
+                  className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="border-t border-gray-200 pt-4">
-        <FormField
-          label="Clinic Logo"
-          name="logo"
-          type="file"
-          registration={register('logo')}
+        <Controller
+          name="image"
+          control={control}
+          render={({ field: { onChange, ref } }) => {
+            const dbPreview = clinicData?.display_image?.status === 200 && !imageRemoved ? clinicData.display_image.src : null;
+            const previewSrc = imagePreview || dbPreview;
+
+            return (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Clinic Logo</label>
+                <input
+                  ref={ref}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    onChange(e.target.files);
+                    if (file) {
+                      setImagePreview(URL.createObjectURL(file));
+                      setImageRemoved(false);
+                    } else {
+                      setImagePreview(null);
+                    }
+                  }}
+                  className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                />
+                {previewSrc && (
+                  <div className="mt-3 flex items-center space-x-3">
+                    <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange(null);
+                        setImagePreview(null);
+                        setImageRemoved(true);
+                      }}
+                      className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          }}
         />
       </div>
 
@@ -420,7 +608,7 @@ const ClinicForm = ({ clinic, onClose }) => {
         >
           {isSubmitting ? (
             'Processing...'
-          ) : clinic ? (
+          ) : clinicData?.id ? (
             <>
               <PencilSquareIcon className="w-4 h-4 mr-2" />
               Update Clinic

@@ -8,14 +8,15 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * @return void 
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('clinics', function (Blueprint $table) {
-			$table->increments('id');
-			$table->string('clinic_group_id')->nullable();
-			$table->string('user_id')->nullable();
-            $table->string('name')->nullable();
+            $table->increments('id');
+			$table->integer('clinic_group_id')->nullable();
+		    $table->string('name')->nullable();
             $table->string('slug')->nullable();
             $table->string('code')->nullable();
             $table->string('poc_email')->nullable();
@@ -31,14 +32,23 @@ return new class extends Migration
             $table->string('doi')->nullable();
             $table->text('files')->nullable();
 			$table->string('image')->nullable();
+			$table->integer('is_dicom_enabled')->default(0);
+			$table->text('device_ids')->nullable();
+			$table->integer('device_type_id')->nullable();
+			$table->integer('is_patient_report_email_enabled')->default(0);
+			$table->integer('is_fax_enabled')->default(0);
+			$table->string('fax_number')->nullable();
+			$table->boolean('is_archived')->default(0);
             $table->timestamps();
         });
     }
 
     /**
      * Reverse the migrations.
+     *
+     * @return void
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('clinics');
     }

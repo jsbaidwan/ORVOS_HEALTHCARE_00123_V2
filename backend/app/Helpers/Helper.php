@@ -1174,7 +1174,7 @@ class Helper{
 	 * -------------------------------------
 	 */
 	public static function googleApiKey()
-	{
+	{   
 		return ['key' => env('GOOGLE_MAP_API_KEY')];
 	}
 	 /*
@@ -1300,7 +1300,7 @@ class Helper{
 	 */
 	public static function getClinics($isAdmin = true,$filters = [])
 	{  
-		$query = Clinic::with('clinicPatients','clinicUsers')->orderBy('id','DESC');  
+		$query = Clinic:: orderBy('id','DESC');  
 		if($isAdmin == false){
 			$query->whereHas('clinicUsers',function($q){
 				$q->where('user_id',\Auth::user()->id);
@@ -1309,8 +1309,25 @@ class Helper{
 			
 		} 
 		
-		if(isset($filters['status'])){
-			$query->where('status',$filters['status']);
+		if (isset($filters['active']) && strtolower($filters['active']) != 'all') {
+
+			$query->where('status',$filters['active']);
+		}
+		 
+		if(isset($filters['is_archived'])){
+			$query->where('is_archived',$filters['is_archived']);
+		} 
+		 
+		if(isset($filters['active'])){
+			$query->where('status',$filters['active']);
+		}
+		
+		if(!empty($filters['q'])){
+			 
+			$query->where(function ($q) use ($filters) {
+				$q->where('name', 'LIKE', '%' . $filters['q'] . '%');
+				 
+			});
 		}
 		
 		if(\Auth::user()->role_id != 1){
@@ -1341,7 +1358,7 @@ class Helper{
 	 */
 	public static function getClinicById($id)
 	{
-		$clinic = Clinic::with('clinicUsers','clinicUsers.user','additionalSetting')->find($id);
+		$clinic = Clinic:: find($id);
 		return ['clinic' => $clinic];
 	} 
 	 /*
@@ -1907,20 +1924,22 @@ class Helper{
 	
 	/********* End:Generate Signed URL **************/
 
-	public static function changeDateFormat($date,$format = 'Y-m-d')
+	public static function changeDateFormat($date,$format = 'Y-m-d',$timezone = true)
 	{
 		if(empty($date)){
 			return['date' => $date];
 		} 
-		$newDate = \Carbon\Carbon::now();
-		if(strtolower($format) == 'y-m-d'){
-			$newDate = \Carbon\Carbon::createFromFormat('m-d-Y', $date)->format('Y-m-d');
-		}else{
-			
-			$newDate = \Carbon\Carbon::parse($date)->format($format);
-			 
-		}
 		
+		if(!$timezone){
+			$newDate = \Carbon\Carbon::createFromFormat('m-d-Y', $date)
+			->format($format);
+			return['date' => $newDate];
+		} 
+		$fromTimezone = \Config('app.custom_timezone');
+		$newDate = \Carbon\Carbon::createFromFormat('m-d-Y', $date, $fromTimezone)
+		->setTimezone('UTC')
+		->format($format);
+		 
 		return['date' => $newDate];
 	}
 
@@ -2706,8 +2725,8 @@ class Helper{
 	public static function  getDeviceTypes()
 	{
 		return [
-			0 => ['name' => 'Volk'],
-			1 => ['name' => 'Eyer2'],
+			0 => ['id' => 1,'name' => 'Volk'],
+			1 => ['id' => 2,'name' => 'Eyer2'],
 		];
 	}	
 	 /*
@@ -2726,7 +2745,7 @@ class Helper{
 	{
 		$deviceTypes = self::getDeviceTypes();
 		foreach($deviceTypes as $sKey => $type){
-			if($sKey == $id){
+			if($type['id'] == $id){
 				return ['status' => 200,'deviceType' => $type];
 			}
 		}

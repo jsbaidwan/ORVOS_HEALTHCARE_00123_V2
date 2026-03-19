@@ -19,7 +19,7 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('roles', 'App\Http\Controllers\Api\RoleController');
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	Route::resource('clinics', 'App\Http\Controllers\Api\ClinicController');
-	
+	  
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
 	});
@@ -78,6 +78,7 @@ Route::middleware('auth:api')->group(function () {
 		);
 		return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
 	});
+	 
 	
 });
   

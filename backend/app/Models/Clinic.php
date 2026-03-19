@@ -14,7 +14,7 @@ class Clinic extends Authenticatable
 
 	protected $table = 'clinics';  
 	
-	protected $appends = ['formated_created_at','is_active_status'];
+	protected $appends = ['formated_created_at','is_active_status','display_files','display_image'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -22,7 +22,7 @@ class Clinic extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'clinic_group_id','user_id','image','name','slug','code','poc_email','phone','address','city','state_id','zip','description','status','doi','files','latitude','longitude'
+        'clinic_group_id','image','name','slug','code','poc_email','phone','address','city','state_id','zip','description','status','doi','files','latitude','longitude','device_ids','device_type_id','is_patient_report_email_enabled','is_fax_enabled','fax_number','is_dicom_enabled','is_archived'
     ];
 	
 	public static $rules = array(
@@ -78,9 +78,61 @@ class Clinic extends Authenticatable
  
 	}
 	
-    public function getDoiAttribute($value)
+    public function getDoiAttribute()
 	{
-		return !empty($value) ? \Helper::changeDateFormat($value,'m-d-y')['date'] : null;
+		return !empty($this->attributes['doi']) ? \Carbon\Carbon::parse($this->attributes['doi'])->format('m-d-Y') : null;
+	}
+	
+	public function setDeviceIdsAttribute($value)
+	{
+        $this->attributes['device_ids'] = !empty($value) ? json_encode($value) : null;
+ 
+	}
+	
+	public function getDeviceIdsAttribute($value)
+	{
+		return !empty($value) ? json_decode($value,true) : null;
+	}
+	
+	public function getDisplayFilesAttribute()
+	{
+		$value = $this->attributes['files'];
+		$arrFiles = !empty($value) ? json_decode($value, true) : [];
+		$files = [];
+
+		if (!empty($arrFiles)) {
+
+			$files = collect($arrFiles)->map(function ($file) {
+
+				$path = 'uploads/clinics/' . $this->slug . '/' . $file;
+				$exists = !empty($file) && \Storage::disk('public')->exists($path);
+				$status = $exists ? 200 : 422;
+				return [
+					'status' => $status,
+					'src' => $status ? asset('storage/' . $path) : asset('images/dummy.png'),
+					'name' => $file
+				];
+			})->values()->toArray(); // reset index (important)
+		}
+
+		return $files;
+	}
+	
+	public function getDisplayImageAttribute()
+	{ 
+		$image = $this->attributes['image'];
+		$path = 'uploads/clinics/' . $this->slug . '/logo/' . $image;
+		$exists = !empty($image) && \Storage::disk('public')->exists($path);
+		$status = $exists ? 200 : 422;
+		
+		$imgArr = [
+			'status' => $status,
+			'src' => $status == 200 
+				? asset('storage/uploads/clinics/' . $this->slug . '/logo/' . $image) 
+				: asset('images/dummy.png'),
+			'name' => $image
+		];
+		return $imgArr;
 	}
 	
 	public function getFormatedCreatedAtAttribute()
@@ -90,7 +142,7 @@ class Clinic extends Authenticatable
 		}
 		
 		try {
-			return \Helper::changeDateFormat($this->created_at,'D, M d Y')['date'];
+			return \Carbon\Carbon::parse($this->created_at)->format('D, M d Y');
 		} catch (\Exception $e) {
 			return '';
 		}

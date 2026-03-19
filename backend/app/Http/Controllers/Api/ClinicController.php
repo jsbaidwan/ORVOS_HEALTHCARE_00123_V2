@@ -7,7 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\ClinicUser;
 use Brian2694\Toastr\Facades\Toastr;
-  
+use Illuminate\Support\Facades\Storage;
+ 
 class ClinicController extends Controller
 { 
     /**
@@ -23,7 +24,7 @@ class ClinicController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
-  
+ 
         $clinics = \Helper::getClinics(true, $input)['clinics'];
         
         return response()->json(['clinics' => $clinics], 200); 
@@ -36,17 +37,41 @@ class ClinicController extends Controller
      * @return \Illuminate\Contracts\Support\Renderable
      */
 	public function store(Request $request)
-    {  
+    {   
 		$haveAccess = \Helper::permission(1,'create');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+		 
+		$rules = Clinic::$rules;
+		$messages = Clinic::$messages;
 		
-		$rules = Clinic::rules();
+		if (!empty($input['is_dicom_enabled'])) {
+			$rules['device_ids'] = 'required|array';
+			$rules['device_ids.*'] = 'required|distinct';
+
+			$messages['device_ids.required'] = 'At least one Device ID is required.';
+			$messages['device_ids.*.required'] = 'Device ID is required.';
+			$messages['device_ids.*.distinct'] = 'Duplicate Device IDs are not allowed.';
+			
+			$rules['device_type_id'] = 'required';
+		}else{
+			$input['is_dicom_enabled'] = 0;
+			$input['device_id'] = NULL;
+			 
+		}
 		
-		$validator = Validator::make($input, $rules);
+		if (!empty($input['is_fax_enabled'])) {
+			$input['fax_number'] = preg_replace('/\D/', '', $input['fax_number']);
+			//$rules['fax_number'] = 'required|unique:clinics,fax_number';
+		}else{
+			$input['is_fax_enabled'] = 0;
+			$input['fax_number'] = NULL;
+		}
+		
+		$validator = Validator::make($input,$rules,$messages);
 		 
 		if ($validator->fails()) { 
 			return response()->json(['message' => $validator->errors()], 422);
@@ -62,54 +87,52 @@ class ClinicController extends Controller
             $files = $input['files'];
 			$uploadedFiles = [];
     
-            foreach ($files as $file) {
-                // Generate a unique filename with a timestamp
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-    
-                // Create the directory if it doesn't exist
-                $destinationPath = public_path('uploads/clinics/' . $input['slug']);
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-    
-                // Move the file to the directory
-                $file->move($destinationPath, $filename);
-    
-                // Store the filename in an array
-                $uploadedFiles[] = $filename;
-            }
+           foreach ($files as $file) {
+				$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+				$destinationPath = 'uploads/clinics/' . $input['slug'];
+
+				$file->storeAs($destinationPath, $filename, 'public');
+
+				$uploadedFiles[] = $filename;
+			}
     
             // Store the file paths as a JSON array in the database
             $input['files'] = json_encode($uploadedFiles);
         }
 		
+		if (!empty($input['image'])) {
+
+			$image = $input['image'];
+ 
+			// Generate filename
+			$imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
+
+			// Store image
+			$path = 'uploads/clinics/' .$input['slug'].'/logo';
+
+			$image->storeAs($path, $imageName, 'public');
+			 
+			$input['image'] = $imageName;
+  
+		}
+		
 		$getLatLng = \Helper::getLatLng($input['address'])['response'];
+		 
         $input['latitude'] = $getLatLng['latitude'];
         $input['longitude'] = $getLatLng['longitude'];
+		 
+		$clinic = Clinic::create($input);
 		
-		Clinic::create($input);
 		
-		 if (!empty($input['image'])) {
-            $image = $input['image'];
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-             // Create the directory if it doesn't exist
-             $destinationPath = public_path('uploads/clinic_logos/' . $clinic->id);
-             if (!file_exists($destinationPath)) {
-                 mkdir($destinationPath, 0755, true);
-             }
-            $image->move($destinationPath, $imageName);
-            $clinic->image = $imageName;
-            $clinic->save();
-        }
-		
-		if(\Auth::user()->role_id != 1){
-			ClinicUser::create([
-				'user_id'   => \Auth::user()->id,
-				'clinic_id' => $clinic->id,
-				'is_admin' => \Auth::user()->role_id == 6 ? 1:0,
+		// if(\Auth::user()->role_id != 1){
+			// ClinicUser::create([
+				// 'user_id'   => \Auth::user()->id,
+				// 'clinic_id' => $clinic->id,
+				// 'is_admin' => \Auth::user()->role_id == 6 ? 1:0,
 				
-			]);
-		}
+			// ]);
+		// }
 		 
         return response()->json(['message' => \Helper::alertMsg('create','Clinic','success')['message']], 200);  
         
@@ -164,108 +187,140 @@ class ClinicController extends Controller
     {  
 		$haveAccess = \Helper::permission(1,'write');
 		if(!$haveAccess){
-			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+			return abort(404);
 		}
 		
-		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
-		
-		$rules = Clinic::rules($id);
-	 
+        $input = $request->all();
+        $rules = Clinic::$rules;
+		$messages = Clinic::$messages;
         $rules['name'] .= ',name,'.$id;  
         $rules['code'] .= ',code,'.$id;
         //$rules['poc_email'] .= ',poc_email,'.$id;
-		
-		$validator = Validator::make($input, $rules);
 		 
-		if ($validator->fails()) { 
-			return response()->json(['message' => $validator->errors()], 422);
-		 
-		}
-		
-		$clinic = \Helper::getClinicById($id)['clinic'];
-		if(!$clinic){
-			return response()->json(['message' => \Helper::alertMsg('update','Clinic','error')['message']], 404);
-		}
-		
-		// Rename directory if the slug has changed
-        $oldPath = public_path('uploads/clinics/' . $clinic->slug);
-        $newPath = public_path('uploads/clinics/' . $input['slug']);
+		if (!empty($input['is_dicom_enabled'])) {
+			$rules['device_ids'] = 'required|array';
+			$rules['device_ids.*'] = 'required|distinct';
 
-        if ($clinic->slug !== $input['slug']) {
-            if (file_exists($oldPath)) {
-                rename($oldPath, $newPath); 
-            }
+			$messages['device_ids.required'] = 'At least one Device ID is required.';
+			$messages['device_ids.*.required'] = 'Device ID is required.';
+			$messages['device_ids.*.distinct'] = 'Duplicate Device IDs are not allowed.';
+			
+			$rules['device_type_id'] = 'required';
+			 
+		}else{
+			$input['is_dicom_enabled'] = 0;
+			$input['device_ids'] = NULL;
+		}
+		if (empty($input['is_patient_report_email_enabled'])) {
+			$input['is_patient_report_email_enabled'] = 0;
+		}
+		
+		if (!empty($input['is_fax_enabled'])) {
+			$input['fax_number'] = preg_replace('/\D/', '', $input['fax_number']);
+			//$rules['fax_number'] = 'required|unique:clinics,fax_number,' . $id;
+		}else{
+			$input['is_fax_enabled'] = 0;
+			$input['fax_number'] = NULL;
+		}
+
+        $validate = Validator::make($input,$rules,$messages);
+        if($validate->fails()){
+            return redirect()->back()->withErrors($validate)->withInput();
         }
+
+        $clinic = \Helper::getClinicById($id,false)['clinic'];
+        if(!$clinic){
+            return redirect()->back()->withErrors(['poc_email' => 'The clinic you are trying to update does not exist.'])->withInput();
+        }
+ 
+        $input['slug'] = \Helper::genSlug($input['name'])['slug'];
+
+        // Rename directory if the slug has changed
+		$oldPath = 'uploads/clinics/' . $clinic->slug;
+		$newPath = 'uploads/clinics/' . $input['slug'];
+
+		if ($clinic->slug !== $input['slug']) {
+			if (Storage::disk('public')->exists($oldPath)) {
+				Storage::disk('public')->move($oldPath, $newPath);
+			}
+		}
 
         $getLatLng = \Helper::getLatLng($input['address'])['response'];
         $input['latitude'] = $getLatLng['latitude'];
         $input['longitude'] = $getLatLng['longitude'];
 
-        if (!empty($input['image'])) {
-            $image = $input['image'];
-            $oldImage =  public_path('uploads/clinic_logos/' . $id.'/'.$clinic->image);
-            if(file_exists($oldImage) && !empty($clinic->image)){
-                unlink($oldImage);
-            }
+		// Handle image removal
+		if (!empty($input['remove_image'])) {
+			if (!empty($clinic->getRawOriginal('image'))) {
+				$oldImagePath = 'uploads/clinics/' . $input['slug'] . '/logo/' . $clinic->getRawOriginal('image');
+				if (Storage::disk('public')->exists($oldImagePath)) {
+					Storage::disk('public')->delete($oldImagePath);
+				}
+			}
+			$input['image'] = null;
+			unset($input['remove_image']);
+		}
 
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-             // Create the directory if it doesn't exist
-             $destinationPath = public_path('uploads/clinic_logos/' . $id);
-             if (!file_exists($destinationPath)) {
-                 mkdir($destinationPath, 0755, true);
-             }
-            $image->move($destinationPath, $imageName);
-            $input['image'] =  $imageName;
-             
-        }
+		if (!empty($input['image']) && $input['image'] instanceof \Illuminate\Http\UploadedFile) {
 
-         // Handle file uploads
+			$image = $input['image'];
+
+			// Delete old image
+			if (!empty($clinic->getRawOriginal('image'))) {
+				$oldPath = 'uploads/clinics/' . $input['slug'] . '/logo/' . $clinic->getRawOriginal('image');
+
+				if (Storage::disk('public')->exists($oldPath)) {
+					Storage::disk('public')->delete($oldPath);
+				}
+			}
+
+			// Generate filename
+			$imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
+
+			// Store image
+			$path = 'uploads/clinics/' .$input['slug'].'/logo';
+
+			$image->storeAs($path, $imageName, 'public');
+
+			$input['image'] = $imageName;
+		}
+
+		// Handle file removals
+		$existingFiles = $clinic->getRawOriginal('files') ? json_decode($clinic->getRawOriginal('files'), true) : [];
+
+		if (!empty($input['removed_files'])) {
+			foreach ($input['removed_files'] as $removedFile) {
+				$filePath = 'uploads/clinics/' . $input['slug'] . '/' . $removedFile;
+				if (Storage::disk('public')->exists($filePath)) {
+					Storage::disk('public')->delete($filePath);
+				}
+				$existingFiles = array_values(array_filter($existingFiles, function ($f) use ($removedFile) {
+					return $f !== $removedFile;
+				}));
+			}
+			unset($input['removed_files']);
+		}
+
+		// Handle new file uploads
 		if (!empty($input['files'])) {
-            $files = $input['files'];
-            $uploadedFiles = [];
+			$files = $input['files'];
 
-            // Existing files
-            if ($clinic->files) {
-                $existingFiles = json_decode($clinic->files, true);
+			foreach ($files as $file) {
+				if ($file instanceof \Illuminate\Http\UploadedFile) {
+					$filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+					$file->storeAs('uploads/clinics/' . $input['slug'], $filename, 'public');
+					$existingFiles[] = $filename;
+				}
+			}
+		}
 
-                foreach ($existingFiles as $file) {
-                    // $filePath = public_path('uploads/clinics/' . $clinic->slug . '/' . $file);
-                    // if (file_exists($filePath)) {
-                    //     unlink($filePath); // Delete the file
-                    // }
-                    $uploadedFiles[] = $file;
-                }
-                
-                
-            }
-
-            foreach ($files as $file) {
-                // Generate a unique filename with a timestamp
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-                // Create the directory if it doesn't exist
-                $destinationPath = public_path('uploads/clinics/' . $input['slug']);
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                // Move the file to the directory
-                $file->move($destinationPath, $filename);
-
-                // Store the filename in an array
-                $uploadedFiles[] = $filename;
-            }
-
-            // Store the new file paths as a JSON array in the database
-            $input['files'] = json_encode($uploadedFiles);
-        }
-
-		
-		$clinic->update($input);
-		 
+		$input['files'] = json_encode($existingFiles);
+ 
+      
+        $clinic->update($input);
+        
         return response()->json(['message' => \Helper::alertMsg('update','Clinic','success')['message']], 200); 
-         
-    } 
+    }
 	  
 	 /**
      * Destroy the application dashboard.
