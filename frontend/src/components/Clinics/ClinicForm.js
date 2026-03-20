@@ -1,4 +1,4 @@
-import React, { useEffect , useState , useCallback} from 'react';
+import React, { useEffect , useState , useCallback,useRef} from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -111,6 +111,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [clinicData, setClinicData] = useState(clinic);
   const { id } = useParams();
+  const fetched = useRef(false);
    
   const {
     register,
@@ -181,7 +182,7 @@ const ClinicForm = ({ clinic, onClose }) => {
       hideLoader();
     }
   }, [cId, getClinicGroups, fetchAdditionalData, getClinicById, hideLoader, reset]);
-
+ 
   useEffect(() => {
   
     const existingClinic = getExistingClinic(id);
@@ -191,7 +192,11 @@ const ClinicForm = ({ clinic, onClose }) => {
       reset(buildDefaults(existingClinic));
     }
       
-    loadData();
+    if (fetched.current === false) {
+      loadData();
+      fetched.current = true;
+    }
+    
   }, [loadData, id,getExistingClinic,reset]);
 
   const onSubmit = async (data) => {

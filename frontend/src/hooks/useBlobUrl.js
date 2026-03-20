@@ -1,66 +1,67 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
-// 🔥 global cache (shared across app)
+// 🔥 global cache for blobs
 const blobCache = new Map();
 
+/**
+ * useBlobUrl - Returns a blob URL for a given file URL
+ * If the URL was already fetched, it instantly returns cached blob URL
+ */
 const useBlobUrl = (url, options = {}) => {
-  const [blobUrl, setBlobUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [blobUrl, setBlobUrl] = useState(() => blobCache.get(url) || null);
+  const [loading, setLoading] = useState(!blobCache.has(url));
   const [error, setError] = useState(null);
+
+  const prevUrlRef = useRef(null);
+
+  // ✅ stable headers object for dependency
+  const headers = useMemo(() => options.headers || {}, [options.headers]);
 
   useEffect(() => {
     if (!url) return;
 
-    let objectUrl;
-    let isMounted = true;
+    // 🔹 If same as previous URL, skip fetch
+    if (prevUrlRef.current === url) return;
 
-    // ✅ 1. Check cache first
+    // 🔹 If already cached, use instantly
     if (blobCache.has(url)) {
-      setBlobUrl(blobCache.get(url)); // ⚡ instant
+      setBlobUrl(blobCache.get(url));
+      setLoading(false);
+      prevUrlRef.current = url; // track current url
       return;
     }
 
+    let isMounted = true;
     setLoading(true);
     setError(null);
 
-    fetch(url, {
-      headers: options.headers || {},
-    })
+    fetch(url, { headers })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch file");
         return res.blob();
       })
       .then((blob) => {
-        objectUrl = URL.createObjectURL(blob);
+        if (!isMounted) return;
 
-        // ✅ 2. Save in cache
+        const objectUrl = URL.createObjectURL(blob);
+
+        // 🔥 Save to cache
         blobCache.set(url, objectUrl);
+        setBlobUrl(objectUrl);
 
-        if (isMounted) {
-          setBlobUrl(objectUrl);
-        }
+        prevUrlRef.current = url; // update previous URL
       })
       .catch((err) => {
-        if (isMounted) {
-          setError(err);
-        }
+        if (isMounted) setError(err);
       })
       .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       });
 
     return () => {
       isMounted = false;
-
-      // ❌ DO NOT revoke cached URLs
-      // only revoke if not cached
-      if (objectUrl && !blobCache.has(url)) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
-  }, [url,options.headers]);
+  }, [url, headers]);
 
   return { blobUrl, loading, error };
 };

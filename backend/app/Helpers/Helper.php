@@ -2814,7 +2814,7 @@ class Helper{
 		if($hasSigned){
 			return $signedUrl = \URL::signedRoute('file.serve', [
 			'token' => $token,
-			], now()->addMinutes(1));
+			], now()->addSeconds(5));
 		}else{
 			return $signedUrl = route('file.serve', ['token' => $token]);
 		}
