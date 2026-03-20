@@ -6,6 +6,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
+import NoRecord from '../Common/NoRecord';
 
 const ClinicGroupView = () => {
   const { id } = useParams();
@@ -87,15 +88,10 @@ const ClinicGroupView = () => {
             Basic information about the clinic group.
           </p>
         </div>
-        <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {errors ? (
+       
+        {clinicGroup ? (
           <>
-            <div>
-              <p className="mt-1 text-gray-400 font-medium">No Record found</p>
-            </div>
-          </>
-        ) : (
-          <>
+           <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6"> 
             <div>
               <p className="text-sm text-gray-500">Name</p>
               <p className="mt-1 text-gray-900 font-medium">{clinicGroup?.name || '-'}</p>
@@ -133,9 +129,15 @@ const ClinicGroupView = () => {
               <p className="text-sm text-gray-500">Description</p>
               <p className="mt-1 text-gray-900">{clinicGroup?.description || '-'}</p>
             </div>
-          </>
+          </div>
+        </>
+         
+        ) : (
+          <>
+          {!loading && <NoRecord message="Clinic Group not found" />}
+         </>
         )}
-         </div>
+        
       </div>
     </div>
   );

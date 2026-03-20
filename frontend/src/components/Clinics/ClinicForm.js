@@ -97,7 +97,7 @@ const buildDefaults = (data) => ({
 const ClinicForm = ({ clinic, onClose }) => {
   const { addClinic, updateClinic, getClinicById , getExistingClinic} = useClinic();
   const { clinicGroups, getClinicGroups } = useClinicGroup();
-  const { hideLoader } = useLoader();
+  const {showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
   const { fetchAdditionalData } = useGetAdditionalData();
@@ -173,7 +173,7 @@ const ClinicForm = ({ clinic, onClose }) => {
 
       if (fresh) {
         setClinicData(fresh?.clinic);
-        setFiles(fresh.display_files || []);
+        setFiles(fresh?.clinic?.display_files || []);
         reset(buildDefaults(fresh?.clinic));
       }
     } finally {
@@ -231,6 +231,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     }
 
     try {
+      showLoader()
       const result = clinicData?.id
         ? await updateClinic(clinicData.id, formData)
         : await addClinic(formData);

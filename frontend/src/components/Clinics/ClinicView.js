@@ -6,6 +6,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
+import NoRecord from '../Common/NoRecord';
 
 const ClinicView = () => {
   const { id } = useParams();
@@ -23,8 +24,7 @@ const ClinicView = () => {
     setPageTitle('Clinic View');
   }, [setPageTitle]);
 
-    
-
+     
   useEffect(() => {
     const loadDetails = async () => {
       setLoading(true);
@@ -94,11 +94,16 @@ const ClinicView = () => {
             Basic information about the clinic.
           </p>
 
-          { clinic && (
+          { clinic ? (
             <div className="mt-4">
               <p><strong>Name:</strong> {clinic.name}</p>
               <p><strong>Code:</strong> {clinic.code}</p>
             </div>
+          ) : (
+            <>
+            
+             {!loading && <NoRecord message="Clinic not found" />}
+            </>
           )}
         </div>
       </div>
