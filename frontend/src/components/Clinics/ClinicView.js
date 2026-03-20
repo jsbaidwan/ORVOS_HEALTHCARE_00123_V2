@@ -89,24 +89,109 @@ const ClinicView = () => {
 
       <div className={`${loading ? 'blur-sm animate-pulse' : ''} bg-white rounded-lg border border-gray-200 shadow-sm`}>
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Overview</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Basic information about the clinic.
-          </p>
-
-          { clinic ? (
-            <div className="mt-4">
-              <p><strong>Name:</strong> {clinic.name}</p>
-              <p><strong>Code:</strong> {clinic.code}</p>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Overview</h3>
+            <p className="mt-1 text-sm text-gray-500">
+                Basic information about the clinic.
+            </p>
             </div>
-          ) : (
-            <>
+             
+            {clinic ? (
+            <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6"> 
             
-             {!loading && <NoRecord message="Clinic not found" />}
+                <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.name || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Code</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.code || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.poc_email || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.phone || '-'}</p>
+                </div>
+              
+                <div>
+                    <p className="text-sm text-gray-500">Address</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.address || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">City</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.city || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">State</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.state?.name || '-'}</p>
+                </div>
+               
+                <div>
+                    <p className="text-sm text-gray-500">Zip</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.zip || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <span className={`mt-1 inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        clinic?.status === 1
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                        {clinic?.status === 1 ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">DICOM Enabled</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.is_dicom_enabled ? 'Yes' : 'No'}</p>
+                </div>
+ 
+                <div>
+                    <p className="text-sm text-gray-500">Patient Report Email</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.is_patient_report_email_enabled ? 'Enabled' : 'Disabled'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Fax Enabled</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.is_fax_enabled ? 'Yes' : 'No'}</p>
+                </div>
+ 
+                <div>
+                    <p className="text-sm text-gray-500">Fax Number</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.fax_number || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Archived</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.is_archived ? 'Yes' : 'No'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Date of Incorporation</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.doi || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Description</p>
+                    <p className="mt-1 text-gray-900 font-medium">{clinic?.description || '-'}</p>
+                </div>
+
+            </div>
+            ) : (
+            <>
+                {!loading && <NoRecord message="Clinic not found" />}
             </>
-          )}
+            )}
         </div>
-      </div>
+         
     </div>
   );
 };

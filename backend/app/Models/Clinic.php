@@ -48,6 +48,11 @@ class Clinic extends Authenticatable
 		'state_id.required' => 'The state field is required.'
 	);
 	
+	public function state()
+	{
+		return $this->belongsTo('App\Models\State', 'state_id');
+	}
+	
 	public function clinicGroup() 
     {  
         return $this->belongsTo('App\Models\ClinicGroup', 'clinic_group_id');

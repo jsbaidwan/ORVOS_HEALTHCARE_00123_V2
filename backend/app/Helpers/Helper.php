@@ -1301,7 +1301,7 @@ class Helper{
 	 */
 	public static function getClinics($isAdmin = true,$filters = [])
 	{  
-		$query = Clinic:: orderBy('id','DESC');  
+		$query = Clinic::with('state')->orderBy('id','DESC');  
 		if($isAdmin == false){
 			$query->whereHas('clinicUsers',function($q){
 				$q->where('user_id',\Auth::user()->id);
@@ -1359,7 +1359,7 @@ class Helper{
 	 */
 	public static function getClinicById($id)
 	{
-		$clinic = Clinic:: find($id);
+		$clinic = Clinic::with('state')->find($id);
 		return ['clinic' => $clinic];
 	} 
 	 /*
