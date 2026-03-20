@@ -1,4 +1,4 @@
-import React, { useEffect , useState} from 'react';
+import React, { useEffect , useState , useCallback} from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import { PlusIcon, PencilSquareIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { useGetAdditionalData } from '../../hooks/getAdditionalData';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useParams  } from 'react-router-dom';
+import Breadcrumb from '../Common/Breadcrumb';
   
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
@@ -94,7 +95,7 @@ const buildDefaults = (data) => ({
 });
 
 const ClinicForm = ({ clinic, onClose }) => {
-  const { addClinic, updateClinic, getClinicById } = useClinic();
+  const { addClinic, updateClinic, getClinicById , getExistingClinic} = useClinic();
   const { clinicGroups, getClinicGroups } = useClinicGroup();
   const { hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
@@ -108,7 +109,8 @@ const ClinicForm = ({ clinic, onClose }) => {
   const [imageRemoved, setImageRemoved] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [clinicData, setClinicData] = useState(clinic);
-
+  const { id } = useParams();
+   
   const {
     register,
     handleSubmit,
@@ -147,36 +149,49 @@ const ClinicForm = ({ clinic, onClose }) => {
   const handleRemoveNewFile = (index) => {
     setNewFiles(prev => prev.filter((_, i) => i !== index));
   };
-  
-  useEffect(() => {
-    const loadData = async () => {
-    
-      try {
-        const promises = [
-          getClinicGroups(1, {}, false),
-          fetchAdditionalData(),
-        ];
-        if (clinic?.id) {
-          promises.push(getClinicById(clinic.id));
-        }
+   
+  const cId = clinic?.id || id || null;
 
-        const [, resp, fresh] = await Promise.all(promises);
+  const loadData = useCallback(async () => {
+    try {
+      const promises = [
+        getClinicGroups(1, {}, false),
+        fetchAdditionalData(),
+      ];
 
-        setDeviceTypes(resp?.additionalData?.deviceTypes || []);
-        setStates(resp?.additionalData?.states || []);
-
-        if (fresh) {
-          setClinicData(fresh);
-          setFiles(fresh.display_files || []);
-          reset(buildDefaults(fresh));
-        }
-      } finally {
-        hideLoader();
+      if (cId) {
+        promises.push(getClinicById(cId));
       }
-    };
+
+      const results = await Promise.all(promises);
+
+      const resp = results[1];
+      const fresh = results[2];
+
+      setDeviceTypes(resp?.additionalData?.deviceTypes || []);
+      setStates(resp?.additionalData?.states || []);
+
+      if (fresh) {
+        setClinicData(fresh);
+        setFiles(fresh.display_files || []);
+        reset(buildDefaults(fresh));
+      }
+    } finally {
+      hideLoader();
+    }
+  }, [cId, getClinicGroups, fetchAdditionalData, getClinicById, hideLoader, reset]);
+
+  useEffect(() => {
+  
+    const existingClinic = getExistingClinic(id);
+    if(existingClinic){
+      setClinicData(existingClinic);
+      setFiles(existingClinic.display_files || []);
+      reset(buildDefaults(existingClinic));
+    }
+      
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadData, id,getExistingClinic,reset]);
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -221,7 +236,7 @@ const ClinicForm = ({ clinic, onClose }) => {
         : await addClinic(formData);
 
       if (result && (result.status === 200 || result.success)) {
-        onClose();
+       // onClose();
         toast.success(result?.message);
         navigate(getRoutePath('/clinics'));
       } else {
@@ -235,393 +250,396 @@ const ClinicForm = ({ clinic, onClose }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-      <ErrorHandle errors={errors} />
+    <div className="py-6">
+      <Breadcrumb />
+      <div className="mb-3">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h1 className="text-2xl font-semibold text-gray-900">{clinicData?.id ? 'Edit Clinic' : 'Add Clinic'}</h1>
+          <div className='mt-3'>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 mt-4">
+            <ErrorHandle errors={errors} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          label="Clinic Group"
-          name="clinic_group_id"
-          type="select"
-          registration={register('clinic_group_id')}
-          required
-          options={clinicGroups?.map(cg => ({
-            value: cg.id,
-            label: cg.name,
-          }))}
-          error={errors.clinic_group_id?.message}
-        />
-
-        <FormField
-          label="Clinic Name"
-          name="name"
-          registration={register('name')}
-          placeholder="Enter Clinic Name"
-          required
-          error={errors.name?.message}
-        />
-
-        <FormField
-          label="POC Email"
-          name="poc_email"
-          type="email"
-          registration={register('poc_email')}
-          placeholder="Enter POC Email"
-          required
-          error={errors.poc_email?.message}
-        />
-
-        <Controller
-          name="phone"
-          control={control}
-          render={({ field }) => (
-            <FormField
-              label="Phone"
-              name="phone"
-              value={field.value}
-              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-              placeholder="(xxx) xxx-xxxx"
-              error={errors.phone?.message}
-            />
-          )}
-        />
-
-        <Controller
-          name="doi"
-          control={control}
-          render={({ field }) => (
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Date of Initiation <span className="text-red-500 ml-1">*</span>
-              </label>
-              <DatePicker
-                selected={field.value}
-                onChange={field.onChange}
-                dateFormat="MM-dd-yyyy"
-                placeholderText="MM-DD-YYYY"
-                className={`w-full border ${errors.doi ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
-                
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                label="Clinic Group"
+                name="clinic_group_id"
+                type="select"
+                registration={register('clinic_group_id')}
+                required
+                options={clinicGroups?.map(cg => ({
+                  value: cg.id,
+                  label: cg.name,
+                }))}
+                error={errors.clinic_group_id?.message}
               />
-              {errors.doi && <p className="mt-1 text-sm text-red-600">{errors.doi.message}</p>}
-            </div>
-          )}
-        />
-      
-      <FormField
-        label="Address"
-        name="address"
-        registration={register('address')}
-        placeholder="Enter Address"
-        required
-        inputClassName="gmap-autocomplete"
-        error={errors.address?.message}
-      />
- 
-        <FormField
-          label="City"
-          name="city"
-          registration={register('city')}
-          placeholder="Enter City"
-          required
-          inputClassName="gm-city"
-          error={errors.city?.message}
-        />
 
-        <FormField
-          label="State"
-          name="state_id"
-          type="select"
-          registration={register('state_id')}
-          options={states?.map(state => ({
-            value: state.id,
-            label: state.name,
-          }))}
-          required
-          inputClassName="gm-state"
-          error={errors.state_id?.message}
-        />
+              <FormField
+                label="Clinic Name"
+                name="name"
+                registration={register('name')}
+                placeholder="Enter Clinic Name"
+                required
+                error={errors.name?.message}
+              />
 
-        <FormField
-          label="Zip"
-          name="zip"
-          registration={register('zip')}
-          placeholder="Enter Zip"
-          required
-          error={errors.zip?.message}
-        />
-      </div>
+              <FormField
+                label="POC Email"
+                name="poc_email"
+                type="email"
+                registration={register('poc_email')}
+                placeholder="Enter POC Email"
+                required
+                error={errors.poc_email?.message}
+              />
 
-      <FormField
-        label="Description"
-        name="description"
-        type="textarea"
-        registration={register('description')}
-        placeholder="Enter Description"
-        rows={3}
-        error={errors.description?.message}
-      />
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <FormField
+                    label="Phone"
+                    name="phone"
+                    value={field.value}
+                    onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    placeholder="(xxx) xxx-xxxx"
+                    error={errors.phone?.message}
+                  />
+                )}
+              />
 
-      <FormField
-        label="Status"
-        name="status"
-        type="select"
-        registration={register('status')}
-        options={[{ value: 1, label: 'Active' }, { value: 0, label: 'Inactive' }]}
-        required
-        error={errors.status?.message}
-      />
-
-      <div className="border-t border-gray-200 pt-4">
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Contract Documents</label>
-          <input
-            type="file"
-            multiple
-            onChange={(e) => {
-              const picked = Array.from(e.target.files || []);
-              setNewFiles(prev => [
-                ...prev,
-                ...picked.map(f => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
-              ]);
-              e.target.value = '';
-            }}
-            className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-          />
-        </div>
-
-        {(files.length > 0 || newFiles.length > 0) && (
-          <ul className="space-y-2">
-            {files.map((file, index) => (
-              file.status === 200 && (
-                
-                <li key={`db-${index}`} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
-                  <div className="flex items-center space-x-2 truncate max-w-[70%]">
-                    {/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name) ? (
-                      <img
-                        src={file.src}
-                        alt={file.name}
-                        className="w-8 h-8 rounded object-cover border border-gray-200 mr-2"
-                      />
-                    ): <DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
-                    <a
-                      href={file.src}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline text-sm   max-w-[70%]"
-                    >
-                      {file.name}
-                    </a>
+              <Controller
+                name="doi"
+                control={control}
+                render={({ field }) => (
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Date of Initiation <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <DatePicker
+                      selected={field.value}
+                      onChange={field.onChange}
+                      dateFormat="MM-dd-yyyy"
+                      placeholderText="MM-DD-YYYY"
+                      className={`w-full border ${errors.doi ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                      
+                    />
+                    {errors.doi && <p className="mt-1 text-sm text-red-600">{errors.doi.message}</p>}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFile(index)}
-                    className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
-                </li>
-              )
-            ))}
+                )}
+              />
+            
+            <FormField
+              label="Address"
+              name="address"
+              registration={register('address')}
+              placeholder="Enter Address"
+              required
+              inputClassName="gmap-autocomplete"
+              error={errors.address?.message}
+            />
+      
+              <FormField
+                label="City"
+                name="city"
+                registration={register('city')}
+                placeholder="Enter City"
+                required
+                inputClassName="gm-city"
+                error={errors.city?.message}
+              />
 
-            {newFiles.map((file, index) => (
-              <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
-                <div className="flex items-center space-x-2 truncate max-w-[70%]">
-                  {file.file.type?.startsWith('image/') ? (
-                    <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover border border-gray-200" />
-                  ):<DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
-                  <span className="text-sm text-gray-800 truncate"><a href={file.preview} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm   max-w-[70%]">{file.name}</a></span>
-                  <span className="text-xs text-green-600 font-medium whitespace-nowrap">(New)</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveNewFile(index)}
-                  className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              <FormField
+                label="State"
+                name="state_id"
+                type="select"
+                registration={register('state_id')}
+                options={states?.map(state => ({
+                  value: state.id,
+                  label: state.name,
+                }))}
+                required
+                inputClassName="gm-state"
+                error={errors.state_id?.message}
+              />
 
-      <div className="border-t border-gray-200 pt-4">
-        <Controller
-          name="image"
-          control={control}
-          render={({ field: { onChange, ref } }) => {
-            const dbPreview = clinicData?.display_image?.status === 200 && !imageRemoved ? clinicData.display_image.src : null;
-            const previewSrc = imagePreview || dbPreview;
+              <FormField
+                label="Zip"
+                name="zip"
+                registration={register('zip')}
+                placeholder="Enter Zip"
+                required
+                error={errors.zip?.message}
+              />
+            </div>
 
-            return (
+            <FormField
+              label="Description"
+              name="description"
+              type="textarea"
+              registration={register('description')}
+              placeholder="Enter Description"
+              rows={3}
+              error={errors.description?.message}
+            />
+
+            <FormField
+              label="Status"
+              name="status"
+              type="select"
+              registration={register('status')}
+              options={[{ value: 1, label: 'Active' }, { value: 0, label: 'Inactive' }]}
+              required
+              error={errors.status?.message}
+            />
+
+            <div className="border-t border-gray-200 pt-4">
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Clinic Logo</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Contract Documents</label>
                 <input
-                  ref={ref}
                   type="file"
-                  accept="image/*"
+                  multiple
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    onChange(e.target.files);
-                    if (file) {
-                      setImagePreview(URL.createObjectURL(file));
-                      setImageRemoved(false);
-                    } else {
-                      setImagePreview(null);
-                    }
+                    const picked = Array.from(e.target.files || []);
+                    setNewFiles(prev => [
+                      ...prev,
+                      ...picked.map(f => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
+                    ]);
+                    e.target.value = '';
                   }}
                   className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
-                {previewSrc && (
-                  <div className="mt-3 flex items-center space-x-3">
-                    <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200" />
+              </div>
+
+              {(files.length > 0 || newFiles.length > 0) && (
+                <ul className="space-y-2">
+                  {files.map((file, index) => (
+                    file.status === 200 && (
+                      
+                      <li key={`db-${index}`} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+                        <div className="flex items-center space-x-2 truncate max-w-[70%]">
+                          {/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name) ? (
+                            <img
+                              src={file.src}
+                              alt={file.name}
+                              className="w-8 h-8 rounded object-cover border border-gray-200 mr-2"
+                            />
+                          ): <DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
+                          <a
+                            href={file.src}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline text-sm   max-w-[70%]"
+                          >
+                            {file.name}
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    )
+                  ))}
+
+                  {newFiles.map((file, index) => (
+                    <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
+                      <div className="flex items-center space-x-2 truncate max-w-[70%]">
+                        {file.file.type?.startsWith('image/') ? (
+                          <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover border border-gray-200" />
+                        ):<DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
+                        <span className="text-sm text-gray-800 truncate"><a href={file.preview} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm   max-w-[70%]">{file.name}</a></span>
+                        <span className="text-xs text-green-600 font-medium whitespace-nowrap">(New)</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewFile(index)}
+                        className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <Controller
+                name="image"
+                control={control}
+                render={({ field: { onChange, ref } }) => {
+                  const dbPreview = clinicData?.display_image?.status === 200 && !imageRemoved ? clinicData.display_image.src : null;
+                  const previewSrc = imagePreview || dbPreview;
+
+                  return (
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Clinic Logo</label>
+                      <input
+                        ref={ref}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          onChange(e.target.files);
+                          if (file) {
+                            setImagePreview(URL.createObjectURL(file));
+                            setImageRemoved(false);
+                          } else {
+                            setImagePreview(null);
+                          }
+                        }}
+                        className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                      />
+                      {previewSrc && (
+                        <div className="mt-3 flex items-center space-x-3">
+                          <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onChange(null);
+                              setImagePreview(null);
+                              setImageRemoved(true);
+                            }}
+                            className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <FormField
+                label="DICOM Enabled"
+                name="is_dicom_enabled"
+                type="checkbox"
+                registration={register('is_dicom_enabled')}
+              />
+              <em className='text-gray-500 text-xs'>(Enabling DICOM automatically hides the Medical Condition section on both the Patient Form and the Orvos Diagnosis Report.)</em>
+            </div>
+
+            {isDicomEnabled && (
+              <>
+                <div className="border-t border-gray-200 pt-4">
+                  <FormField
+                    label="Device Type"
+                    name="device_type_id"
+                    type="select"
+                    registration={register('device_type_id')}
+                    options={deviceTypes?.map(deviceType => ({
+                      value: deviceType.id,
+                      label: deviceType.name,
+                    }))}
+                    required
+                    error={errors.device_type_id?.message}
+                  />
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Device ID <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    {fields.map((field, index) => (
+                      <div key={field.id}>
+                        <div className="flex items-center space-x-2">
+                          <FormField name={`device_ids.${index}.value`} type="text" placeholder="Enter Device ID" registration={register(`device_ids.${index}.value`)} error={errors.device_ids?.[index]?.value?.message}/>
+                          <button type="button" onClick={() => remove(index)} className="px-2 py-1 mb-5 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Remove</button>
+                        </div>
+                      </div>
+                    ))}
                     <button
                       type="button"
-                      onClick={() => {
-                        onChange(null);
-                        setImagePreview(null);
-                        setImageRemoved(true);
-                      }}
-                      className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                      onClick={() => append({ value: '' })}
+                      className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
                     >
-                      Remove
+                      + Add Device ID
                     </button>
                   </div>
-                )}
-              </div>
-            );
-          }}
-        />
-      </div>
-
-      <div className="border-t border-gray-200 pt-4">
-        <FormField
-          label="DICOM Enabled"
-          name="is_dicom_enabled"
-          type="checkbox"
-          registration={register('is_dicom_enabled')}
-        />
-        <em className='text-gray-500 text-xs'>(Enabling DICOM automatically hides the Medical Condition section on both the Patient Form and the Orvos Diagnosis Report.)</em>
-      </div>
-
-      {isDicomEnabled && (
-        <>
-          <div className="border-t border-gray-200 pt-4">
-            <FormField
-              label="Device Type"
-              name="device_type_id"
-              type="select"
-              registration={register('device_type_id')}
-              options={deviceTypes?.map(deviceType => ({
-                value: deviceType.id,
-                label: deviceType.name,
-              }))}
-              required
-              error={errors.device_type_id?.message}
-            />
-          </div>
-
-          <div className="border-t border-gray-200 pt-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Device ID <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <div key={field.id}>
-                  <div className="flex items-center space-x-2">
-                    <FormField name={`device_ids.${index}.value`} type="text" placeholder="Enter Device ID" registration={register(`device_ids.${index}.value`)} error={errors.device_ids?.[index]?.value?.message}/>
-                    <button type="button" onClick={() => remove(index)} className="px-2 py-1 mb-5 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Remove</button>
-                  </div>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => append({ value: '' })}
-                className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
-              >
-                + Add Device ID
-              </button>
+              </>
+            )}
+
+            <div className="border-t border-gray-200 pt-4">
+              <FormField
+                label="Enable Patient Reports via Email"
+                name="is_patient_report_email_enabled"
+                type="checkbox"
+                registration={register('is_patient_report_email_enabled')}
+              />
+              <em className='text-xs text-gray-500'>(Enable this option to automatically receive patient reports through email.)</em>
             </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <FormField
+                label="Fax Enabled"
+                name="is_fax_enabled"
+                type="checkbox"
+                registration={register('is_fax_enabled')}
+              />
+            </div>
+
+            {isFaxEnabled && (
+              <>
+                <div className="border-t border-gray-200 pt-4">
+                  <FormField
+                    label="Fax Number"
+                    name="fax_number"
+                    type="text"
+                    registration={register('fax_number')}
+                    placeholder="Enter Fax Number eg:- 34XXXXXXXX"
+                    required
+                    error={errors.fax_number?.message}
+                  />
+                </div>
+
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs px-4 py-3 rounded relative">
+                  <strong className="font-semibold">Note:</strong>{" "}
+                  The fax number should not include a leading '+' or '1'. It should be in the format{" "}
+                  <code className="bg-yellow-200 px-1 rounded">34XXXXXXXX</code>{" "}
+                  and not{" "}
+                  <code className="bg-yellow-200 px-1 rounded">+134XXXXXXXX</code>{" "}
+                  or{" "}
+                  <code className="bg-yellow-200 px-1 rounded">+34XXXXXXXX</code>.
+                </div>
+              </>
+            )}
+
+            {/* Form Actions */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+               
+              <button
+                type="submit"
+                className="btn-primary flex items-center justify-center"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  'Processing...'
+                ) : clinicData?.id ? (
+                  <>
+                    <PencilSquareIcon className="w-4 h-4 mr-2" />
+                    Update Clinic
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add Clinic
+                  </>
+                )}
+              </button>
+              </div>
+            </form>
           </div>
-        </>
-      )}
-
-      <div className="border-t border-gray-200 pt-4">
-        <FormField
-          label="Enable Patient Reports via Email"
-          name="is_patient_report_email_enabled"
-          type="checkbox"
-          registration={register('is_patient_report_email_enabled')}
-        />
-        <em className='text-xs text-gray-500'>(Enable this option to automatically receive patient reports through email.)</em>
+        </div>
       </div>
-
-      <div className="border-t border-gray-200 pt-4">
-        <FormField
-          label="Fax Enabled"
-          name="is_fax_enabled"
-          type="checkbox"
-          registration={register('is_fax_enabled')}
-        />
-      </div>
-
-      {isFaxEnabled && (
-        <>
-          <div className="border-t border-gray-200 pt-4">
-            <FormField
-              label="Fax Number"
-              name="fax_number"
-              type="text"
-              registration={register('fax_number')}
-              placeholder="Enter Fax Number eg:- 34XXXXXXXX"
-              required
-              error={errors.fax_number?.message}
-            />
-          </div>
-
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs px-4 py-3 rounded relative">
-            <strong className="font-semibold">Note:</strong>{" "}
-            The fax number should not include a leading '+' or '1'. It should be in the format{" "}
-            <code className="bg-yellow-200 px-1 rounded">34XXXXXXXX</code>{" "}
-            and not{" "}
-            <code className="bg-yellow-200 px-1 rounded">+134XXXXXXXX</code>{" "}
-            or{" "}
-            <code className="bg-yellow-200 px-1 rounded">+34XXXXXXXX</code>.
-          </div>
-        </>
-      )}
-
-      {/* Form Actions */}
-      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn-secondary"
-          disabled={isSubmitting}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="btn-primary flex items-center justify-center"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            'Processing...'
-          ) : clinicData?.id ? (
-            <>
-              <PencilSquareIcon className="w-4 h-4 mr-2" />
-              Update Clinic
-            </>
-          ) : (
-            <>
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Add Clinic
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 

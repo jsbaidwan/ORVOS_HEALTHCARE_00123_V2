@@ -51,10 +51,7 @@ const Breadcrumb = () => {
         return 'Emails';
       case 'templates':
         return 'Templates';
-      case 'new':
-        return 'Create New';
-      case 'edit':
-        return null; // handled by numeric id as Edit
+      
       default:
         if (!isNaN(parseInt(segment, 10)) && index === segments.length - 1) {
           return ''; // ignore last segment if it's a number

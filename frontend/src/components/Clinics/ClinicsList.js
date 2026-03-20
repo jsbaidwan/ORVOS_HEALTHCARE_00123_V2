@@ -189,7 +189,7 @@ const ClinicsList = ({ archived = false }) => {
       sortable: false,
       render: (row) => (
         <div className="flex items-center space-x-2">
-          <button
+          {/* <button
             onClick={() => handleEdit(row)}
             className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200"
             title="Edit"
@@ -197,7 +197,13 @@ const ClinicsList = ({ archived = false }) => {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-          </button>
+          </button> */}
+
+          <Link to={getRoutePath(`/clinics/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </Link>
 
           <Link to={getRoutePath(`/clinics/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
             <EyeIcon className="w-5 h-5" />
@@ -230,10 +236,10 @@ const ClinicsList = ({ archived = false }) => {
     window.history.pushState({}, '', newUrl);
   };
 
-  const handleEdit = (clinic) => {
-    setEditingClinic(clinic);
-    setShowModal(true);
-  };
+  // const handleEdit = (clinic) => {
+  //   setEditingClinic(clinic);
+  //   setShowModal(true);
+  // };
 
   const handleArchive = (clinic) => {
     setShowArchiveConfirm(true);
@@ -315,7 +321,7 @@ const ClinicsList = ({ archived = false }) => {
                   Archived Clinics
                 </button>
 
-                <button
+                {/* <button
                   onClick={() => {
                     setEditingClinic(null);
                     setShowModal(true);
@@ -324,7 +330,11 @@ const ClinicsList = ({ archived = false }) => {
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Add New Clinic
-                </button>
+                </button> */}
+                <Link to={getRoutePath('/clinics/create')} className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
+                 <PlusIcon className="w-4 h-4 mr-2" />
+                  Add New Clinic
+                </Link>
               </>
             ) : (
               <button

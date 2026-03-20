@@ -2,9 +2,8 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import Api from '../utils/api';
 import { handleApiError } from '../utils/errorHandler';
-
 const ClinicContext = createContext();
-
+ 
 export const useClinic = () => {
   const context = useContext(ClinicContext);
   if (!context) {
@@ -22,7 +21,7 @@ export const ClinicProvider = ({ children }) => {
     perPage: 10,
     total: 0,
   });
-
+   
   const getClinics = useCallback(async (page = 1, filters = {}, paginate) => {
     const api = Api(() => getToken());
     if (!api) return;
@@ -175,6 +174,11 @@ export const ClinicProvider = ({ children }) => {
     }
   };
 
+  const getExistingClinic = (id) => {
+    
+    return clinics.find(c => c.id === Number(id)) || null;
+  };
+
   const value = {
     clinics,
     setClinics,
@@ -186,6 +190,7 @@ export const ClinicProvider = ({ children }) => {
     deleteClinic,
     archiveClinic,
     unarchiveClinic,
+    getExistingClinic
   };
 
   return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;
