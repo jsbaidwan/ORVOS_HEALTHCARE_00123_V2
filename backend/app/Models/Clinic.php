@@ -7,12 +7,14 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\User;
 use App\Models\AdditionalSetting;
-
+  
 class Clinic extends Authenticatable
 {
     use Notifiable;
 
-	protected $table = 'clinics';  
+	protected $table = 'clinics'; 
+
+	protected $hasSigned = true; 
 	
 	protected $appends = ['formated_created_at','is_active_status','display_files','display_image'];
 	 
@@ -107,9 +109,14 @@ class Clinic extends Authenticatable
 				$path = 'uploads/clinics/' . $this->slug . '/' . $file;
 				$exists = !empty($file) && \Storage::disk('public')->exists($path);
 				$status = $exists ? 200 : 422;
+				 
+				$token = \Helper::fileTokenGen($path,$file,$this->hasSigned);
+				$signedUrl = \Helper::fileSignedRoute($token,$this->hasSigned);
+				$src = $signedUrl;
+				
 				return [
 					'status' => $status,
-					'src' => $status ? asset('storage/' . $path) : asset('images/dummy.png'),
+					'src' => $status ? $src : asset('assets/images/dummy.png'),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -119,20 +126,27 @@ class Clinic extends Authenticatable
 	}
 	
 	public function getDisplayImageAttribute()
-	{ 
+	{
 		$image = $this->attributes['image'];
-		$path = 'uploads/clinics/' . $this->slug . '/logo/' . $image;
+		$path = "uploads/clinics/{$this->slug}/logo/$image";
 		$exists = !empty($image) && \Storage::disk('public')->exists($path);
 		$status = $exists ? 200 : 422;
 		
-		$imgArr = [
+		if ($status === 200) {
+			 
+			$token = \Helper::fileTokenGen($path,$image,$this->hasSigned);
+			$signedUrl = \Helper::fileSignedRoute($token,$this->hasSigned);
+			$src = $signedUrl;
+			 
+		} else {
+			$src = asset('assets/images/dummy.png');
+		}
+
+		return [
 			'status' => $status,
-			'src' => $status == 200 
-				? asset('storage/uploads/clinics/' . $this->slug . '/logo/' . $image) 
-				: asset('images/dummy.png'),
+			'src' => $src,
 			'name' => $image
 		];
-		return $imgArr;
 	}
 	
 	public function getFormatedCreatedAtAttribute()

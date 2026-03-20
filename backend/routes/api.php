@@ -120,3 +120,30 @@ Route::post('login', 'App\Http\Controllers\Api\LoginController@login');
 Route::resource('register', 'App\Http\Controllers\Api\RegisterController');
 Route::post('password/email','App\Http\Controllers\Api\ForgotPasswordController@sendResetLinkEmail');
 Route::post('password/reset', 'App\Http\Controllers\Api\ResetsPasswords@reset');
+
+Route::get('/file/{token}', function ($token, Request $request) {
+   
+    // 1️⃣ Decode the token
+    $decoded = base64_decode(strtr($token, '-_', '+/'));
+	$data = json_decode(gzuncompress($decoded), true);
+	
+	if(!empty($data['hasSigned']) && $data['hasSigned']){
+		 
+		if (! $request->hasValidSignature()) {
+			abort(403, 'Unauthorized or expired link');
+		}	
+	}
+	
+    if (!$data || !isset($data['path'])) {
+        abort(403, 'Invalid link');
+    }
+	  
+    // 4️⃣ Check file exists
+    if (!Storage::disk('public')->exists($data['path'])) {
+        abort(404, 'File not found');
+    }
+
+    // 5️⃣ Serve the file
+    return response()->file(storage_path('app/public/' . $data['path']));
+
+})->name('file.serve');

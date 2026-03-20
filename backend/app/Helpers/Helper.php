@@ -21,6 +21,7 @@ use Illuminate\Http\UploadedFile;
 use App\Models\PdfTemplate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class Helper{
 	 
@@ -2757,6 +2758,55 @@ class Helper{
 	/*
 	 *-----------------------------------------
 	 * End: Get Device Type By Id
+	 * 
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Generate file token
+	 * 
+	 */
+	 
+	public static function  fileTokenGen($path,$file,$hasSigned = true)
+	{
+		return  rtrim(strtr(
+			base64_encode(gzcompress(json_encode([
+				'path' => $path,
+				'filename' => $file,
+				'hasSigned' => $hasSigned
+			]))),
+			'+/', '-_'
+		), '=');
+		
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Generate file token
+	 * 
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: File Signed Route
+	 * 
+	 */
+	 
+	public static function fileSignedRoute($token,$hasSigned = true)
+	{
+		if($hasSigned){
+			return $signedUrl = \URL::signedRoute('file.serve', [
+			'token' => $token,
+			], now()->addMinutes(1));
+		}else{
+			return $signedUrl = route('file.serve', ['token' => $token]);
+		}
+		  
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: File Signed Route
 	 * 
 	 */
 	 
