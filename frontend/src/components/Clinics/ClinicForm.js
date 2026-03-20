@@ -421,7 +421,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                             <img
                               src={file.src}
                               alt={file.name}
-                              className="w-8 h-8 rounded object-cover border border-gray-200 mr-2"
+                              className="w-8 h-8 rounded object-cover border border-gray-200 mr-2 bg-gray-200"
                             />
                           ): <DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
                           <a
@@ -448,7 +448,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                     <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
                       <div className="flex items-center space-x-2 truncate max-w-[70%]">
                         {file.file.type?.startsWith('image/') ? (
-                          <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover border border-gray-200" />
+                          <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover border border-gray-200 bg-gray-200" />
                         ):<DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
                         <span className="text-sm text-gray-800 truncate"><a href={file.preview} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm   max-w-[70%]">{file.name}</a></span>
                         <span className="text-xs text-green-600 font-medium whitespace-nowrap">(New)</span>
@@ -495,7 +495,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                       />
                       {previewSrc && (
                         <div className="mt-3 flex items-center space-x-3">
-                          <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200" />
+                          <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
                           <button
                             type="button"
                             onClick={() => {
