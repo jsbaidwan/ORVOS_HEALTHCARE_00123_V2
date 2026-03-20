@@ -13,9 +13,7 @@ class Clinic extends Authenticatable
     use Notifiable;
 
 	protected $table = 'clinics'; 
-
-	protected $hasSigned = true; 
-	
+  
 	protected $appends = ['formated_created_at','is_active_status','display_files','display_image'];
 	 
     /**
@@ -115,8 +113,8 @@ class Clinic extends Authenticatable
 				$exists = !empty($file) && \Storage::disk('public')->exists($path);
 				$status = $exists ? 200 : 422;
 				 
-				$token = \Helper::fileTokenGen($path,$file,$this->hasSigned);
-				$signedUrl = \Helper::fileSignedRoute($token,$this->hasSigned);
+				$token = \Helper::fileTokenGen($path,$file,\Helper::hasSigned());
+				$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
 				$src = $signedUrl;
 				
 				return [
@@ -139,8 +137,8 @@ class Clinic extends Authenticatable
 		
 		if ($status === 200) {
 			 
-			$token = \Helper::fileTokenGen($path,$image,$this->hasSigned);
-			$signedUrl = \Helper::fileSignedRoute($token,$this->hasSigned);
+			$token = \Helper::fileTokenGen($path,$image,\Helper::hasSigned());
+			$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
 			$src = $signedUrl;
 			 
 		} else {

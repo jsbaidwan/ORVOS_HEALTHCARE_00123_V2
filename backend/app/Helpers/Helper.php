@@ -2763,6 +2763,23 @@ class Helper{
 	 
 	/*
 	 *-----------------------------------------
+	 * Start: Has Signed
+	 * 
+	 */ 
+	 
+	public static function hasSigned()
+	{
+		return false;
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Has Signed
+	 * 
+	 */
+	 
+	/*
+	 *-----------------------------------------
 	 * Start: Generate file token
 	 * 
 	 */
