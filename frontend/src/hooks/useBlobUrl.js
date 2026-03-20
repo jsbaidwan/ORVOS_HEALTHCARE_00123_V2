@@ -30,12 +30,15 @@ const useBlobUrl = (url, options = {}) => {
     
     // 🔹 If same as previous URL, skip fetch
     if (prevUrlRef.current === url) return;
-    
+   
     // 🔹 If already cached, use instantly
     if (blobCache.has(url)) {
+     
       setBlobUrl(blobCache.get(url));
+      
       setLoading(false);
       prevUrlRef.current = url; // track current url
+      
       return;
     }
 
