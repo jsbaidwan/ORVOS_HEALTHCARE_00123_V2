@@ -2769,7 +2769,7 @@ class Helper{
 	 
 	public static function hasSigned()
 	{
-		return false;
+		return true;
 	}
 	
 	/*
@@ -2814,7 +2814,7 @@ class Helper{
 		if($hasSigned){
 			return $signedUrl = \URL::signedRoute('file.serve', [
 			'token' => $token,
-			], now()->addMinutes(5));
+			], now()->addMinutes(1));
 		}else{
 			return $signedUrl = route('file.serve', ['token' => $token]);
 		}

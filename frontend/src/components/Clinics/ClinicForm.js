@@ -18,7 +18,8 @@ import { useGetAdditionalData } from '../../hooks/getAdditionalData';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate,useParams  } from 'react-router-dom';
 import Breadcrumb from '../Common/Breadcrumb';
-  
+import useBlobUrl from '../../hooks/useBlobUrl';
+
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
   name: yup.string().required('Clinic Name is required').trim(),
@@ -250,6 +251,52 @@ const ClinicForm = ({ clinic, onClose }) => {
     }
   };
 
+  const dbPreview = clinicData?.display_image?.status === 200 && !imageRemoved ? clinicData.display_image.src : null;
+  const previewSrc = imagePreview || dbPreview;
+  const { blobUrl } = useBlobUrl(previewSrc);
+  const imgBlobUrl = blobUrl
+
+
+  const BlobFileItem = ({ file, onRemove, index }) => {
+    const { blobUrl } = useBlobUrl(file.src);
+  
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+  
+    return (
+      <li className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+        <div className="flex items-center space-x-2 truncate max-w-[70%]">
+          
+          {isImage ? (
+            <img
+              src={blobUrl}
+              alt=""
+              className="w-8 h-8 rounded object-cover border border-gray-200 bg-gray-200"
+            />
+          ) : (
+            <DocumentIcon className="w-8 h-8 border border-gray-200" />
+          )}
+  
+          <a
+            href={blobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline text-sm max-w-[70%]"
+          >
+            {file.name}
+          </a>
+        </div>
+  
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+        >
+          Remove
+        </button>
+      </li>
+    );
+  };
+
   return (
     <div className="py-6">
       <Breadcrumb />
@@ -411,41 +458,19 @@ const ClinicForm = ({ clinic, onClose }) => {
                 />
               </div>
 
-              {(files.length > 0 || newFiles.length > 0) && (
-                <ul className="space-y-2">
-                  {files.map((file, index) => (
-                    file.status === 200 && (
-                      
-                      <li key={`db-${index}`} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
-                        <div className="flex items-center space-x-2 truncate max-w-[70%]">
-                          {/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name) ? (
-                            <img
-                              src={file.src}
-                              alt={file.name}
-                              className="w-8 h-8 rounded object-cover border border-gray-200 mr-2 bg-gray-200"
-                            />
-                          ): <DocumentIcon className="w-8 h-8 rounded object-cover border border-gray-200 mr-2" />}
-                          <a
-                            href={file.src}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 underline text-sm   max-w-[70%]"
-                          >
-                            {file.name}
-                          </a>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    )
-                  ))}
-
-                  {newFiles.map((file, index) => (
+              {files.map((file, index) =>
+                file.status === 200 && (
+                  <BlobFileItem
+                    key={`db-${index}`}
+                    file={file}
+                    index={index}
+                    onRemove={handleRemoveFile} // ✅ used
+                  />
+                )
+              )}
+              
+             <ul className="space-y-2">
+              {newFiles.map((file, index) => (
                     <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
                       <div className="flex items-center space-x-2 truncate max-w-[70%]">
                         {file.file.type?.startsWith('image/') ? (
@@ -463,8 +488,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                       </button>
                     </li>
                   ))}
-                </ul>
-              )}
+              </ul>
             </div>
 
             <div className="border-t border-gray-200 pt-4">
@@ -472,9 +496,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                 name="image"
                 control={control}
                 render={({ field: { onChange, ref } }) => {
-                  const dbPreview = clinicData?.display_image?.status === 200 && !imageRemoved ? clinicData.display_image.src : null;
-                  const previewSrc = imagePreview || dbPreview;
-
+                  
                   return (
                     <div className="mb-4">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Clinic Logo</label>
@@ -496,7 +518,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                       />
                       {previewSrc && (
                         <div className="mt-3 flex items-center space-x-3">
-                          <img src={previewSrc} alt="Clinic Logo" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
+                          <img src={imgBlobUrl} alt="" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
                           <button
                             type="button"
                             onClick={() => {
