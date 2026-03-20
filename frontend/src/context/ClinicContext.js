@@ -74,7 +74,7 @@ export const ClinicProvider = ({ children }) => {
       const response = await api.call(`clinics/${id}/edit`, 'GET', null, true);
 
       if (response.status === 200) {
-        return response.data.clinic;
+        return {'status': 200,'clinic': response.data.clinic};
       } else {
         return handleApiError(response.error, logout);
       }
@@ -175,8 +175,7 @@ export const ClinicProvider = ({ children }) => {
   };
 
   const getExistingClinic = (id) => {
-    
-    return clinics.find(c => c.id === Number(id)) || null;
+     return clinics.find(c => c.id === Number(id)) || null;
   };
 
   const value = {

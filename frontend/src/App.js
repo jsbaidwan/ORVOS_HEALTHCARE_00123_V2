@@ -26,6 +26,7 @@ import ResetPassword from './components/Auth/ResetPassword';
 import Dashboard from './components/Dashboard/Dashboard';
 import ClinicsList from './components/Clinics/ClinicsList';
 import ClinicForm from './components/Clinics/ClinicForm';
+import ClinicView from './components/Clinics/ClinicView';
 import ArchiveClinics from './components/Clinics/ArchiveClinics';
 import ClinicGroupList from './components/ClinicGroups/ClinicGroupList';
 import ArchiveClinicGroups from './components/ClinicGroups/ArchiveClinicGroups';
@@ -139,6 +140,14 @@ const createProtectedRoutes = (prefix, roleId,permission) => {
         element={
           <ProtectedRoute permission={permission(1,'write')} requiredRole={roleId}>
             <MainLayout><ClinicForm /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/clinics/view/:id`}
+        element={
+          <ProtectedRoute permission={permission(1,'read')} requiredRole={roleId}>
+            <MainLayout><ClinicView /></MainLayout>
           </ProtectedRoute>
         }
       />

@@ -172,9 +172,9 @@ const ClinicForm = ({ clinic, onClose }) => {
       setStates(resp?.additionalData?.states || []);
 
       if (fresh) {
-        setClinicData(fresh);
+        setClinicData(fresh?.clinic);
         setFiles(fresh.display_files || []);
-        reset(buildDefaults(fresh));
+        reset(buildDefaults(fresh?.clinic));
       }
     } finally {
       hideLoader();

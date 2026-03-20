@@ -35,9 +35,9 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
     }
     const data = await getClinicGroupById(id);
     return {
-      name: data?.name || '',
-      description: data?.description || '',
-      active: data?.active === 1,
+      name: data?.clinicGroup?.name || '',
+      description: data?.clinicGroup?.description || '',
+      active: data?.clinicGroup?.active === 1,
     };
   }, [getClinicGroupById]);  
   

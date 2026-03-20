@@ -11,7 +11,7 @@ const ClinicGroupView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
-  const { getClinicGroupById } = useClinicGroup();
+  const { getClinicGroupById,getExistingClinicGroup } = useClinicGroup();
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState(null);
   const [clinicGroup, setClinicGroup] = useState(null);
@@ -25,22 +25,40 @@ const ClinicGroupView = () => {
     const loadDetails = async () => {
       setLoading(true);
       setErrors(null);
+  
       try {
-        const data = await getClinicGroupById(id);
-        if (data?.status && data?.status !== 200) {
-          setErrors({ general: data?.message || 'Unable to load clinic group' });
-        } else {
-          setClinicGroup(data);
+        const existingClinicGroup = getExistingClinicGroup(id);
+  
+        // ✅ Use cached data if available
+        if (existingClinicGroup) {
+          setClinicGroup(existingClinicGroup);
+          setLoading(false);
+          
         }
+  
+        // ❌ Otherwise call API
+        const data = await getClinicGroupById(id);
+  
+        if (data?.status && data?.status !== 200) {
+          setErrors({
+            general: data?.message || 'Unable to load clinic group'
+          });
+        } else {
+          setClinicGroup(data?.clinicGroup);
+        }
+  
       } catch (err) {
-        setErrors({ general: err?.message || 'Something went wrong' });
+        setErrors({
+          general: err?.message || 'Something went wrong'
+        });
       } finally {
         setLoading(false);
       }
     };
-
-    loadDetails();
-  }, [id, getClinicGroupById]);
+  
+    if (id) loadDetails();
+  
+  }, [id, getClinicGroupById, getExistingClinicGroup]);
  
   return (
     <div className="py-6">

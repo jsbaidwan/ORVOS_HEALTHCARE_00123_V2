@@ -83,7 +83,8 @@ export const ClinicGroupProvider = ({ children }) => {
       const response = await api.call(`clinic-groups/${id}`, 'GET', null, true);
 
       if (response.status === 200) {
-        return response.data.clinicGroup;
+        return {'status': 200,'clinicGroup': response.data.clinicGroup};
+        
       } else {
         return handleApiError(response.error, logout);
        
@@ -191,6 +192,10 @@ export const ClinicGroupProvider = ({ children }) => {
       return handleApiError(err, logout);
     }
   };
+
+  const getExistingClinicGroup = (id) => {
+    return clinicGroups.find(c => c.id === Number(id)) || null;
+ };
   
   const value = {
     clinicGroups,
@@ -203,6 +208,7 @@ export const ClinicGroupProvider = ({ children }) => {
     deleteClinicGroup,
     archiveClinicGroup,
     unarchiveClinicGroup,
+    getExistingClinicGroup
   };
 
   return <ClinicGroupContext.Provider value={value}>{children}</ClinicGroupContext.Provider>;
