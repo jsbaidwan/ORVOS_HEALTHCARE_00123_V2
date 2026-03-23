@@ -260,8 +260,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   const previewSrc = imagePreview || dbPreview;
   const { blobUrl } = useBlobUrl(previewSrc);
   const imgBlobUrl = blobUrl
-
-
+ 
   const BlobFileItem = ({ file, onRemove, index }) => {
     const { blobUrl } = useBlobUrl(file.src);
   

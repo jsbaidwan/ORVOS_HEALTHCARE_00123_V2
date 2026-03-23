@@ -4,9 +4,10 @@ import { useClinic } from '../../context/ClinicContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
+import useBlobUrl from '../../hooks/useBlobUrl';
 
 const ClinicView = () => {
   const { id } = useParams();
@@ -65,6 +66,42 @@ const ClinicView = () => {
   }, [id, getClinicById, getExistingClinic]);
    
 
+  const { blobUrl } = useBlobUrl(clinic?.display_image?.src || '');
+  const imgBlobUrl = blobUrl
+
+  const BlobFileItem = ({ file, onRemove, index }) => {
+    const { blobUrl } = useBlobUrl(file.src);
+  
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+  
+    return (
+      <li className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
+        <div className="flex items-center space-x-2 truncate max-w-[70%]">
+          
+          {isImage ? (
+            <img
+              src={blobUrl}
+              alt=""
+              className="w-8 h-8 rounded object-cover border border-gray-200 bg-gray-200"
+            />
+          ) : (
+            <DocumentIcon className="w-8 h-8 border border-gray-200" />
+          )}
+  
+          <a
+            href={blobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline text-sm max-w-[70%]"
+          >
+            {file.name}
+          </a>
+        </div>
+   
+      </li>
+    );
+  };
+
   return (
     <div className="py-6">
       <Breadcrumb />
@@ -97,7 +134,29 @@ const ClinicView = () => {
              
             {clinic ? (
             <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6"> 
-            
+              <div>
+                  <p className="text-sm text-gray-500 mb-1">Clinic Logo</p>
+
+                  <div className="w-20 h-20 relative">
+                    <div className="w-full h-full bg-gray-100 border rounded-lg flex items-center justify-center overflow-hidden">
+
+                      {/* Loader */}
+                      {loading && (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg"></div>
+                      )}
+
+                      {/* Image */}
+                      <img
+                        src={imgBlobUrl}
+                        alt=""
+                        onLoad={() => setLoading(false)}
+                        className={`w-full h-full object-contain transition-opacity duration-300 ${
+                          loading ? "opacity-0" : "opacity-100"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div>
                     <p className="text-sm text-gray-500">Name</p>
                     <p className="mt-1 text-gray-900 font-medium">{clinic?.name || '-'}</p>
@@ -182,6 +241,22 @@ const ClinicView = () => {
                 <div>
                     <p className="text-sm text-gray-500">Description</p>
                     <p className="mt-1 text-gray-900 font-medium">{clinic?.description || '-'}</p>
+                </div>
+
+                <div>
+                    <p className="text-sm text-gray-500">Contract Documents</p>
+                    <ul className="mt-1 space-y-2">
+                    {clinic?.display_files?.map((file, index) =>
+                      file.status === 200 && (
+                        <BlobFileItem
+                          key={`db-${index}`}
+                          file={file}
+                          index={index}
+                          
+                        />
+                      )
+                    )}
+                    </ul>
                 </div>
 
             </div>
