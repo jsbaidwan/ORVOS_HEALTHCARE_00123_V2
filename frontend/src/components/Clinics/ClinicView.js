@@ -135,20 +135,24 @@ const ClinicView = () => {
             {clinic ? (
             <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6"> 
                 
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                <img
-                  src={imgBlobUrl}
-                  alt=""
-                  onLoad={() => setLoading(false)}
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${
-                    loading ? "opacity-0" : "opacity-100"
-                  }`}
-                />
+                <div className="flex flex-col items-start gap-2">
+                  <p className="text-sm text-gray-500">Logo</p>
 
-                {loading && (
-                  <div className="absolute w-24 h-24 rounded-full bg-gray-200 animate-pulse"></div>
-                )}
-              </div>
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                    <img
+                      src={imgBlobUrl}
+                      alt=""
+                      onLoad={() => setLoading(false)}
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${
+                        loading ? "opacity-0" : "opacity-100"
+                      }`}
+                    />
+
+                    {loading && (
+                      <div className="absolute inset-0 rounded-full bg-gray-200 animate-pulse"></div>
+                    )}
+                  </div>
+                </div>
                 
                 <div>
                     <p className="text-sm text-gray-500">Name</p>
