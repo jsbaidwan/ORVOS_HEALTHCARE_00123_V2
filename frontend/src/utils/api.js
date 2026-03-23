@@ -70,7 +70,7 @@ const Api = (getToken) => {
   
       return { status: response.status, data: json };
     } catch (err) {
-      console.error('Response decode error:', err);
+     
       return {
         status: response.status,
         data: {},
