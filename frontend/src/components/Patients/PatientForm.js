@@ -87,7 +87,10 @@ const PatientForm = ({ patient }) => {
                 type="select"
                 value={formData.clinic}
                 onChange={handleChange}
-                options={clinics.map(c => c.companyName)}
+                options={[
+                  { value: '', label: 'All Clinics' },
+                  ...clinics.map(c => ({ value: c?.id, label: c.name }))
+                ]}
                 required
               />
 
