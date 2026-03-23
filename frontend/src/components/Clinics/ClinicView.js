@@ -218,7 +218,7 @@ const ClinicView = () => {
                           key={`db-${index}`}
                           file={file}
                           index={index}
-                          onRemove=""
+                          onRemove={null}
                           onRemoveEnable={false}
                         />
                       )
