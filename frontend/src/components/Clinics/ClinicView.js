@@ -173,7 +173,9 @@ const ClinicView = () => {
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
-                        {clinic?.status === 1 ? 'Active' : 'Inactive'}
+                       {clinic.is_active_status?.name
+                        ? clinic.is_active_status.name.charAt(0).toUpperCase() + clinic.is_active_status.name.slice(1)
+                        : ''}
                     </span>
                 </div>
 

@@ -14,7 +14,7 @@ class Clinic extends Authenticatable
 
 	protected $table = 'clinics'; 
   
-	protected $appends = ['formated_created_at','display_files','display_image'];
+	protected $appends = ['formated_created_at','is_active_status','display_files','display_image'];
 	 
     /**
      * The attributes that are mass assignable.
