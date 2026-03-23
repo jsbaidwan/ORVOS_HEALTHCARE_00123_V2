@@ -48,7 +48,7 @@ class ClinicGroup extends Authenticatable
 		}
 		
 		try {
-			return \Helper::changeDateFormat($this->created_at,'D, M d Y')['date'];
+			return \Carbon\Carbon::parse($this->created_at)->format('D, M d Y');
 		} catch (\Exception $e) {
 			return '';
 		}

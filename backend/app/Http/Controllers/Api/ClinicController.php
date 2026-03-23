@@ -196,7 +196,7 @@ class ClinicController extends Controller
         $rules['name'] .= ',name,'.$id;  
         $rules['code'] .= ',code,'.$id;
         //$rules['poc_email'] .= ',poc_email,'.$id;
-		 
+		
 		if (!empty($input['is_dicom_enabled'])) {
 			$rules['device_ids'] = 'required|array';
 			$rules['device_ids.*'] = 'required|distinct';
@@ -223,14 +223,15 @@ class ClinicController extends Controller
 			$input['fax_number'] = NULL;
 		}
 
-        $validate = Validator::make($input,$rules,$messages);
-        if($validate->fails()){
-            return redirect()->back()->withErrors($validate)->withInput();
+        $validator = Validator::make($input,$rules,$messages);
+        if($validator->fails()){
+			
+			return response()->json(['message' => $validator->errors()], 422);
         }
 
         $clinic = \Helper::getClinicById($id,false)['clinic'];
         if(!$clinic){
-            return redirect()->back()->withErrors(['poc_email' => 'The clinic you are trying to update does not exist.'])->withInput();
+           return response()->json(['message' => ['poc_email' => 'The clinic you are trying to update does not exist.']], 422);
         }
  
         $input['slug'] = \Helper::genSlug($input['name'])['slug'];
@@ -315,8 +316,7 @@ class ClinicController extends Controller
 		}
 
 		$input['files'] = json_encode($existingFiles);
- 
-      
+  
         $clinic->update($input);
         
         return response()->json(['message' => \Helper::alertMsg('update','Clinic','success')['message']], 200); 

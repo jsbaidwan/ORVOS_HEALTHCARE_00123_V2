@@ -150,7 +150,7 @@ const ClinicsList = ({ archived = false }) => {
       accessor: 'city',
       render: (row) => (
         <div>
-          <p className="text-gray-900 text-sm">{row.city || '-'}{row.state ? `, ${row.state}` : ''}</p>
+          <p className="text-gray-900 text-sm">{row.city || '-'}{row.state?.name ? `, ${row.state?.name}` : ''}</p>
           <p className="text-gray-500 text-xs">{row.zip || ''}</p>
         </div>
       ),

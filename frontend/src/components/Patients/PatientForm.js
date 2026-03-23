@@ -10,10 +10,8 @@ import Breadcrumb from '../Common/Breadcrumb';
 const PatientForm = ({ patient }) => {
   const navigate = useNavigate();
   const { addPatient, updatePatient } = usePatient();
-  const { getActiveeClinics } = useClinic();
-
-  const clinics = getActiveeClinics();
-
+  const { clinics } = useClinic();
+  
   const [formData, setFormData] = useState({
     clinic: patient?.clinic || '',
     firstName: patient?.firstName || '',

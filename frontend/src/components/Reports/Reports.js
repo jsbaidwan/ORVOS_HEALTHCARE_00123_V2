@@ -7,13 +7,12 @@ import Breadcrumb from '../Common/Breadcrumb';
 import { useTitle } from '../../context/TitleContext';
 
 const Reports = () => {
-  const { getActiveeClinics } = useClinic();
+  const { clinics } = useClinic();
   const { patients } = usePatient();
   const [selectedClinic, setSelectedClinic] = useState('');
   const [reportType, setReportType] = useState('clinic-patients');
   const { setPageTitle } = useTitle();
-
-  const clinics = getActiveeClinics();
+ 
 
   const getClinicPatients = () => {
     if (!selectedClinic) return patients;
