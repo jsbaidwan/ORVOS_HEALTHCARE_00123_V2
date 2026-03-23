@@ -19,6 +19,7 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate,useParams  } from 'react-router-dom';
 import Breadcrumb from '../Common/Breadcrumb';
 import useBlobUrl from '../../hooks/useBlobUrl';
+import BlobFileItem from '../UI/BlobFileItem';
 
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
@@ -260,47 +261,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   const previewSrc = imagePreview || dbPreview;
   const { blobUrl } = useBlobUrl(previewSrc);
   const imgBlobUrl = blobUrl
- 
-  const BlobFileItem = ({ file, onRemove, index }) => {
-    const { blobUrl } = useBlobUrl(file.src);
   
-    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
-  
-    return (
-      <li className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
-        <div className="flex items-center space-x-2 truncate max-w-[70%]">
-          
-          {isImage ? (
-            <img
-              src={blobUrl}
-              alt=""
-              className="w-8 h-8 rounded object-cover border border-gray-200 bg-gray-200"
-            />
-          ) : (
-            <DocumentIcon className="w-8 h-8 border border-gray-200" />
-          )}
-  
-          <a
-            href={blobUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline text-sm max-w-[70%]"
-          >
-            {file.name}
-          </a>
-        </div>
-  
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-        >
-          Remove
-        </button>
-      </li>
-    );
-  };
-
   return (
     <div className="py-6">
       <Breadcrumb />

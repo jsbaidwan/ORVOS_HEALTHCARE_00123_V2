@@ -4,10 +4,11 @@ import { useClinic } from '../../context/ClinicContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
 import useBlobUrl from '../../hooks/useBlobUrl';
+import BlobFileItem from '../UI/BlobFileItem';
 
 const ClinicView = () => {
   const { id } = useParams();
@@ -68,39 +69,7 @@ const ClinicView = () => {
 
   const { blobUrl } = useBlobUrl(clinic?.display_image?.src || '');
   const imgBlobUrl = blobUrl
-
-  const BlobFileItem = ({ file, onRemove, index }) => {
-    const { blobUrl } = useBlobUrl(file.src);
-  
-    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
-  
-    return (
-      <li className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
-        <div className="flex items-center space-x-2 truncate max-w-[70%]">
-          
-          {isImage ? (
-            <img
-              src={blobUrl}
-              alt=""
-              className="w-8 h-8 rounded object-cover border border-gray-200 bg-gray-200"
-            />
-          ) : (
-            <DocumentIcon className="w-8 h-8 border border-gray-200" />
-          )}
-  
-          <a
-            href={blobUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline text-sm max-w-[70%]"
-          >
-            {file.name}
-          </a>
-        </div>
-   
-      </li>
-    );
-  };
+ 
 
   return (
     <div className="py-6">
@@ -249,7 +218,8 @@ const ClinicView = () => {
                           key={`db-${index}`}
                           file={file}
                           index={index}
-                          
+                          onRemove=""
+                          onRemoveEnable={false}
                         />
                       )
                     )}
