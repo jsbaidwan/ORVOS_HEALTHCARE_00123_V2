@@ -13,7 +13,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { errorsFormatted } from '../../utils/errorHandler';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
-import { PlusIcon, PencilSquareIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, DocumentIcon,UserIcon } from '@heroicons/react/24/outline';
 import { useGetAdditionalData } from '../../hooks/getAdditionalData';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate,useParams  } from 'react-router-dom';
@@ -483,7 +483,18 @@ const ClinicForm = ({ clinic, onClose }) => {
                       />
                       {previewSrc && (
                         <div className="mt-3 flex items-center space-x-3">
-                          <img src={imgBlobUrl} alt="" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
+                           
+                           {!imgBlobUrl ? (
+                              <UserIcon className="w-16 h-16 rounded-full object-cover border border-gray-80 bg-gray-50" />
+                            ) : (
+                            <img
+                              src={imgBlobUrl}
+                              alt=""
+                              
+                              className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" 
+                            />
+                            )}
+                          
                           <button
                             type="button"
                             onClick={() => {

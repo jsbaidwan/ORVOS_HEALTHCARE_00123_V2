@@ -4,7 +4,7 @@ import { useClinic } from '../../context/ClinicContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
 import useBlobUrl from '../../hooks/useBlobUrl';
@@ -69,8 +69,7 @@ const ClinicView = () => {
 
   const { blobUrl } = useBlobUrl(clinic?.display_image?.src || '');
   const imgBlobUrl = blobUrl
- 
-
+  
   return (
     <div className="py-6">
       <Breadcrumb />
@@ -107,7 +106,10 @@ const ClinicView = () => {
                 <div className="flex flex-col items-start gap-2">
                   <p className="text-sm text-gray-500">Logo</p>
 
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
+                    {!imgBlobUrl ? (
+                      <UserIcon className="w-10 h-10 rounded-full object-cover border border-gray-80 bg-gray-50" />
+                    ) : (
                     <img
                       src={imgBlobUrl}
                       alt=""
@@ -116,6 +118,7 @@ const ClinicView = () => {
                         loading ? "opacity-0" : "opacity-100"
                       }`}
                     />
+                    )}
 
                     {loading && (
                       <div className="absolute inset-0 rounded-full bg-gray-200 animate-pulse"></div>
