@@ -57,7 +57,7 @@ const Api = (getToken) => {
         // Regular JSON
         json = rawText ? JSON.parse(rawText) : {};
       }
-  
+      
       // If response is not OK, throw ApiError
       if (!response.ok) {
         const apiError = new ApiError(
@@ -121,7 +121,7 @@ const Api = (getToken) => {
       });
       return await handleResponse(response);
     } catch (error) {
-      
+       
       const status = error?.response?.status || 500;
      
       let message = error?.message || 'An error occurred';
