@@ -9,7 +9,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   const [isLoading, setIsLoading] = useState(true);
   const loadDataRef = useRef(false);
   const [error, setError] = useState(null);
-  
+  const recaptchaRef = useRef(null);
   // Decode once at top level
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
 
@@ -58,9 +58,14 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   }, [getRecaptchaKeys]);
 
   const handleChange = (token) => {
+    if (!token) {
+      recaptchaRef.current?.reset();
+      return;
+    }
+  
     onVerify && onVerify(token);
   };
-
+  
   if (isLoading) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md flex justify-center items-center"> 
@@ -103,10 +108,17 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg flex justify-center">
         <div className="g-recaptcha transform scale-[0.85] sm:scale-100 origin-center">
         
-          <ReCAPTCHA
-            sitekey={siteKey}
-            onChange={handleChange}
-          />
+        <ReCAPTCHA
+          ref={recaptchaRef}
+          sitekey={siteKey}
+          onChange={handleChange}
+          onExpired={() => {
+            recaptchaRef.current?.reset();
+          }}
+          onErrored={() => {
+            recaptchaRef.current?.reset();
+          }}
+        />
         </div>
       </div>
     </div>
