@@ -372,7 +372,7 @@ const ClinicsList = ({ archived = false }) => {
           Inactive
         </button>
       </div>
-
+      
       <ErrorHandle errors={errors} />
       <Filters filters={filterConfig} onFilterChange={filtersData} />
 

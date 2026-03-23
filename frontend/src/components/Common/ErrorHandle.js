@@ -72,13 +72,14 @@ const ErrorHandle = ({
       return Object.entries(errors).map(([field, value], i) => {
         const messages = extractMessages(value);
         if (messages.length === 0) return null;
-
+        const filteredMessages = messages.filter(msg => msg !== 'manual');
+        
         return (
           <div key={field || i} className="mb-2">
             {field !== 'general' && (
               <p className="font-medium text-red-800 text-xs uppercase tracking-wide">{field}</p>
             )}
-            {messages.map((msg, j) => (
+            {filteredMessages.map((msg, j) => (
               <div key={j} className="flex items-start">
                 {renderIcon()}
                 <p className={errorTextClass}>{msg}</p>

@@ -121,8 +121,14 @@ const Api = (getToken) => {
       });
       return await handleResponse(response);
     } catch (error) {
+      
       const status = error?.response?.status || 500;
-      const apiError = new ApiError(status, error?.message || 'An error occurred');
+     
+      let message = error?.message || 'An error occurred';
+      if(status === 500){
+        message = 'An unexpected error has occurred. Please try again later or contact support if the issue persists.'
+      }
+      const apiError = new ApiError(status, message);
       return { status, error: apiError };
     }
   };
