@@ -41,8 +41,13 @@ const BlobFileItem = ({ file, onRemove, index ,onRemoveEnable = true}) => {
           href={blobUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline text-sm truncate"
+          className={`text-sm truncate ${
+            blobUrl
+              ? "text-blue-600 underline text-sm truncate cursor-pointer"
+              : "text-gray-400 cursor-not-allowed pointer-events-none"
+          }`}
           title={file?.name}
+          
         >
           {file?.name}
         </a>
