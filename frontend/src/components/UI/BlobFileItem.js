@@ -1,21 +1,16 @@
-import React, { useRef, useState } from "react";
-import { useEffect } from "react";
+import React, { useRef, useState,useEffect } from "react";
 import { DocumentIcon,PhotoIcon } from '@heroicons/react/24/outline';
 import useBlobUrl from '../../hooks/useBlobUrl';
-
 const BlobFileItem = ({ file, onRemove, index ,onRemoveEnable = true}) => {
+  const { blobUrl } = useBlobUrl(file?.src);
+  const [fileloading, setFileLoading] = useState(false);
   const fileRef = useRef(file?.src);
-  const [loading, setLoading] = useState(false);
-  const { blobUrl, error } = useBlobUrl(fileRef.current);
-
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file?.name || "");
-
   useEffect(() => {
     if (fileRef.current === file?.src) {
-        loading === true ? setLoading(true) : setLoading(false);
+        fileloading === true ? setFileLoading(true) : setFileLoading(false);
     }
-  }, [ file?.src,loading]);
-
+  }, [ file?.src,fileloading]);
   return (
     <li className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
       
@@ -23,11 +18,9 @@ const BlobFileItem = ({ file, onRemove, index ,onRemoveEnable = true}) => {
         
         {isImage ? (
           <div className="w-8 h-8 rounded overflow-hidden   border   flex items-center justify-center">
-            {loading ? (
+            {fileloading ? (
               <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 bg-gray-100" />
-            ) : error ? (
-              <span className="text-xs text-gray-400">!</span>
-            ) : (
+            )  : (
                 <>
                 {!blobUrl ? (
                     <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 bg-gray-100" />
