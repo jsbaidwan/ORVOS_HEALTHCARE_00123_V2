@@ -106,7 +106,7 @@ const ClinicView = () => {
                 <div className="flex flex-col items-start gap-2">
                   <p className="text-sm text-gray-500">Logo</p>
 
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
                     {!imgBlobUrl ? (
                       <UserIcon className="w-10 h-10 rounded-full object-cover border border-gray-80 bg-gray-50" />
                     ) : (
