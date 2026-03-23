@@ -35,8 +35,8 @@ const clinicSchema = yup.object({
   city: yup.string().required('City is required').trim(),
   state_id: yup.string().required('State is required'),
   zip: yup.string().required('Zip is required').trim(),
-  description: yup.string().trim(),
-  status: yup.string().required('Status is required'),
+  description: yup.string().trim(), 
+  status: yup.boolean().required('Status is required'),
   is_dicom_enabled: yup.boolean(),
   device_type_id: yup.string().when('is_dicom_enabled', {
     is: true,
@@ -395,7 +395,21 @@ const ClinicForm = ({ clinic, onClose }) => {
               error={errors.description?.message}
             />
 
-            <FormField
+          <div className="flex items-center space-x-2">
+            <label htmlFor="status" className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                id="status"
+                {...register('status')}
+                className="sr-only peer"
+              />
+              <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
+              <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
+            </label>
+            <span className="text-sm font-medium text-gray-700">Active</span>
+          </div>
+
+            {/* <FormField
               label="Status"
               name="status"
               type="select"
@@ -403,7 +417,7 @@ const ClinicForm = ({ clinic, onClose }) => {
               options={[{ value: 1, label: 'Active' }, { value: 0, label: 'Inactive' }]}
               required
               error={errors.status?.message}
-            />
+            /> */}
 
             <div className="border-t border-gray-200 pt-4">
               <div className="mb-4">

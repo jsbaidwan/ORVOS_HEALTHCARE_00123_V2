@@ -152,6 +152,12 @@ class Clinic extends Authenticatable
 		];
 	}
 	
+	public function setStatusAttribute($value)
+	{
+        $this->attributes['status'] = !empty($value) ? 1 : 0;
+ 
+	}
+	
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (empty($this->created_at)) {
