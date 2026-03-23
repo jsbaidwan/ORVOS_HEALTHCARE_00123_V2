@@ -10,7 +10,7 @@ const ClinicPatients = ({ selectedClinic }) => {
   useEffect(() => {
     setPageTitle('Clinic Patients Report');
   }, [setPageTitle]);
-
+ 
   return (
     <div className="bg-white rounded-xl shadow-card p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Clinic Patients Report</h2>

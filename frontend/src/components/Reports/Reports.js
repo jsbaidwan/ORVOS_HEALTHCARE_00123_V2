@@ -12,8 +12,7 @@ const Reports = () => {
   const [selectedClinic, setSelectedClinic] = useState('');
   const [reportType, setReportType] = useState('clinic-patients');
   const { setPageTitle } = useTitle();
- 
-
+  
   const getClinicPatients = () => {
     if (!selectedClinic) return patients;
     return patients.filter(p => p.clinic === selectedClinic);
@@ -75,7 +74,7 @@ const Reports = () => {
               { value: 'doctor-review', label: 'Orvos Doctor Review' },
             ]}
           />
-
+     
           <FormField
             label="Select Clinic"
             name="clinic"
@@ -84,7 +83,7 @@ const Reports = () => {
             onChange={(e) => setSelectedClinic(e.target.value)}
             options={[
               { value: '', label: 'All Clinics' },
-              ...clinics.map(c => ({ value: c.companyName, label: c.companyName }))
+              ...clinics.map(c => ({ value: c?.id, label: c.name }))
             ]}
           />
         </div>
