@@ -589,7 +589,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                     control={control}
                     render={({ field: { onChange, ref } }) => (
                       <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Signature <span class="text-red-500 ml-1">*</span></label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Signature <span className="text-red-500 ml-1">*</span></label>
                         <input
                           ref={ref}
                           type="file"

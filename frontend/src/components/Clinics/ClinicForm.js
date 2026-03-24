@@ -267,9 +267,9 @@ const ClinicForm = ({ clinic, onClose }) => {
       <Breadcrumb />
       <div className="mb-3">
 
-        <div class="bg-white px-6 py-4 border-b rounded-t-lg shadow-sm border-gray-200" bis_skin_checked="1">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">{clinicData?.id ? 'Edit Clinic' : 'Add Clinic'}</h3>
-         <p class="mt-1 text-sm text-gray-500">
+        <div className="bg-white px-6 py-4 border-b rounded-t-lg shadow-sm border-gray-200" bis_skin_checked="1">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">{clinicData?.id ? 'Edit Clinic' : 'Add Clinic'}</h3>
+         <p className="mt-1 text-sm text-gray-500">
           Basic information about the clinic.</p>
         </div>
  
