@@ -161,6 +161,7 @@ const UserForm = ({ user: userProp, onClose }) => {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarRemoved, setAvatarRemoved] = useState(false);
   const [states, setStates] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [newDocs, setNewDocs] = useState([]);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [signatureRemoved, setSignatureRemoved] = useState(false);
@@ -207,6 +208,7 @@ const UserForm = ({ user: userProp, onClose }) => {
 
       const [, resp] = await Promise.all(promises);
       setStates(resp?.additionalData?.states || []);
+      setRoles(resp?.additionalData?.roles || []);
 
       if (isEditMode && resolvedId) {
         const fresh = getUserById(resolvedId);
@@ -233,14 +235,7 @@ const UserForm = ({ user: userProp, onClose }) => {
     loadData();
   }, [loadData]);
 
-  const roles = [
-    { value: '2', label: 'Orvos Doctor' },
-    { value: '3', label: 'Doctor' },
-    { value: '4', label: 'Medical Assistant' },
-    { value: '5', label: 'User' },
-    { value: '6', label: 'Clinic Admin' },
-  ];
-
+   
   const clinicOptions =
     clinics?.map((c) => ({
       value: String(c.id),
@@ -412,7 +407,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                 name="role_id"
                 type="select"
                 registration={register('role_id')}
-                options={roles}
+                options={roles?.map((r) => ({ value: r.id, label: r.name }))}
                 required
                 error={errors.role_id?.message}
               />
