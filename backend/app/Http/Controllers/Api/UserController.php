@@ -326,7 +326,8 @@ class UserController extends Controller
                 ->exists(); // Check if any record exists
 
                 if ($existingLicense) {
-					return response()->json(["licence_number.$index" => "This license number is already assigned to another user."], 422);
+					$licencesErr['message'] = ["licences.$index.licence_number" => "This license number is already assigned to another user."]; 
+					return response()->json($licencesErr, 422);
                   
                 }
 
@@ -561,12 +562,13 @@ class UserController extends Controller
                     ->exists();
         
                 if ($existingLicense) {
-                    $duplicateIndexes["licence_number.$index"] = "This license number is already assigned to another user.";
+					$duplicateIndexes['message'] = ["licences.$index.licence_number" => "This license number is already assigned to another user."]; 
+                   
                 }
             }
         
             if (!empty($duplicateIndexes)) {
-				return response()->json(['message' => $duplicateIndexes ], 422);
+				return response()->json($duplicateIndexes, 422);
                 
             }
         }

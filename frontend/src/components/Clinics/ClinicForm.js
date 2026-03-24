@@ -187,7 +187,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   useEffect(() => {
   
     const existingClinic = getExistingClinic(id);
-    if(existingClinic){
+    if(existingClinic && !clinicData){
       setClinicData(existingClinic);
       setFiles(existingClinic.display_files || []);
       reset(buildDefaults(existingClinic));
@@ -198,7 +198,7 @@ const ClinicForm = ({ clinic, onClose }) => {
       fetched.current = true;
     }
     
-  }, [loadData, id,getExistingClinic,reset]);
+  }, [loadData, id,getExistingClinic,reset,clinicData]);
 
   const onSubmit = async (data) => {
     const formData = new FormData();

@@ -267,17 +267,21 @@ const UserForm = ({ user: userProp, onClose }) => {
 
   useEffect(() => {
     const existingUser = getExistingUser(id);
-    if (existingUser) {
-      setUserData(existingUser);
-      setExistingDocs(existingUser.display_documents || []);
-      reset(buildDefaults(existingUser, insuranceCarriers));
+    
+    if (existingUser && !userData) {
+       
+        setUserData(existingUser);
+        setExistingDocs(existingUser.display_documents || []);
+        reset(buildDefaults(existingUser, insuranceCarriers));
+       
+      
     }
 
     if (fetched.current === false) {
       loadData();
       fetched.current = true;
     }
-  }, [loadData, id, getExistingUser, reset, insuranceCarriers]);
+  }, [loadData, id, getExistingUser, reset, insuranceCarriers,userData]);
 
   const clinicOptions =
     clinics?.map((c) => ({
@@ -389,7 +393,7 @@ const UserForm = ({ user: userProp, onClose }) => {
       } else {
  
         errorsFormatted(result, setError);
-          
+         
       }
     } catch (error) {
       errorsFormatted(error, setError);
@@ -557,17 +561,19 @@ const UserForm = ({ user: userProp, onClose }) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Licence Details <span className="text-red-500 ml-1">*</span>
                     </h3>
+                    {console.log(errors)}
                     <div className="space-y-3">
                       {licenceFields.map((field, index) => (
                         <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                           
                             <FormField
                               label="Licence Number"
                               name={`licences.${index}.licence_number`}
                               registration={register(`licences.${index}.licence_number`)}
                               placeholder="Enter Licence Number"
                               required
-                              error={errors.licences?.[index]?.licence_number?.message}
+                              error={errors.licences?.[index]?.licence_number?.message }
                             />
                             <FormField
                               label="State"
