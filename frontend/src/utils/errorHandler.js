@@ -130,37 +130,46 @@ export const logError = (error, context = 'Unknown') => {
   }
 };
  
-export const errorsFormatted = (response,setError) => {
-    try{
-         
-        if (response.errors) {
-            Object.entries(response?.errors).forEach(([field, message]) => {
-            setError(field, {
-                type: 'manual',
-                message,
-            });
-            });
-        } else if (response.error?.message) {
-            setError('general', {
-            type: 'manual',
-            message: response.error.message,
-            });
-        } else if (response === false) {
-            setError('general', {
-            type: 'manual',
-            message: 'An unexpected error occurred. Please try again.',
-            });
-        }else if(response?.message){
-            setError('general', {
-            type: 'manual',
-            message: response?.message,
-            });
-        }
-    } catch(error){
-        setError('general', {
-            type: 'manual',
-            message: 'An unexpected error occurred. Please try again.',
-        });
-    }
+export const errorsFormatted = (response, setError) => {
+  try {
 
-}
+    setTimeout(() => {
+
+      if (response.errors) {
+        Object.entries(response?.errors).forEach(([field, message]) => {
+          setError(field, {
+            type: 'server', // 🔥 changed from manual
+            message: Array.isArray(message) ? message[0] : message,
+          });
+        });
+
+      } else if (response.error?.message) {
+        setError('general', {
+          type: 'server',
+          message: response.error.message,
+        });
+
+      } else if (response === false) {
+        setError('general', {
+          type: 'server',
+          message: 'An unexpected error occurred. Please try again.',
+        });
+
+      } else if (response?.message) {
+        setError('general', {
+          type: 'server',
+          message: response?.message,
+        });
+      }
+
+    }, 200); // 🔥 delay added
+
+  } catch (error) {
+    setTimeout(() => {
+      setError('general', {
+        type: 'server',
+        message: 'An unexpected error occurred. Please try again.',
+      });
+    }, 200);
+  }
+};

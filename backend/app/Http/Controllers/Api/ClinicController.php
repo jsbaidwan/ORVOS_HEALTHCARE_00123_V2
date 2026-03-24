@@ -124,6 +124,12 @@ class ClinicController extends Controller
 		 
 		$clinic = Clinic::create($input);
 		
+		\Log::save(
+			'Clinic Created.',
+			'The Clinic has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Clinic',
+			$clinic->id
+		);
 		
 		// if(\Auth::user()->role_id != 1){
 			// ClinicUser::create([
@@ -318,6 +324,13 @@ class ClinicController extends Controller
 		$input['files'] = json_encode($existingFiles);
   
         $clinic->update($input);
+		
+		\Log::save(
+			'Clinic Updated.',
+			'The Clinic has been updated by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Clinic',
+			$clinic->id
+		);
         
         return response()->json(['message' => \Helper::alertMsg('update','Clinic','success')['message']], 200); 
     }
@@ -341,6 +354,13 @@ class ClinicController extends Controller
 		}
 		
 		$clinic->delete();
+		
+		\Log::save(
+			'Clinic Deleted.',
+			'The Clinic has been deleted by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Clinic', 
+			$clinic->id
+		);
 		 
         return response()->json(['message' => \Helper::alertMsg('delete','Clinic','success')['message']], 200); 
     }

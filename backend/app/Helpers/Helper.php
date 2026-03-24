@@ -81,7 +81,7 @@ class Helper{
 
 	public static function users($isAdmin = false,$filters = [])
 	{
-		$query = User::with('clinicUsers','licenses')->orderBy('id', 'DESC');
+		$query = User::with('role','clinicUsers','licenses')->orderBy('id', 'DESC');
 
 		if(!empty($filters['role_id'])){
 			$query->where('role_id', $filters['role_id']);
@@ -92,9 +92,12 @@ class Helper{
 				$q->where('slug',$slug);
 			});
 		}
-		if(isset($filters['status'])){
-			$query->where('status', $filters['status']);
+		if(isset($filters['active'])){
+			$query->where('status', $filters['active']);
 		}
+		if(isset($filters['is_archived'])){
+			$query->where('is_archived',$filters['is_archived']);
+		} 
 		
 		if(isset($filters['expiry_reminder'])){
 			$query->where('expiry_reminder', $filters['expiry_reminder']);
@@ -127,10 +130,13 @@ class Helper{
 			
 		}
 		 
-		if(!empty($filters['without_paginate'])){
+		if(empty($filters['paginate']) || $filters['paginate'] === false){
 			$users = $query->get();
-		}else{
-			$users = $query->paginate();
+		} else {
+			 
+			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$page = $filters['page'] ?? 1;
+			$users = $query->paginate($perPage, ['*'], 'page', $page);
 		}
 		
 		return ['users' => $users];

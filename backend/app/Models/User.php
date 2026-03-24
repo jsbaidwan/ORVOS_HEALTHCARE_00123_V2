@@ -9,27 +9,46 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use App\Models\Company;
 use App\Models\UserDocument;
+use App\Notifications\ResetPassword as ResetPasswordNotification;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-	protected $appends = ['formated_created_at','google_map_api_key'];
+	protected $appends = ['formated_created_at','google_map_api_key','display_signature','display_documents','display_avatar','is_active_status'];
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+   protected $fillable = [
+        'code',
         'first_name',
-		'last_name',
-		'username',
+        'last_name',
         'email',
-		'role_id',
-		'image',
-		'timezone',
-		'country_code',	
-		'remember_token'
+        'user_name',
+        'phone_number',
+        'dob',
+        'gender',
+        'address',
+        'city',
+        'state_id',
+        'zip',
+        'latitude',
+        'longitude',
+        'bio',
+        'image',
+        'role_id',
+        'npi_number',
+		'caqh_id',
+		'provider_id',
+		'signature',
+		'documents',
+        'expiry_date',
+        'licence_number',
+        'password',
+        'status',
+        'expiry_reminder',
     ];
 
     /**
@@ -53,12 +72,21 @@ class User extends Authenticatable
 		'company_ids' => 'array',  
     ];
 	
-	public static $rules = [
-		'first_name' => ['required', 'string', 'max:255'],
-		'last_name' => ['required', 'string', 'max:255'],
-		'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-		'password' => ['required', 'string', 'min:8', 'confirmed'],
-    ];
+	public static $rules = array(
+  
+		'first_name'  => 'required',
+        'last_name'  => 'required',
+        'role_id' => 'required',
+        //'user_name' => 'required|unique:users',
+		'email' => 'required|email|unique:users',
+        'address' => 'required',
+		//'city' => 'required',
+		//'state_id' => 'required',
+		//'zip' => 'required',
+		'password' => 'required|min:8|regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,}$/',
+		'confirm_password'  => 'required|min:8|same:password',		
+		'phone_number' => 'nullable|regex:/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/',
+    );
 	
 	public static $messages = [
          
@@ -73,6 +101,11 @@ class User extends Authenticatable
         return false;
     }
 	
+	public function sendPasswordResetNotification($token)
+	{
+		$this->notify(new ResetPasswordNotification($token));
+	}
+	
 	public function role() 
     {
         return $this->belongsTo(Role::class);
@@ -82,6 +115,16 @@ class User extends Authenticatable
     {
         return $this->hasOne('App\Models\Role','id','role_id');
     }
+	
+	public function clinicUsers() 
+    {
+        return $this->hasMany('App\Models\ClinicUser','user_id','id');
+    }
+
+    public function licenses()
+    {
+        return $this->hasMany('App\Models\UserLicense','user_id','id');
+    }
 	  
 	public function getGoogleMapApiKeyAttribute()
 	{ 
@@ -90,7 +133,100 @@ class User extends Authenticatable
 		return  \Helper::encodeData($apiKey)['encoded'];
 		 
 	}
-	 
+	
+	public function setTimezoneAttribute($value)
+    {
+		$this->attributes['timezone'] = \Config('app.custom_timezone');
+    }
+	
+	public function setCountryCodeAttribute($value)
+    {
+		$this->attributes['country_code'] = \Config('app.country_code'); 
+    }
+	
+	public function getIsActiveStatusAttribute()
+	{
+		return \Helper::getIsActiveStatusById($this->status)['status'] ?? [];
+		 
+	}
+	
+	public function getDisplaySignatureAttribute()
+	{
+		$signature = $this->attributes['signature'];
+		$path = 'uploads/users/' . $this->user_name . '/signature/'.$signature;
+		$exists = !empty($signature) && \Storage::disk('public')->exists($path);
+		$status = $exists ? 200 : 422;
+		
+		if ($status === 200) {
+			 
+			$token = \Helper::fileTokenGen($path,$signature,\Helper::hasSigned());
+			$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+			$src = $signedUrl;
+			 
+		} else {
+			$src = asset('assets/images/dummy.png');
+		}
+
+		return [
+			'status' => $status,
+			'src' => $src,
+			'name' => $signature
+		];
+	}
+	
+	public function getDisplayDocumentsAttribute()
+	{
+		$value = $this->attributes['documents'];
+		$arrFiles = !empty($value) ? json_decode($value, true) : [];
+		$files = [];
+
+		if (!empty($arrFiles)) {
+
+			$files = collect($arrFiles)->map(function ($file) {
+
+				$path = 'uploads/users/' . $this->user_name . '/documents/'.$file;
+				$exists = !empty($file) && \Storage::disk('public')->exists($path);
+				$status = $exists ? 200 : 422;
+				 
+				$token = \Helper::fileTokenGen($path,$file,\Helper::hasSigned());
+				$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+				$src = $signedUrl;
+				
+				return [
+					'status' => $status,
+					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'name' => $file
+				];
+			})->values()->toArray(); // reset index (important)
+		}
+
+		return $files;
+	}
+	
+	public function getDisplayAvatarAttribute()
+	{
+		$image = $this->attributes['image'];
+		$path = 'uploads/users/' . $this->user_name . '/'.$image;
+		$exists = !empty($image) && \Storage::disk('public')->exists($path);
+		$status = $exists ? 200 : 422;
+		
+		if ($status === 200) {
+			 
+			$token = \Helper::fileTokenGen($path,$image,\Helper::hasSigned());
+			$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+			$src = $signedUrl;
+			 
+		} else {
+			$src = asset('assets/images/dummy.png');
+		}
+
+		return [
+			'status' => $status,
+			'src' => $src,
+			'name' => $image
+		];
+	}
+	  
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (!empty($this->created_at)) {

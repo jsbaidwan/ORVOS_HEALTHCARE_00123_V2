@@ -20,29 +20,24 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
 import Select from 'react-select';
 import { useGetAdditionalData } from '../../hooks/getAdditionalData';
- 
+import BlobFileItem from '../UI/BlobFileItem';
 
 const createUserSchema = (isEdit) =>
   yup.object({
     first_name: yup.string().required('First name is required').trim(),
     last_name: yup.string().required('Last name is required').trim(),
     email: yup.string().email('Invalid email').required('Email is required').trim(),
-    phone: yup.string(),
+    phone_number: yup.string(),
     role_id: yup.string().required('User type is required'),
     clinic_ids: yup.array().of(yup.string()).when('role_id', {
       is: (val) => val && val !== '2',
       then: (schema) => schema.min(1, 'At least one clinic is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
-    
     address: yup.string().required('Address is required').trim(),
     bio: yup.string().trim(),
-    active: yup.boolean().required('Status is required'),
-    signature:  yup.string().when('role_id', {
-      is: '2',
-      then: (schema) => schema.required('Signature is required'),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    status: yup.boolean().required('Status is required'),
+
     npi_number: yup.string().when('role_id', {
       is: '2',
       then: (schema) => schema.required('NPI Number is required'),
@@ -53,6 +48,7 @@ const createUserSchema = (isEdit) =>
 
     licences: yup.array().of(
       yup.object({
+        id: yup.mixed().nullable(),
         licence_number: yup.string(),
         l_state_id: yup.string(),
         expiry_date: yup.date().nullable().typeError('Invalid date'),
@@ -62,14 +58,17 @@ const createUserSchema = (isEdit) =>
       is: '2',
       then: (schema) => schema.of(
         yup.object({
+          id: yup.mixed().nullable(),
           licence_number: yup.string().required('Licence number is required'),
           l_state_id: yup.string().required('State is required'),
-          expiry_date: yup.date().required().typeError('Invalid date'),
+          expiry_date: yup.date().required('Expiry date is required').typeError('Invalid date'),
           insurance_carriers: yup.object(),
         })
       ).min(1, 'At least one licence is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
+
+    signature: yup.mixed(),
 
     password: isEdit
       ? yup
@@ -93,43 +92,82 @@ const createUserSchema = (isEdit) =>
           .oneOf([yup.ref('password')], 'Passwords must match'),
   });
 
-const buildInsuranceDefaults = (data) => {
+const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
   const defaults = {};
-  data?.forEach((c) => {
+  const list = insuranceCarriersList || [];
+  list.forEach((c) => {
     const key = String(c.id);
     defaults[key] = {
-      checked: data?.[key]?.checked || false,
-      other: data?.[key]?.other || '',
+      checked: false,
+      other: '',
     };
   });
+
+  if (carriersData && typeof carriersData === 'object') {
+    if (Array.isArray(carriersData)) {
+      carriersData.forEach((val) => {
+        if (typeof val === 'object' && val !== null) {
+          Object.keys(val).forEach((k) => {
+            if (defaults[k]) {
+              defaults[k].checked = true;
+              if (val[k]?.medicare) defaults[k].other = val[k].medicare;
+              if (val[k]?.other) defaults[k].other = val[k].other;
+            }
+          });
+        } else {
+          const strVal = String(val);
+          if (defaults[strVal]) {
+            defaults[strVal].checked = true;
+          }
+        }
+      });
+    } else {
+      Object.keys(carriersData).forEach((k) => {
+        if (defaults[k]) {
+          defaults[k].checked = true;
+          const v = carriersData[k];
+          if (typeof v === 'object' && v !== null) {
+            if (v.medicare) defaults[k].other = v.medicare;
+            if (v.other) defaults[k].other = v.other;
+          }
+        }
+      });
+    }
+  }
   return defaults;
 };
 
-const buildDefaults = (data) => ({
+const buildDefaults = (data, insuranceCarriersList) => ({
   first_name: data?.first_name || '',
   last_name: data?.last_name || '',
   email: data?.email || '',
-  phone: data?.phone || '',
+  phone_number: data?.phone_number || '',
   role_id: data?.role_id != null ? String(data.role_id) : '',
-  clinic_ids: Array.isArray(data?.clinic_ids)
+  clinic_ids: Array.isArray(data?.clinic_ids) && data.clinic_ids.length
     ? data.clinic_ids.map((id) => String(id))
+    : Array.isArray(data?.clinic_users) && data.clinic_users.length
+    ? data.clinic_users.map((cu) => String(cu.clinic_id))
     : data?.clinic_id != null
     ? [String(data.clinic_id)]
     : [],
   address: data?.address || '',
   bio: data?.bio || '',
-  active: data?.active ?? true,
+  status: data?.status ?? true,
   npi_number: data?.npi_number || '',
   caqh_id: data?.caqh_id || '',
   provider_id: data?.provider_id || '',
-  licences: Array.isArray(data?.licences) && data.licences.length
-    ? data.licences.map((l) => ({
+  licences: Array.isArray(data?.licenses) && data.licenses.length
+    ? data.licenses.map((l) => ({
+        id: l.id || null,
         licence_number: l.licence_number || '',
         l_state_id: l.l_state_id != null ? String(l.l_state_id) : '',
         expiry_date: l.expiry_date ? new Date(l.expiry_date) : null,
-        insurance_carriers: buildInsuranceDefaults(l.insurance_carriers),
+        insurance_carriers: buildInsuranceDefaults(
+          l.insurance_carriers_ids ? (typeof l.insurance_carriers_ids === 'string' ? JSON.parse(l.insurance_carriers_ids) : l.insurance_carriers_ids) : null,
+          insuranceCarriersList
+        ),
       }))
-    : [{ licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null) }],
+    : [{ id: null, licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null, insuranceCarriersList) }],
   password: '',
   confirm_password: '',
 });
@@ -138,7 +176,7 @@ const UserForm = ({ user: userProp, onClose }) => {
   const { id: idParam } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
-  const { addUser, updateUser, getUserById } = useUser();
+  const { addUser, updateUser, getUserById, getExistingUser } = useUser();
   const { clinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
   const { fetchAdditionalData } = useGetAdditionalData();
@@ -151,10 +189,14 @@ const UserForm = ({ user: userProp, onClose }) => {
   const [avatarRemoved, setAvatarRemoved] = useState(false);
   const [states, setStates] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [insuranceCarriers, setInsuranceCarriers] = useState([]);
+  const [existingDocs, setExistingDocs] = useState([]);
+  const [removedDocs, setRemovedDocs] = useState([]);
   const [newDocs, setNewDocs] = useState([]);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [signatureRemoved, setSignatureRemoved] = useState(false);
-  const [insuranceCarriers, setInsuranceCarriers] = useState([]);
+  const { id } = useParams();
+
   const userSchema = useMemo(() => createUserSchema(isEditMode), [isEditMode]);
 
   const {
@@ -168,9 +210,11 @@ const UserForm = ({ user: userProp, onClose }) => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(userSchema),
-    defaultValues: buildDefaults(userProp || {}),
+    defaultValues: buildDefaults(userProp || {}, []),
+    
   });
 
+  
   const { fields: licenceFields, append: appendLicence, remove: removeLicence } = useFieldArray({
     control,
     name: 'licences',
@@ -185,47 +229,56 @@ const UserForm = ({ user: userProp, onClose }) => {
     standaloneFields: { address: 'address', city: 'city', state_id: 'state_id' },
   });
 
-  const fetchedRef = useRef(false);
+  const fetched = useRef(false);
+  const uId = userProp?.id || id || null;
 
   const loadData = useCallback(async () => {
-     
     try {
       const promises = [
         getClinics(1, {}, false),
         fetchAdditionalData(),
       ];
 
-      const [, resp] = await Promise.all(promises);
-      setStates(resp?.additionalData?.states || []);
-      setRoles(resp?.additionalData?.roles || []);
-      setInsuranceCarriers(resp?.additionalData?.insuranceCarriers || []);
+      if (uId) {
+        promises.push(getUserById(uId));
+      }
 
-      if (isEditMode && resolvedId) {
-        const fresh = getUserById(resolvedId);
-        if (fresh) {
-          setUserData(fresh);
-          reset(buildDefaults(fresh));
-        }
+      const results = await Promise.all(promises);
+
+      const resp = results[1];
+      const fresh = results[2];
+
+      const fetchedStates = resp?.additionalData?.states || [];
+      const fetchedRoles = resp?.additionalData?.roles || [];
+      const fetchedCarriers = resp?.additionalData?.insuranceCarriers || [];
+      setStates(fetchedStates);
+      setRoles(fetchedRoles);
+      setInsuranceCarriers(fetchedCarriers);
+
+      if (fresh?.user) {
+        setUserData(fresh.user);
+        setExistingDocs(fresh.user.display_documents || []);
+        reset(buildDefaults(fresh.user, fetchedCarriers));
       }
     } finally {
       hideLoader();
     }
-  }, [isEditMode, resolvedId, getClinics, fetchAdditionalData, getUserById, hideLoader, reset]);
+  }, [uId, getClinics, fetchAdditionalData, getUserById, hideLoader, reset]);
 
   useEffect(() => {
-    if (userProp && !idParam) {
-      setUserData(userProp);
-      reset(buildDefaults(userProp));
+    const existingUser = getExistingUser(id);
+    if (existingUser) {
+      setUserData(existingUser);
+      setExistingDocs(existingUser.display_documents || []);
+      reset(buildDefaults(existingUser, insuranceCarriers));
     }
-  }, [userProp, idParam, reset]);
 
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    loadData();
-  }, [loadData]);
+    if (fetched.current === false) {
+      loadData();
+      fetched.current = true;
+    }
+  }, [loadData, id, getExistingUser, reset, insuranceCarriers]);
 
-   
   const clinicOptions =
     clinics?.map((c) => ({
       value: String(c.id),
@@ -245,74 +298,98 @@ const UserForm = ({ user: userProp, onClose }) => {
   };
 
   const onSubmit = async (data) => {
+    
+    if (isOrvosDoctor) {
+      const hasExistingSignature = userData?.display_signature?.status === 200 && !signatureRemoved;
+      const hasNewSignature = data.signature?.length > 0;
+      if (!hasNewSignature && !hasExistingSignature) {
+        setError('signature', { message: 'Signature is required' });
+        return;
+      }
+    }
+
     showLoader();
     try {
-      const payload = {
-        first_name: data.first_name.trim(),
-        last_name: data.last_name.trim(),
-        email: data.email.trim(),
-        phone: data.phone || '',
-        role_id: data.role_id,
-        clinic_ids: data.clinic_ids || [],
-        address: data.address.trim(),
-        bio: data.bio?.trim() || '',
-        active: data.active ? 1 : 0,
-      };
+      const formData = new FormData();
 
-      if (isOrvosDoctor) {
-        payload.npi_number = data.npi_number?.trim() || '';
-        payload.caqh_id = data.caqh_id?.trim() || '';
-        payload.provider_id = data.provider_id?.trim() || '';
+      formData.append('first_name', data.first_name?.trim() || '');
+      formData.append('last_name', data.last_name?.trim() || '');
+      formData.append('email', data.email?.trim() || '');
+      formData.append('phone_number', data?.phone_number || '');
+      formData.append('role_id', data.role_id || '');
+      formData.append('address', data.address?.trim() || '');
+      formData.append('bio', data.bio?.trim() || '');
+      formData.append('status', data.status ? 1 : 0);
 
-        payload.licences = (data.licences || []).map((l) => {
-          const carriers = {};
-          insuranceCarriers?.forEach((c) => {
-            const key = String(c.id);
-            const entry = l.insurance_carriers?.[key];
-            if (entry?.checked) {
-              carriers[key] = { checked: true, other: entry.other || '' };
-            }
-          });
-          return {
-            licence_number: l.licence_number,
-            l_state_id: l.l_state_id,
-            expiry_date: l.expiry_date
-              ? `${String(l.expiry_date.getMonth() + 1).padStart(2, '0')}-${String(l.expiry_date.getDate()).padStart(2, '0')}-${l.expiry_date.getFullYear()}`
-              : '',
-            insurance_carriers: carriers,
-          };
-        });
-
-        if (data.signature?.length) {
-          payload.signature = data.signature[0];
-        } else if (signatureRemoved) {
-          payload.remove_signature = true;
-        }
-
-        newDocs.forEach((f, i) => {
-          payload[`documents[${i}]`] = f.file;
-        });
-      }
-
-      if (data.avatar?.length) {
-        payload.avatar = data.avatar[0];
-      } else if (avatarRemoved && userData?.avatar) {
-        payload.avatar = null;
+      if (data.clinic_ids?.length) {
+        data.clinic_ids.forEach((cid) => formData.append('clinic_ids[]', cid));
       }
 
       if (data.password) {
-        payload.password = data.password;
+        formData.append('password', data.password);
+        formData.append('confirm_password', data.confirm_password || '');
+      }
+
+      if (data.avatar?.length) {
+        formData.append('image', data.avatar[0]);
+      } else if (avatarRemoved && userData?.image) {
+        formData.append('remove_image', '1');
+      }
+
+      if (isOrvosDoctor) {
+        formData.append('npi_number', data.npi_number?.trim() || '');
+        formData.append('caqh_id', data.caqh_id?.trim() || '');
+        formData.append('provider_id', data.provider_id?.trim() || '');
+
+        (data.licences || []).forEach((l, index) => {
+          if (l.id) {
+            formData.append(`license_id[${index}]`, l.id);
+          }
+          formData.append(`licence_number[${index}]`, l.licence_number || '');
+          formData.append(`l_state_id[${index}]`, l.l_state_id || '');
+          formData.append(
+            `expiry_date[${index}]`,
+            l.expiry_date
+              ? `${String(l.expiry_date.getMonth() + 1).padStart(2, '0')}-${String(l.expiry_date.getDate()).padStart(2, '0')}-${l.expiry_date.getFullYear()}`
+              : ''
+          );
+
+          const carriers = l.insurance_carriers || {};
+          Object.keys(carriers).forEach((carrierId) => {
+            const entry = carriers[carrierId];
+            if (entry?.checked) {
+              formData.append(`insurance_carriers_ids[${index}][]`, carrierId);
+              if (carrierId === '6' && entry.other) {
+                formData.append(`insurance_carriers_ids[${index}][6][medicare]`, entry.other);
+              }
+              if (carrierId === '9' && entry.other) {
+                formData.append(`insurance_carriers_ids[${index}][9][other]`, entry.other);
+              }
+            }
+          });
+        });
+
+        if (data.signature?.length) {
+          formData.append('signature', data.signature[0]);
+        } else if (signatureRemoved) {
+          formData.append('remove_signature', '1');
+        }
+
+        newDocs.forEach((f) => formData.append('documents[]', f.file));
+        removedDocs.forEach((name) => formData.append('removed_documents[]', name));
       }
 
       const result = userData?.id
-        ? await updateUser(userData.id, payload)
-        : await addUser(payload);
-
+        ? await updateUser(userData.id, formData)
+        : await addUser(formData);
+      
       if (result && (result.status === 200 || result.success)) {
         toast.success(result?.message || (userData?.id ? 'User updated successfully' : 'User created successfully'));
-        handleClose();
+        navigate(getRoutePath('/users'));
       } else {
+ 
         errorsFormatted(result, setError);
+          
       }
     } catch (error) {
       errorsFormatted(error, setError);
@@ -343,310 +420,332 @@ const UserForm = ({ user: userProp, onClose }) => {
         </div>
 
         <div className="bg-white px-5 p-4">
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-            <ErrorHandle errors={errors} />
+          <div className="mt-3">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 mt-4">
+             
+              <ErrorHandle errors={errors} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="First Name"
-                name="first_name"
-                registration={register('first_name')}
-                placeholder="Enter First Name"
-                required
-                error={errors.first_name?.message}
-              />
-              <FormField
-                label="Last Name"
-                name="last_name"
-                registration={register('last_name')}
-                placeholder="Enter Last Name"
-                required
-                error={errors.last_name?.message}
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="First Name"
+                  name="first_name"
+                  registration={register('first_name')}
+                  placeholder="Enter First Name"
+                  required
+                  error={errors.first_name?.message}
+                />
+                <FormField
+                  label="Last Name"
+                  name="last_name"
+                  registration={register('last_name')}
+                  placeholder="Enter Last Name"
+                  required
+                  error={errors.last_name?.message}
+                />
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="Email"
-                name="email"
-                type="email"
-                registration={register('email')}
-                placeholder="Enter Email"
-                required
-                error={errors.email?.message}
-              />
-              <Controller
-                name="phone"
-                control={control}
-                render={({ field }) => (
-                  <FormField
-                    label="Phone"
-                    name="phone"
-                    value={field.value}
-                    onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                    placeholder="(xxx) xxx-xxxx"
-                    error={errors.phone?.message}
-                  />
-                )}
-              />
-            </div>
-
-            <div className={`grid grid-cols-1 ${showClinics ? 'md:grid-cols-2' : ''} gap-4`}>
-              <FormField
-                label="User Type"
-                name="role_id"
-                type="select"
-                registration={register('role_id')}
-                options={roles?.map((r) => ({ value: r.id, label: r.name }))}
-                required
-                error={errors.role_id?.message}
-              />
-              {showClinics && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  registration={register('email')}
+                  placeholder="Enter Email"
+                  required
+                  error={errors.email?.message}
+                />
                 <Controller
-                  name="clinic_ids"
+                  name="phone_number"
                   control={control}
                   render={({ field }) => (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Choose Clinics <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <Select
-                        isMulti
-                        options={clinicOptions}
-                        value={clinicOptions.filter((o) => field.value?.includes(o.value))}
-                        onChange={(selected) => field.onChange(selected ? selected.map((s) => s.value) : [])}
-                        placeholder="Select clinics..."
-                        classNamePrefix="react-select"
-                        styles={{
-                          control: (base, state) => ({
-                            ...base,
-                            borderColor: errors.clinic_ids ? '#ef4444' : state.isFocused ? '#009efb' : '#d1d5db',
-                            boxShadow: state.isFocused ? '0 0 0 2px rgba(0, 158, 251, 0.2)' : base.boxShadow,
-                            '&:hover': { borderColor: state.isFocused ? '#009efb' : '#9ca3af' },
-                            minHeight: '38px',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                          }),
-                          multiValue: (base) => ({ ...base, backgroundColor: '#e0f2fe', borderRadius: '0.25rem' }),
-                          multiValueLabel: (base) => ({ ...base, color: '#0369a1', fontSize: '0.8rem' }),
-                          multiValueRemove: (base) => ({ ...base, color: '#0369a1', '&:hover': { backgroundColor: '#bae6fd', color: '#0c4a6e' } }),
-                          menu: (base) => ({ ...base, zIndex: 50 }),
-                        }}
-                      />
-                      {errors.clinic_ids && (
-                        <p className="mt-1 text-sm text-red-600">{errors.clinic_ids.message}</p>
-                      )}
-                    </div>
+                    <FormField
+                      label="Phone"
+                      name="phone_number"
+                      value={field.value}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                      placeholder="(xxx) xxx-xxxx"
+                      error={errors.phone_number?.message}
+                    />
                   )}
                 />
-              )}
-            </div>
- 
+              </div>
 
-            {/* ======= ORVOS DOCTOR FIELDS (role_id === 2) ======= */}
-            {isOrvosDoctor && (
-              <>
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Provider Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      label="NPI Number"
-                      name="npi_number"
-                      registration={register('npi_number')}
-                      placeholder="Enter NPI Number"
-                      required
-                      error={errors.npi_number?.message}
-                    />
-                    <FormField
-                      label="CAQH ID"
-                      name="caqh_id"
-                      registration={register('caqh_id')}
-                      placeholder="Enter CAQH ID"
-                      error={errors.caqh_id?.message}
-                    />
-                    <FormField
-                      label="Provider ID"
-                      name="provider_id"
-                      registration={register('provider_id')}
-                      placeholder="Enter Provider ID"
-                      error={errors.provider_id?.message}
-                    />
-                  </div>
-                </div>
-
-                {/* Licence Details */}
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Licence Details <span className="text-red-500 ml-1">*</span>
-                  </h3>
-                  <div className="space-y-3">
-                    {licenceFields.map((field, index) => (
-                      <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            label="Licence Number"
-                            name={`licences.${index}.licence_number`}
-                            registration={register(`licences.${index}.licence_number`)}
-                            placeholder="Enter Licence Number"
-                            required
-                            error={errors.licences?.[index]?.licence_number?.message}
-                          />
-                          <FormField
-                            label="State"
-                            name={`licences.${index}.l_state_id`}
-                            type="select"
-                            registration={register(`licences.${index}.l_state_id`)}
-                            options={states?.map((s) => ({ value: s.id, label: s.name }))}
-                            required
-                            error={errors.licences?.[index]?.l_state_id?.message}
-                          />
-                          <Controller
-                            name={`licences.${index}.expiry_date`}
-                            control={control}
-                            render={({ field: dateField }) => (
-                              <div className="mb-4">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Expiry Date</label>
-                                <DatePicker
-                                  selected={dateField.value}
-                                  onChange={dateField.onChange}
-                                  dateFormat="MM-dd-yyyy"
-                                  placeholderText="MM-DD-YYYY"
-                                  className={`w-full border ${errors.licences?.[index]?.expiry_date ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
-                                />
-                                {errors.licences?.[index]?.expiry_date && (
-                                  <p className="mt-1 text-sm text-red-600">{errors.licences[index].expiry_date.message}</p>
-                                )}
-                              </div>
-                            )}
-                          />
-                        </div>
-
-                        {/* Insurance Carriers per licence */}
-                        <div className="mt-4 pt-3 border-t border-gray-200">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {insuranceCarriers?.map((carrier) => {
-                              const key = String(carrier.id);
-                              const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
-                              const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
-
-                              return (
-                                <div key={carrier.id} className="border border-gray-200 rounded-md p-2 bg-white">
-                                  <label className="flex items-center cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      {...register(`licences.${index}.insurance_carriers.${key}.checked`)}
-                                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
-                                    />
-                                    <span className="ml-2 text-xs font-medium text-gray-700">{carrier.name}</span>
-                                  </label>
-                                  {needsInput && isChecked && (
-                                    <div className="mt-1.5">
-                                      <input
-                                        type="text"
-                                        {...register(`licences.${index}.insurance_carriers.${key}.other`)}
-                                        placeholder={carrier.name === 'Other' ? 'Specify carrier name' : `Enter ${carrier.name} details`}
-                                        className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {licenceFields.length > 1 && (
-                          <div className="flex justify-end mt-3">
-                            <button
-                              type="button"
-                              onClick={() => removeLicence(index)}
-                              className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => appendLicence({ licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null) })}
-                      className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
-                    >
-                      + Add Licence
-                    </button>
-                    {errors.licences?.message && (
-                      <p className="mt-1 text-sm text-red-600">{errors.licences.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Signature Upload */}
-                <div className="border-t border-gray-200 pt-4">
+              <div className={`grid grid-cols-1 ${showClinics ? 'md:grid-cols-2' : ''} gap-4`}>
+                <FormField
+                  label="User Type"
+                  name="role_id"
+                  type="select"
+                  registration={register('role_id')}
+                  options={roles?.map((r) => ({ value: r.id, label: r.name }))}
+                  required
+                  error={errors.role_id?.message}
+                />
+                {showClinics && (
                   <Controller
-                    name="signature"
+                    name="clinic_ids"
                     control={control}
-                    render={({ field: { onChange, ref } }) => (
+                    render={({ field }) => (
                       <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Signature <span className="text-red-500 ml-1">*</span></label>
-                        <input
-                          ref={ref}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onChange(e.target.files);
-                            if (file) {
-                              setSignaturePreview(URL.createObjectURL(file));
-                              setSignatureRemoved(false);
-                            } else {
-                              setSignaturePreview(null);
-                            }
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Choose Clinics <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <Select
+                          isMulti
+                          options={clinicOptions}
+                          value={clinicOptions.filter((o) => field.value?.includes(o.value))}
+                          onChange={(selected) => field.onChange(selected ? selected.map((s) => s.value) : [])}
+                          placeholder="Select clinics..."
+                          classNamePrefix="react-select"
+                          styles={{
+                            control: (base, state) => ({
+                              ...base,
+                              borderColor: errors.clinic_ids ? '#ef4444' : state.isFocused ? '#009efb' : '#d1d5db',
+                              boxShadow: state.isFocused ? '0 0 0 2px rgba(0, 158, 251, 0.2)' : base.boxShadow,
+                              '&:hover': { borderColor: state.isFocused ? '#009efb' : '#9ca3af' },
+                              minHeight: '38px',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                            }),
+                            multiValue: (base) => ({ ...base, backgroundColor: '#e0f2fe', borderRadius: '0.25rem' }),
+                            multiValueLabel: (base) => ({ ...base, color: '#0369a1', fontSize: '0.8rem' }),
+                            multiValueRemove: (base) => ({ ...base, color: '#0369a1', '&:hover': { backgroundColor: '#bae6fd', color: '#0c4a6e' } }),
+                            menu: (base) => ({ ...base, zIndex: 50 }),
                           }}
-                          className={`input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 ${errors.signature ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
                         />
-                        {errors.signature && <p className="mt-1 text-sm text-red-600">{errors.signature.message}</p>}
-                        {sigPreviewSrc && (
-                          <div className="mt-3 flex items-center space-x-3">
-                            {sigBlobUrl ? (
-                              <img src={sigBlobUrl} alt="Signature" className="h-16 rounded border border-gray-200 bg-white p-1" />
-                            ) : (
-                              <div className="h-16 w-32 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 text-xs">Loading...</div>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => { onChange(null); setSignaturePreview(null); setSignatureRemoved(true); }}
-                              className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                            >
-                              Remove
-                            </button>
-                          </div>
+                        {errors.clinic_ids && (
+                          <p className="mt-1 text-sm text-red-600">{errors.clinic_ids.message}</p>
                         )}
                       </div>
                     )}
                   />
-                </div>
+                )}
+              </div>
+ 
+              {/* ======= ORVOS DOCTOR FIELDS (role_id === 2) ======= */}
+              {isOrvosDoctor && (
+                <>
+                  <div className="border-t border-gray-200 pt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Provider Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        label="NPI Number"
+                        name="npi_number"
+                        registration={register('npi_number')}
+                        placeholder="Enter NPI Number"
+                        required
+                        error={errors.npi_number?.message}
+                      />
+                      <FormField
+                        label="CAQH ID"
+                        name="caqh_id"
+                        registration={register('caqh_id')}
+                        placeholder="Enter CAQH ID"
+                        error={errors.caqh_id?.message}
+                      />
+                      <FormField
+                        label="Provider ID"
+                        name="provider_id"
+                        registration={register('provider_id')}
+                        placeholder="Enter Provider ID"
+                        error={errors.provider_id?.message}
+                      />
+                    </div>
+                  </div>
 
-                {/* Documents Upload */}
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Documents</label>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={(e) => {
-                        const picked = Array.from(e.target.files || []);
-                        setNewDocs((prev) => [
-                          ...prev,
-                          ...picked.map((f) => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
-                        ]);
-                        e.target.value = '';
-                      }}
-                      className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                  {/* Licence Details */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Licence Details <span className="text-red-500 ml-1">*</span>
+                    </h3>
+                    <div className="space-y-3">
+                      {licenceFields.map((field, index) => (
+                        <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              label="Licence Number"
+                              name={`licences.${index}.licence_number`}
+                              registration={register(`licences.${index}.licence_number`)}
+                              placeholder="Enter Licence Number"
+                              required
+                              error={errors.licences?.[index]?.licence_number?.message}
+                            />
+                            <FormField
+                              label="State"
+                              name={`licences.${index}.l_state_id`}
+                              type="select"
+                              registration={register(`licences.${index}.l_state_id`)}
+                              options={states?.map((s) => ({ value: s.id, label: s.name }))}
+                              required
+                              error={errors.licences?.[index]?.l_state_id?.message}
+                            />
+                            <Controller
+                              name={`licences.${index}.expiry_date`}
+                              control={control}
+                              render={({ field: dateField }) => (
+                                <div className="mb-4">
+                                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Expiry Date <span className="text-red-500 ml-1">*</span>
+                                  </label>
+                                  <DatePicker
+                                    selected={dateField.value}
+                                    onChange={dateField.onChange}
+                                    dateFormat="MM-dd-yyyy"
+                                    placeholderText="MM-DD-YYYY"
+                                    className={`w-full border ${errors.licences?.[index]?.expiry_date ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                                  />
+                                  {errors.licences?.[index]?.expiry_date && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.licences[index].expiry_date.message}</p>
+                                  )}
+                                </div>
+                              )}
+                            />
+                          </div>
+
+                          {/* Insurance Carriers per licence */}
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                              {insuranceCarriers?.map((carrier) => {
+                                const key = String(carrier.id);
+                                const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
+                                const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
+
+                                return (
+                                  <div key={carrier.id} className="border border-gray-200 rounded-md p-2 bg-white">
+                                    <label className="flex items-center cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        {...register(`licences.${index}.insurance_carriers.${key}.checked`)}
+                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                                      />
+                                      <span className="ml-2 text-xs font-medium text-gray-700">{carrier.name}</span>
+                                    </label>
+                                    {needsInput && isChecked && (
+                                      <div className="mt-1.5">
+                                        <input
+                                          type="text"
+                                          {...register(`licences.${index}.insurance_carriers.${key}.other`)}
+                                          placeholder={carrier.name === 'Other' ? 'Specify carrier name' : `Enter ${carrier.name} details`}
+                                          className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {licenceFields.length > 1 && (
+                            <div className="flex justify-end mt-3">
+                              <button
+                                type="button"
+                                onClick={() => removeLicence(index)}
+                                className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => appendLicence({ id: null, licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null, insuranceCarriers) })}
+                        className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
+                      >
+                        + Add Licence
+                      </button>
+                      {errors.licences?.message && (
+                        <p className="mt-1 text-sm text-red-600">{errors.licences.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Signature Upload */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <Controller
+                      name="signature"
+                      control={control}
+                      render={({ field: { onChange, ref } }) => (
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Signature <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <input
+                            ref={ref}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              onChange(e.target.files);
+                              if (file) {
+                                setSignaturePreview(URL.createObjectURL(file));
+                                setSignatureRemoved(false);
+                              } else {
+                                setSignaturePreview(null);
+                              }
+                            }}
+                            className={`input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 ${errors.signature ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                          />
+                          {errors.signature && <p className="mt-1 text-sm text-red-600">{errors.signature.message}</p>}
+                          {sigPreviewSrc && (
+                            <div className="mt-3 flex items-center space-x-3">
+                              {sigBlobUrl ? (
+                                <img src={sigBlobUrl} alt="Signature" className="h-16 rounded border border-gray-200 bg-white p-1" />
+                              ) : (
+                                <div className="h-16 w-32 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 text-xs">Loading...</div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => { onChange(null); setSignaturePreview(null); setSignatureRemoved(true); }}
+                                className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     />
                   </div>
-                  {newDocs.length > 0 && (
+
+                  {/* Documents Upload */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Documents</label>
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) => {
+                          const picked = Array.from(e.target.files || []);
+                          setNewDocs((prev) => [
+                            ...prev,
+                            ...picked.map((f) => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
+                          ]);
+                          e.target.value = '';
+                        }}
+                        className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                      />
+                    </div>
+
+                    {existingDocs.map((file, index) =>
+                      file.status === 200 && (
+                        <BlobFileItem
+                          key={`db-${index}`}
+                          file={file}
+                          index={index}
+                          onRemove={() => {
+                            const removed = existingDocs[index];
+                            if (removed?.name) {
+                              setRemovedDocs((prev) => [...prev, removed.name]);
+                            }
+                            setExistingDocs((prev) => prev.filter((_, i) => i !== index));
+                          }}
+                        />
+                      )
+                    )}
+
                     <ul className="space-y-2">
                       {newDocs.map((file, index) => (
                         <li key={`new-${index}`} className="flex items-center justify-between bg-blue-50 rounded-md px-3 py-2">
@@ -671,143 +770,146 @@ const UserForm = ({ user: userProp, onClose }) => {
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-              </>
-            )}
-
-<FormField
-              label="Address"
-              name="address"
-              registration={register('address')}
-              placeholder="Enter Address"
-              required
-              inputClassName="gmap-autocomplete"
-              error={errors.address?.message}
-            />
-
-            <Controller
-              name="avatar"
-              control={control}
-              render={({ field: { onChange, ref } }) => (
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Avatar</label>
-                  <input
-                    ref={ref}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(e.target.files);
-                      if (file) {
-                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                        if (!validTypes.includes(file.type)) {
-                          setError('avatar', { message: 'Please upload a valid image (JPEG, PNG, GIF, WebP)' });
-                          onChange(null);
-                          setAvatarPreview(null);
-                          return;
-                        }
-                        if (file.size > 5 * 1024 * 1024) {
-                          setError('avatar', { message: 'File size must be less than 5MB' });
-                          onChange(null);
-                          setAvatarPreview(null);
-                          return;
-                        }
-                        setAvatarPreview(URL.createObjectURL(file));
-                        setAvatarRemoved(false);
-                      } else {
-                        setAvatarPreview(null);
-                      }
-                    }}
-                    className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                  />
-                  {previewSrc && (
-                    <div className="mt-3 flex items-center space-x-3">
-                      {!imgBlobUrl ? (
-                        <UserIcon className="w-16 h-16 rounded-full object-cover border border-gray-80 bg-gray-50" />
-                      ) : (
-                        <img src={imgBlobUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => { onChange(null); setAvatarPreview(null); setAvatarRemoved(true); }}
-                        className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  )}
-                  {errors.avatar && <p className="mt-1 text-sm text-red-600">{errors.avatar.message}</p>}
-                </div>
+                  </div>
+                </>
               )}
-            />
 
-            <FormField
-              label="Short Biography"
-              name="bio"
-              type="textarea"
-              registration={register('bio')}
-              placeholder="Enter Short Biography"
-              rows={3}
-              error={errors.bio?.message}
-            />
+              <FormField
+                label="Address"
+                name="address"
+                registration={register('address')}
+                placeholder="Enter Address"
+                required
+                inputClassName="gmap-autocomplete"
+                error={errors.address?.message}
+              />
 
-            <div className="flex items-center space-x-2">
-              <label htmlFor="active" className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="active" {...register('active')} className="sr-only peer" />
-                <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
-                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
-              </label>
-              <span className="text-sm font-medium text-gray-700">Active</span>
-            </div>
-
-            {/* Password Section */}
-            <div className="border-t border-gray-200 pt-4">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  label="Password"
-                  name="password"
-                  type="password"
-                  registration={register('password')}
-                  placeholder="••••••••••••••••"
-                  required={!userData?.id}
-                  error={errors.password?.message}
-                />
-                <FormField
-                  label="Confirm Password"
-                  name="confirm_password"
-                  type="password"
-                  registration={register('confirm_password')}
-                  placeholder="••••••••••••••••"
-                  required={!userData?.id}
-                  error={errors.confirm_password?.message}
-                />
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <button type="button" onClick={handleClose} className="btn-secondary" disabled={isSubmitting}>
-                Cancel
-              </button>
-              <button type="submit" className="btn-primary flex items-center justify-center" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  'Processing...'
-                ) : userData?.id ? (
-                  <>
-                    <PencilSquareIcon className="w-4 h-4 mr-2" />
-                    Update User
-                  </>
-                ) : (
-                  <>
-                    <PlusIcon className="w-4 h-4 mr-2" />
-                    Add User
-                  </>
+              <Controller
+                name="avatar"
+                control={control}
+                render={({ field: { onChange, ref } }) => (
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Avatar</label>
+                    <input
+                      ref={ref}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        onChange(e.target.files);
+                        if (file) {
+                          const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                          if (!validTypes.includes(file.type)) {
+                            setError('avatar', { message: 'Please upload a valid image (JPEG, PNG, GIF, WebP)' });
+                            onChange(null);
+                            setAvatarPreview(null);
+                            return;
+                          }
+                          if (file.size > 5 * 1024 * 1024) {
+                            setError('avatar', { message: 'File size must be less than 5MB' });
+                            onChange(null);
+                            setAvatarPreview(null);
+                            return;
+                          }
+                          setAvatarPreview(URL.createObjectURL(file));
+                          setAvatarRemoved(false);
+                        } else {
+                          setAvatarPreview(null);
+                        }
+                      }}
+                      className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    />
+                    {previewSrc && (
+                      <div className="mt-3 flex items-center space-x-3">
+                        {!imgBlobUrl ? (
+                          <UserIcon className="w-16 h-16 rounded-full object-cover border border-gray-80 bg-gray-50" />
+                        ) : (
+                          <img src={imgBlobUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-200 bg-gray-200" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => { onChange(null); setAvatarPreview(null); setAvatarRemoved(true); }}
+                          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                    {errors.avatar && <p className="mt-1 text-sm text-red-600">{errors.avatar.message}</p>}
+                  </div>
                 )}
-              </button>
-            </div>
-          </form>
+              />
+
+              <FormField
+                label="Short Biography"
+                name="bio"
+                type="textarea"
+                registration={register('bio')}
+                placeholder="Enter Short Biography"
+                rows={3}
+                error={errors.bio?.message}
+              />
+
+              <div className="flex items-center space-x-2">
+                <label htmlFor="status" className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="status" {...register('status')} className="sr-only peer" />
+                  <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
+                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
+                </label>
+                <span className="text-sm font-medium text-gray-700">Active</span>
+              </div>
+
+
+              {/* Password Section */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    label="Password"
+                    name="password"
+                    type="password"
+                    registration={register('password')}
+                    placeholder="••••••••••••••••"
+                    required={!userData?.id}
+                    error={errors.password?.message}
+                  />
+                  <FormField
+                    label="Confirm Password"
+                    name="confirm_password"
+                    type="password"
+                    registration={register('confirm_password')}
+                    placeholder="••••••••••••••••"
+                    required={!userData?.id}
+                    error={errors.confirm_password?.message}
+                  />
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" onClick={handleClose} className="btn-secondary" disabled={isSubmitting}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary flex items-center justify-center" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    'Processing...'
+                  ) : userData?.id ? (
+                    <>
+                      <PencilSquareIcon className="w-4 h-4 mr-2" />
+                      Update User
+                    </>
+                  ) : (
+                    <>
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Add User
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

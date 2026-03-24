@@ -172,7 +172,7 @@ class ClinicGroupController extends Controller
 		
 		\Log::save(
 			'Clinic Group Deleted.',
-			'The Clinic Group has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'The Clinic Group has been deleted by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
 			'ClinicGroup', 
 			$clinicGroup->id
 		);

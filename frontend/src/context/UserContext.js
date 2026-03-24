@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import Api from '../utils/api';
+import { handleApiError } from '../utils/errorHandler';
 
 const UserContext = createContext();
 
@@ -11,115 +14,143 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '(555) 123-4567',
-      userType: '2',
-      clinicId: '1',
-      address: '123 Main St, New York, NY 10001',
-      avatar: null,
-      shortBiography: 'Experienced ophthalmologist specializing in retinal diseases.',
-      status: 'Active',
-      createdAt: '2024-01-15',
-    },
-    {
-      id: 2,
-      firstName: 'Jane',
-      lastName: 'Smith',
-      email: 'jane.smith@example.com',
-      phone: '(555) 987-6543',
-      userType: '3',
-      clinicId: '1',
-      address: '456 Oak Ave, Los Angeles, CA 90001',
-      avatar: null,
-      shortBiography: 'Board-certified doctor with 10 years of experience.',
-      status: 'Active',
-      createdAt: '2024-02-20',
-    },
-    {
-      id: 3,
-      firstName: 'Michael',
-      lastName: 'Johnson',
-      email: 'michael.j@example.com',
-      phone: '(555) 456-7890',
-      userType: '4',
-      clinicId: '2',
-      address: '789 Pine Rd, Chicago, IL 60601',
-      avatar: null,
-      shortBiography: 'Dedicated medical assistant with expertise in patient care.',
-      status: 'Active',
-      createdAt: '2024-03-10',
-    },
-    {
-      id: 4,
-      firstName: 'Sarah',
-      lastName: 'Williams',
-      email: 'sarah.w@example.com',
-      phone: '(555) 321-0987',
-      userType: '6',
-      clinicId: '1',
-      address: '321 Elm St, Houston, TX 77001',
-      avatar: null,
-      shortBiography: 'Clinic administrator managing daily operations.',
-      status: 'Inactive',
-      createdAt: '2024-01-25',
-    },
-  ]);
+  const { getToken, logout } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 10,
+    total: 0,
+  });
 
-  const addUser = (user) => {
-    const newUser = {
-      ...user,
-      id: Date.now(),
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setUsers([...users, newUser]);
-    return newUser;
+  const getUsers = useCallback(async (page = 1, filters = {}, paginate) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const data = { paginate, page, ...filters };
+      const endpoint = 'users?data=' + encodeURIComponent(JSON.stringify(data));
+      const response = await api.call(endpoint, 'GET', null, true);
+
+      if (response.status === 200) {
+        const responseData = response.data.users;
+
+        if (typeof responseData === 'object' && responseData.data && Array.isArray(responseData.data)) {
+          setUsers(responseData.data);
+          setPagination({
+            currentPage: responseData.current_page || 1,
+            lastPage: responseData.last_page || 1,
+            perPage: responseData.per_page || 10,
+            total: responseData.total || 0,
+          });
+          return responseData;
+        } else if (Array.isArray(responseData)) {
+          setUsers(responseData);
+          setPagination({
+            currentPage: 1,
+            lastPage: 1,
+            perPage: responseData.length,
+            total: responseData.length,
+          });
+          return responseData;
+        }
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const getUserById = useCallback(async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`users/${id}`, 'GET', null, true);
+
+      if (response.status === 200) {
+        return { status: 200, user: response.data.user };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const addUser = async (userData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('users', 'POST', userData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'User created successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const updateUser = (id, updatedUser) => {
-    setUsers(users.map((user) => (user.id === id ? { ...user, ...updatedUser } : user)));
+  const updateUser = async (id, userData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      let method = 'PUT';
+      if (userData instanceof FormData) {
+        userData.append('_method', 'PUT');
+        method = 'POST';
+      }
+
+      const response = await api.call(`users/${id}`, method, userData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'User updated successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const deleteUser = (id) => {
-    setUsers(users.filter((user) => user.id !== id));
+  const deleteUser = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`users/${id}`, 'DELETE', null, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'User deleted successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const getUserById = (id) => {
-    return users.find((user) => user.id === parseInt(id));
-  };
-
-  const getUsersByClinic = (clinicId) => {
-    return users.filter((user) => user.clinicId === clinicId);
-  };
-
-  const getUsersByType = (userType) => {
-    return users.filter((user) => user.userType === userType);
-  };
-
-  const getActiveUsers = () => {
-    return users.filter((user) => user.status === 'Active');
-  };
-
-  const getInactiveUsers = () => {
-    return users.filter((user) => user.status === 'Inactive');
+  const getExistingUser = (id) => {
+    return users.find((u) => u.id === Number(id)) || null;
   };
 
   const value = {
     users,
+    setUsers,
+    pagination,
+    getUsers,
+    getUserById,
     addUser,
     updateUser,
     deleteUser,
-    getUserById,
-    getUsersByClinic,
-    getUsersByType,
-    getActiveUsers,
-    getInactiveUsers,
+    getExistingUser,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
-

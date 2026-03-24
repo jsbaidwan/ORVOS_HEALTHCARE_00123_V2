@@ -11,7 +11,7 @@ const ErrorHandle = ({
     
   // Reset visibility when errors change
   useEffect(() => {
-     
+    
     if (errors) {
       setIsVisible(true);
     }
@@ -47,8 +47,9 @@ const ErrorHandle = ({
   };
 
   const renderErrors = () => {
+     
     if (React.isValidElement(errors)) return errors;
-
+   
     if (typeof errors === 'string') {
       return (
         <div className="flex items-start">
