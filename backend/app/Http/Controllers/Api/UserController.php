@@ -327,7 +327,7 @@ class UserController extends Controller
 
                 if ($existingLicense) {
 					
-					//return response()->json(['message' => ["licence_number.$index" => "This license number  is already assigned to another user."]], 422);
+					return response()->json(['message' => ["licence_number.$index" => "This license number  is already assigned to another user."]], 422);
                   
                 }
 
