@@ -14,7 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon,PhotoIcon } from '@heroicons/react/24/outline';
 import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
@@ -694,7 +694,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                               {sigBlobUrl ? (
                                 <img src={sigBlobUrl} alt="Signature" className="h-16 rounded border border-gray-200 bg-white p-1" />
                               ) : (
-                                <div className="h-16 w-32 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 text-xs">Loading...</div>
+                                <PhotoIcon className="w-16 h-16 rounded-full object-cover border border-gray-80 bg-gray-50" />
                               )}
                               <button
                                 type="button"
