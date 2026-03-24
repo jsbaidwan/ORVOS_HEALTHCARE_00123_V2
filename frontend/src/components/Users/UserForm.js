@@ -20,18 +20,7 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
 import Select from 'react-select';
 import { useGetAdditionalData } from '../../hooks/getAdditionalData';
-
-const INSURANCE_CARRIERS = [
-  { id: 1, name: 'Aetna/CVS' },
-  { id: 2, name: 'BCBS' },
-  { id: 3, name: 'Centene' },
-  { id: 4, name: 'Cigna' },
-  { id: 5, name: 'Kaiser' },
-  { id: 6, name: 'Medicare' },
-  { id: 7, name: 'Molina' },
-  { id: 8, name: 'UHC' },
-  { id: 9, name: 'Other' },
-];
+ 
 
 const createUserSchema = (isEdit) =>
   yup.object({
@@ -106,7 +95,7 @@ const createUserSchema = (isEdit) =>
 
 const buildInsuranceDefaults = (data) => {
   const defaults = {};
-  INSURANCE_CARRIERS.forEach((c) => {
+  data?.forEach((c) => {
     const key = String(c.id);
     defaults[key] = {
       checked: data?.[key]?.checked || false,
@@ -165,7 +154,7 @@ const UserForm = ({ user: userProp, onClose }) => {
   const [newDocs, setNewDocs] = useState([]);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [signatureRemoved, setSignatureRemoved] = useState(false);
-
+  const [insuranceCarriers, setInsuranceCarriers] = useState([]);
   const userSchema = useMemo(() => createUserSchema(isEditMode), [isEditMode]);
 
   const {
@@ -209,6 +198,7 @@ const UserForm = ({ user: userProp, onClose }) => {
       const [, resp] = await Promise.all(promises);
       setStates(resp?.additionalData?.states || []);
       setRoles(resp?.additionalData?.roles || []);
+      setInsuranceCarriers(resp?.additionalData?.insuranceCarriers || []);
 
       if (isEditMode && resolvedId) {
         const fresh = getUserById(resolvedId);
@@ -276,7 +266,7 @@ const UserForm = ({ user: userProp, onClose }) => {
 
         payload.licences = (data.licences || []).map((l) => {
           const carriers = {};
-          INSURANCE_CARRIERS.forEach((c) => {
+          insuranceCarriers?.forEach((c) => {
             const key = String(c.id);
             const entry = l.insurance_carriers?.[key];
             if (entry?.checked) {
@@ -535,7 +525,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                         <div className="mt-4 pt-3 border-t border-gray-200">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {INSURANCE_CARRIERS.map((carrier) => {
+                            {insuranceCarriers?.map((carrier) => {
                               const key = String(carrier.id);
                               const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
                               const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';

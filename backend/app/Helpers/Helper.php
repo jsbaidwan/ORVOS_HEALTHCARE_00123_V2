@@ -1090,6 +1090,9 @@ class Helper{
 		if($roleId == 6){
 			$code = 'CA';
 		}
+		if($roleId == 7){
+			$code = 'PA';
+		}
 		  
 		$newCount = ($count + 1);
 		// Generate the user code, ensuring the number is zero-padded
@@ -2825,6 +2828,89 @@ class Helper{
 	 *-----------------------------------------
 	 * End: File Signed Route
 	 * 
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Insurance Carriers
+	 * -----------------------------------------
+	 */
+	
+	public static function insuranceCarriers()
+    {
+		return [
+		
+			[
+				'id' => 1,
+				'name' => 'Aetna/CVS',
+				 
+			],
+			[
+				'id' => 2,
+				'name' => 'BCBS',
+				 
+			],
+			[
+				'id' => 3,
+				'name' => 'Centene',
+			],
+			[
+				'id' => 4,
+				'name' => 'Cigna',
+			],
+			[
+				'id' => 5,
+				'name' => 'Kaiser',
+			],
+			[
+				'id' => 6,
+				'name' => 'Medicare',
+			],
+			[
+				'id' => 7,
+				'name' => 'Molina',
+			],
+			[
+				'id' => 8,
+				'name' => 'UHC',
+			],
+			[
+				'id' => 9,
+				'name' => 'Other',
+			],
+		];
+	}
+	 
+	 /*
+	 *-----------------------------------------
+	 * End: Insurance Carriers
+	 * -----------------------------------------
+	 */
+	 
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get Insurance Carrier By Id
+	 * -----------------------------------------
+	 */
+	 
+	public static function getInsuranceCarrierById($id)
+    {
+		$insuranceCarriers = self::insuranceCarriers();
+		foreach($insuranceCarriers as $iCarrier){
+			if($id == $iCarrier['id']){
+				return ['status' => 200,'iCarrier' => $iCarrier];
+			}
+		}
+		
+		return ['status' => 422];
+		
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Get Insurance Carrier By Id
+	 * -----------------------------------------
 	 */
 	 
 }

@@ -99,6 +99,7 @@ Route::get('additional-data', function(){
 		'states' => \Helper::getStates(['country_id' => 231])['states'],
 		'deviceTypes' => \Helper::getDeviceTypes(),
 		'roles' => \Helper::getRoles(false)['roles'],
+		'insuranceCarriers' => \Helper::insuranceCarriers(),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);
