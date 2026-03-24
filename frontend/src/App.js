@@ -36,7 +36,8 @@ import PatientForm from './components/Patients/PatientForm';
 import Reports from './components/Reports/Reports';
 import Settings from './components/Settings/Settings';
 import UsersList from './components/Users/UsersList';
-
+import UserForm from './components/Users/UserForm';
+import UserView from './components/Users/UserView';
 // Support Components
 import Support from './components/Support/Support';
 
@@ -215,6 +216,31 @@ const createProtectedRoutes = (prefix, roleId,permission) => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path={`${basePath}/users/create`}
+        element={
+          <ProtectedRoute permission={permission(3,'create')} requiredRole={roleId}>
+            <MainLayout><UserForm /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path={`${basePath}/users/:id/edit`}
+        element={
+          <ProtectedRoute permission={permission(3,'write')} requiredRole={roleId}>
+            <MainLayout><UserForm /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/users/view/:id`}
+        element={
+          <ProtectedRoute permission={permission(3,'read')} requiredRole={roleId}>
+            <MainLayout><UserView /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      
       <Route
         path={`${basePath}/clinic-groups`}
         element={

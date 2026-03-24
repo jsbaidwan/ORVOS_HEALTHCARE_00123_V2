@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const FormField = ({
   label,
@@ -23,11 +24,39 @@ const FormField = ({
     ? { name, onChange }
     : { name, value, onChange };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const errorClass = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '';
   const disabledClass = disabled ? 'bg-gray-100 cursor-not-allowed' : '';
 
   const renderInput = () => {
     switch (type) {
+      case 'password':
+        return (
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id={name}
+              {...inputProps}
+              placeholder={placeholder}
+              required={required}
+              disabled={disabled}
+              className={`input-field pr-10 ${errorClass} ${disabledClass} ${inputClassName}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="w-5 h-5" />
+              ) : (
+                <EyeIcon className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        );
       case 'textarea':
         return (
           <textarea
