@@ -561,7 +561,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Licence Details <span className="text-red-500 ml-1">*</span>
                     </h3>
-                    {console.log(errors)}
+                   
                     <div className="space-y-3">
                       {licenceFields.map((field, index) => (
                         <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -573,7 +573,11 @@ const UserForm = ({ user: userProp, onClose }) => {
                               registration={register(`licences.${index}.licence_number`)}
                               placeholder="Enter Licence Number"
                               required
-                              error={errors.licences?.[index]?.licence_number?.message }
+                              error={
+                                errors?.licences?.[index]?.licence_number?.message ??
+                                errors?.licence_number?.[index]?.message ??
+                                errors?.licence_number?.message
+                              }
                             />
                             <FormField
                               label="State"
@@ -582,7 +586,12 @@ const UserForm = ({ user: userProp, onClose }) => {
                               registration={register(`licences.${index}.l_state_id`)}
                               options={states?.map((s) => ({ value: s.id, label: s.name }))}
                               required
-                              error={errors.licences?.[index]?.l_state_id?.message}
+                              error={
+                                errors?.licences?.[index]?.l_state_id?.message ??
+                                errors?.l_state_id?.[index]?.message ??
+                                errors?.l_state_id?.message
+                              }
+                             
                             />
                             <Controller
                               name={`licences.${index}.expiry_date`}
