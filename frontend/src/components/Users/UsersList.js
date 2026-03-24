@@ -107,9 +107,20 @@ const UsersList = () => {
             </div>
             <div>
               <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
-              <div className="text-sm text-gray-500">{row?.email || '-'}</div>
+              <Link to={getRoutePath(`/users/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
             </div>
           </div>
+        </div>
+      ),
+    },
+
+    {
+      header: 'Contact',
+      accessor: 'email',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row.email || '-'}</p>
+          <p className="text-gray-500 text-xs">{row.phone_number || '-'}</p>
         </div>
       ),
     },
