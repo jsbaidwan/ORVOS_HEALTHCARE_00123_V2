@@ -159,7 +159,7 @@ class ClinicController extends Controller
 		
         $clinic = \Helper::getClinicById($id)['clinic'];
 		if(!$clinic){
-			return response()->json(['message' => \Helper::alertMsg('edit','Clinic','error')['message']], 404);
+			return response()->json(['message' => \Helper::alertMsg('view','Clinic','error')['message']], 404);
 		}
 		return response()->json(['clinic' => $clinic], 200);
     }
