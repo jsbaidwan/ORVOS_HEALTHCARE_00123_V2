@@ -196,7 +196,7 @@ class LoginController extends Controller
 		$data = [
 			$field => $request->get($this->username()),
 			'password' => $request->password,
-			'active' => 1,
+			'status' => 1,
 			'role_id' => $roleIds,
 			 
 		];
