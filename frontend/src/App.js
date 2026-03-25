@@ -370,7 +370,14 @@ const AppContent = () => {
           )
         } 
       />
-      <Route path="*" element={<NotFound />} />
+       <Route
+        path="*"
+        element={
+          <MainLayout>
+            <NotFound />
+          </MainLayout>
+        }
+      />
       <Route 
           path={`/${ADMIN_PREFIX}`} 
           element={<Navigate to={`/${ADMIN_PREFIX}/dashboard`} replace />} 
