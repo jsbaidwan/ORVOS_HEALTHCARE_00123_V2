@@ -73,14 +73,18 @@ export const ClinicGroupProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-  const getClinicGroupById = useCallback(async (id, filters = {}) => {
+  const getClinicGroupById = useCallback(async (id, options = {}) => {
    
     const api = Api(() => getToken());
     if (!api) {
       return;
     }
     try {
-      const response = await api.call(`clinic-groups/${id}`, 'GET', null, true);
+      let url = `clinic-groups/${id}/edit`;
+      if(options?.action && options?.action === 'view'){
+       url = `clinic-groups/${id}`;
+      }
+      const response = await api.call(url, 'GET', null, true);
 
       if (response.status === 200) {
         return {'status': 200,'clinicGroup': response.data.clinicGroup};

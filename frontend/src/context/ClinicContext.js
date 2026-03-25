@@ -66,12 +66,16 @@ export const ClinicProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-  const getClinicById = useCallback(async (id) => {
+  const getClinicById = useCallback(async (id,options = {}) => {
     const api = Api(() => getToken());
     if (!api) return;
 
     try {
-      const response = await api.call(`clinics/${id}/edit`, 'GET', null, true);
+      let url = `clinics/${id}/edit`;
+      if(options?.action && options?.action === 'view'){
+       url = `clinics/${id}`;
+      }
+      const response = await api.call(url, 'GET', null, true);
       
       if (response.status === 200) {
         return {'status': 200,'clinic': response.data.clinic};

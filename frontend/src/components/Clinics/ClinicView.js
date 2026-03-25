@@ -43,7 +43,7 @@ const ClinicView = () => {
         }
   
         // ❌ Otherwise call API
-        const data = await getClinicById(id);
+        const data = await getClinicById(id,{action:'view'});
         
         if (data?.status && data?.status !== 200) {
           setErrors({

@@ -62,12 +62,15 @@ export const UserProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-  const getUserById = useCallback(async (id) => {
+  const getUserById = useCallback(async (id,options = {}) => {
     const api = Api(() => getToken());
     if (!api) return;
-
+    let url = `users/${id}/edit`;
+    if(options?.action && options?.action === 'view'){
+      url = `users/${id}`;
+    }
     try {
-      const response = await api.call(`users/${id}/edit`, 'GET', null, true);
+      const response = await api.call(url, 'GET', null, true);
 
       if (response.status === 200) {
         return { status: 200, user: response.data.user };

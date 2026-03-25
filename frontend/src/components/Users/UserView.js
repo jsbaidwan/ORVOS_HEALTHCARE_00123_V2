@@ -43,7 +43,7 @@ const UserView = () => {
         }
   
         // ❌ Otherwise call API
-        const data = await getUserById(id);
+        const data = await getUserById(id,{action:'view'});
         
         if (data?.status && data?.status !== 200) {
           setErrors({
