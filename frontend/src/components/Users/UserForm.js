@@ -19,7 +19,7 @@ import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
 import Select from 'react-select';
-import { useGetAdditionalData } from '../../hooks/getAdditionalData';
+import { useAdditionalData } from '../../context/AdditionalDataContext';
 import BlobFileItem from '../UI/BlobFileItem';
 
 const createUserSchema = (isEdit) =>
@@ -179,7 +179,7 @@ const UserForm = ({ user: userProp, onClose }) => {
   const { addUser, updateUser, getUserById, getExistingUser } = useUser();
   const { clinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
-  const { fetchAdditionalData } = useGetAdditionalData();
+  const {additionalData} = useAdditionalData();
 
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
@@ -213,7 +213,6 @@ const UserForm = ({ user: userProp, onClose }) => {
     defaultValues: buildDefaults(userProp || {}, []),
     
   });
-
   
   const { fields: licenceFields, append: appendLicence, remove: removeLicence } = useFieldArray({
     control,
@@ -231,10 +230,11 @@ const UserForm = ({ user: userProp, onClose }) => {
 
   const fetched = useRef(false);
   const uId = userProp?.id || id || null;
-
+  
+     
   const loadData = useCallback(async () => {
     try {
-      const getAdditionalData = await fetchAdditionalData()
+      
       const promises = [
         getClinics(1, {}, false),
         
@@ -243,7 +243,7 @@ const UserForm = ({ user: userProp, onClose }) => {
       if (uId) {
         promises.push(getUserById(uId));
       }
-      const additionalData = getAdditionalData?.additionalData;
+      
       setStates(additionalData?.states || []);
       setRoles(additionalData?.roles || []);
       setInsuranceCarriers(additionalData?.insuranceCarriers || []);
@@ -258,7 +258,7 @@ const UserForm = ({ user: userProp, onClose }) => {
     } finally {
       hideLoader();
     }
-  }, [uId, getClinics, fetchAdditionalData, getUserById, hideLoader, reset]);
+  }, [uId, getClinics, additionalData, getUserById, hideLoader, reset]);
 
   useEffect(() => {
     const existingUser = getExistingUser(id);
@@ -269,16 +269,16 @@ const UserForm = ({ user: userProp, onClose }) => {
         setExistingDocs(existingUser.display_documents || []);
        
         setTimeout(() => {
-          reset(buildDefaults(existingUser, insuranceCarriers));
+          reset(buildDefaults(existingUser, additionalData?.insuranceCarriers));
         }, 10);
         
     }
-
+   
     if (fetched.current === false) {
       loadData();
       fetched.current = true;
     }
-  }, [loadData, id, getExistingUser, reset, insuranceCarriers,userData]);
+  }, [loadData, id, getExistingUser, reset, additionalData,userData]);
 
   const clinicOptions =
     clinics?.map((c) => ({

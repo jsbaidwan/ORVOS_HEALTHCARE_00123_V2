@@ -44,6 +44,7 @@ import Support from './components/Support/Support';
 
 // Hooks
 import useAutoLogoutOnIdle from './hooks/useAutoLogoutOnIdle';
+import { AdditionalDataProvider } from './context/AdditionalDataContext';
 
 // Get route prefixes from environment
 const ADMIN_PREFIX = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
@@ -377,6 +378,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <AdditionalDataProvider>
         <ForgotPasswordProvider>
           <PermissionsProvider>
           <ClinicProvider>
@@ -394,6 +396,7 @@ function App() {
           </ClinicProvider>
           </PermissionsProvider>
         </ForgotPasswordProvider>
+        </AdditionalDataProvider>
       </AuthProvider>
     </Router>
   );

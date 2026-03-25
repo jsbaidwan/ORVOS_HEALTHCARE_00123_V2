@@ -14,7 +14,7 @@ import { errorsFormatted } from '../../utils/errorHandler';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { PlusIcon, PencilSquareIcon, DocumentIcon,UserIcon } from '@heroicons/react/24/outline';
-import { useGetAdditionalData } from '../../hooks/getAdditionalData';
+import { useAdditionalData } from '../../context/AdditionalDataContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate,useParams  } from 'react-router-dom';
 import Breadcrumb from '../Common/Breadcrumb';
@@ -102,7 +102,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   const {showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
-  const { fetchAdditionalData } = useGetAdditionalData();
+  const {additionalData} = useAdditionalData();
   const [deviceTypes, setDeviceTypes] = useState([]);
   const [states, setStates] = useState([]);
   const [files, setFiles] = useState(clinic?.display_files || []);
@@ -157,7 +157,7 @@ const ClinicForm = ({ clinic, onClose }) => {
 
   const loadData = useCallback(async () => {
     try {
-      const getAdditionalData = await fetchAdditionalData()
+       
       const promises = [
         getClinicGroups(1, {}, false),
          
@@ -166,7 +166,7 @@ const ClinicForm = ({ clinic, onClose }) => {
       if (cId) {
         promises.push(getClinicById(cId));
       }
-      const additionalData = getAdditionalData?.additionalData;
+       
       setDeviceTypes(additionalData?.deviceTypes || []);
       setStates(additionalData?.states || []);
        
@@ -181,7 +181,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     } finally {
       hideLoader();
     }
-  }, [cId, getClinicGroups, fetchAdditionalData, getClinicById, hideLoader, reset]);
+  }, [cId, getClinicGroups, additionalData, getClinicById, hideLoader, reset]);
  
    useEffect(() => {
     const existingClinic = getExistingClinic(id);
