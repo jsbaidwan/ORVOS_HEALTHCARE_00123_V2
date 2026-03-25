@@ -157,7 +157,7 @@ class Helper{
 
 	public static function getUserById($id)
 	{
-		$user = User::with('clinicUsers','licenses')->find($id);
+		$user = User::with('role','clinicUsers','licenses')->find($id);
 		
 		return ['user' => $user];
 	}
