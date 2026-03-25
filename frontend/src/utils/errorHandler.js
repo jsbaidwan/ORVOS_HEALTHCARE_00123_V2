@@ -21,6 +21,15 @@ export const handleApiError = (error, logout = null) => {
       requiresLogin: true,
     };
   }
+
+  if(error?.status === 404){
+    
+    return {
+      status: 404,
+      errors: error?.validationErrors ? error?.validationErrors : null,
+      message: 'The requested resource was not found.',
+    };
+  }
    
   // Handle validation errors (422)
   if (error?.status === 422 && error?.validationErrors) {
@@ -92,6 +101,7 @@ export const requiresLogout = (error) => {
  * @returns {string} User-friendly error message
  */
 export const getErrorMessage = (error) => {
+ 
   if (error?.message) {
     return error.message;
   }
@@ -165,6 +175,7 @@ export const errorsFormatted = (response, setError) => {
     }, 10); // 🔥 delay added
 
   } catch (error) {
+    
     setTimeout(() => {
       setError('general', {
         type: 'server',

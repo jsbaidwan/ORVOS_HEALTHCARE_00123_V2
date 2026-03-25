@@ -67,7 +67,7 @@ export const UserProvider = ({ children }) => {
     if (!api) return;
 
     try {
-      const response = await api.call(`users/${id}`, 'GET', null, true);
+      const response = await api.call(`users/${id}/edit`, 'GET', null, true);
 
       if (response.status === 200) {
         return { status: 200, user: response.data.user };

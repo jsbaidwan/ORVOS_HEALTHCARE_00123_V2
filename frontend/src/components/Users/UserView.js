@@ -47,7 +47,7 @@ const UserView = () => {
         
         if (data?.status && data?.status !== 200) {
           setErrors({
-            general: data?.message || 'Unable to load clinic'
+            general: data?.message || 'Unable to load user'
           });
         } else {
           setUser(data?.user);

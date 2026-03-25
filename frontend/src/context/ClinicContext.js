@@ -72,7 +72,7 @@ export const ClinicProvider = ({ children }) => {
 
     try {
       const response = await api.call(`clinics/${id}/edit`, 'GET', null, true);
-
+      
       if (response.status === 200) {
         return {'status': 200,'clinic': response.data.clinic};
       } else {

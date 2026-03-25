@@ -171,8 +171,15 @@ const ClinicForm = ({ clinic, onClose }) => {
       setStates(additionalData?.states || []);
        
       const results = await Promise.all(promises);
+      
       const fresh = results[1];
-  
+      if(fresh?.status){
+        if(fresh?.status !== 200){
+          errorsFormatted({errors: {general: fresh?.errors}}, setError);
+          return;
+        }
+      }
+      
       if (fresh) {
         setClinicData(fresh?.clinic);
         setFiles(fresh?.clinic?.display_files || []);
@@ -181,7 +188,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     } finally {
       hideLoader();
     }
-  }, [cId, getClinicGroups, additionalData, getClinicById, hideLoader, reset]);
+  }, [cId, getClinicGroups, additionalData, getClinicById, hideLoader, reset,setError]);
  
    useEffect(() => {
     const existingClinic = getExistingClinic(id);
@@ -279,6 +286,7 @@ const ClinicForm = ({ clinic, onClose }) => {
  
           <div className='mt-3'>
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 mt-4">
+              
             <ErrorHandle errors={errors} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

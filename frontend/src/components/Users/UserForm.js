@@ -250,6 +250,12 @@ const UserForm = ({ user: userProp, onClose }) => {
       
       const results = await Promise.all(promises);
       const fresh = results[1];
+      if(fresh?.status){
+        if(fresh?.status !== 200){
+          errorsFormatted({errors: {general: fresh?.errors}}, setError);
+          return;
+        }
+      }
       if (fresh?.user) {
         setUserData(fresh.user);
         setExistingDocs(fresh.user.display_documents || []);
@@ -258,7 +264,7 @@ const UserForm = ({ user: userProp, onClose }) => {
     } finally {
       hideLoader();
     }
-  }, [uId, getClinics, additionalData, getUserById, hideLoader, reset]);
+  }, [uId, getClinics, additionalData, getUserById, hideLoader, reset,setError]);
 
   useEffect(() => {
     const existingUser = getExistingUser(id);

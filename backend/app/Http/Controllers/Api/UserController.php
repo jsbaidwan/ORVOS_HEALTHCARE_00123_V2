@@ -285,6 +285,11 @@ class UserController extends Controller
 	
 	public function update(Request $request,$id)
 	{	
+		$haveAccess = \Helper::permission(3,'write');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all(); 
 		 
 		$insurance = $request->input('insurance_carriers_ids', []);
@@ -631,17 +636,41 @@ class UserController extends Controller
 		return response()->json(['user' => $user,'message' => 'User updated successfully.'], 200);
 	}
 	
-	public function show($id)
-	{
+	public function edit($id)
+    {  
+		$haveAccess = \Helper::permission(3,'write');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
 		$user = \Helper::getUserById($id)['user'];
 		if(!$user){
-			return response()->json(['message' => 'We couldn’t find the user you’re looking for.'], 404);
+			return response()->json(['message' => \Helper::alertMsg('edit','User','error')['message']], 404);
+		}
+		return response()->json(['user' => $user], 200);
+    }
+	
+	public function show($id)
+	{
+		$haveAccess = \Helper::permission(3,'view');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
+		$user = \Helper::getUserById($id)['user'];
+		if(!$user){
+			return response()->json(['message' => \Helper::alertMsg('view','User','error')['message']], 404);
 		}
 		return response()->json(['user' => $user], 200);
 	}
 	
 	public function destroy($id)
 	{ 
+		$haveAccess = \Helper::permission(3,'delete');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
 		$user = \Helper::getUserById($id)['user'];
 		if(!$user){
 			return response()->json(['message' => 'We couldn’t find the user you’re looking for.'], 404);

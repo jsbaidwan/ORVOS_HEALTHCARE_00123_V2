@@ -5,9 +5,8 @@ import FormField from '../UI/FormField';
 
 const ClinicSettings = () => {
   const { clinicSettings, updateClinicSettings } = useSettings();
-  const { getActiveeClinics } = useClinic();
-  const clinics = getActiveeClinics();
-
+  const { clinics } = useClinic();
+   
   const [formData, setFormData] = useState({
     selectedClinic: '',
     showPhone: clinicSettings?.showPhone || true,
@@ -48,10 +47,7 @@ const ClinicSettings = () => {
             type="select"
             value={formData.selectedClinic}
             onChange={handleChange}
-            options={[
-              { value: '', label: 'All Clinics' },
-              ...clinics.map(c => ({ value: c.id, label: c.companyName }))
-            ]}
+            options={clinics?.map(c => ({ value: c.id, label: c.name }))}
             required
           />
         </div>

@@ -2659,6 +2659,7 @@ class Helper{
 			'edit'   => 'edited',
 			'update' => 'updated',
 			'delete' => 'deleted',
+			'view' => 'view',
 			'archive' => 'archived',
 			'unarchive' => 'unarchived',
 		];
