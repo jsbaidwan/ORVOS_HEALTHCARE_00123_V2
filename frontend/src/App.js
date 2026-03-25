@@ -38,6 +38,7 @@ import Settings from './components/Settings/Settings';
 import UsersList from './components/Users/UsersList';
 import UserForm from './components/Users/UserForm';
 import UserView from './components/Users/UserView';
+import ArchiveUsers from './components/Users/ArchiveUsers';
 // Support Components
 import Support from './components/Support/Support';
 
@@ -237,6 +238,14 @@ const createProtectedRoutes = (prefix, roleId,permission) => {
         element={
           <ProtectedRoute permission={permission(3,'read')} requiredRole={roleId}>
             <MainLayout><UserView /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path={`${basePath}/users/archived`}
+        element={
+          <ProtectedRoute permission={permission(3,'read')} requiredRole={roleId}>
+            <MainLayout><ArchiveUsers /></MainLayout>
           </ProtectedRoute>
         }
       />

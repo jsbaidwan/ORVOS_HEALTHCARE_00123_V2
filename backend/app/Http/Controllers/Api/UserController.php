@@ -646,25 +646,7 @@ class UserController extends Controller
 		if(!$user){
 			return response()->json(['message' => 'We couldn’t find the user you’re looking for.'], 404);
 		}
-		
-		$image = $user->image['name'];
 		 
-		$filePath = 'uploads/users/' . $user['username'] . '/' . $image;
-
-		if (!empty($image) && Storage::disk('public')->exists($filePath)) {
-
-			// Delete file
-			Storage::disk('public')->delete($filePath);
-
-			// Try removing directory (only works if empty)
-			$dirPath = 'uploads/users/' . $user['username'];
-
-			if (empty(Storage::disk('public')->files($dirPath)) &&
-				empty(Storage::disk('public')->directories($dirPath))) {
-
-				Storage::disk('public')->deleteDirectory($dirPath);
-			}
-}
 		$user->delete();
 		\Log::save(
 			'User Deleted.',

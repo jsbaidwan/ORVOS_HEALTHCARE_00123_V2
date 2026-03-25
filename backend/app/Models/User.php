@@ -49,6 +49,7 @@ class User extends Authenticatable
         'password',
         'status',
         'expiry_reminder',
+		'is_archived'
     ];
 
     /**

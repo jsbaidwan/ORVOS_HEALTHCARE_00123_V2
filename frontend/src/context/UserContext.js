@@ -119,6 +119,40 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const archiveUser = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('archive', 'POST', { module: 'users', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'User archived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const unarchiveUser = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('unarchive', 'POST', { module: 'users', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'User unarchived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
   const deleteUser = async (id) => {
     const api = Api(() => getToken());
     if (!api) return;
@@ -148,8 +182,10 @@ export const UserProvider = ({ children }) => {
     getUserById,
     addUser,
     updateUser,
-    deleteUser,
+    archiveUser,
+    unarchiveUser,
     getExistingUser,
+    deleteUser
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

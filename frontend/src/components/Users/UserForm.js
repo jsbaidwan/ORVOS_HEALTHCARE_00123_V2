@@ -234,31 +234,26 @@ const UserForm = ({ user: userProp, onClose }) => {
 
   const loadData = useCallback(async () => {
     try {
+      const getAdditionalData = await fetchAdditionalData()
       const promises = [
         getClinics(1, {}, false),
-        fetchAdditionalData(),
+        
       ];
-
+      
       if (uId) {
         promises.push(getUserById(uId));
       }
-
+      const additionalData = getAdditionalData?.additionalData;
+      setStates(additionalData?.states || []);
+      setRoles(additionalData?.roles || []);
+      setInsuranceCarriers(additionalData?.insuranceCarriers || []);
+      
       const results = await Promise.all(promises);
-
-      const resp = results[1];
-      const fresh = results[2];
-
-      const fetchedStates = resp?.additionalData?.states || [];
-      const fetchedRoles = resp?.additionalData?.roles || [];
-      const fetchedCarriers = resp?.additionalData?.insuranceCarriers || [];
-      setStates(fetchedStates);
-      setRoles(fetchedRoles);
-      setInsuranceCarriers(fetchedCarriers);
-
+      const fresh = results[1];
       if (fresh?.user) {
         setUserData(fresh.user);
         setExistingDocs(fresh.user.display_documents || []);
-        reset(buildDefaults(fresh.user, fetchedCarriers));
+        reset(buildDefaults(fresh.user, additionalData?.insuranceCarriers));
       }
     } finally {
       hideLoader();
@@ -272,9 +267,11 @@ const UserForm = ({ user: userProp, onClose }) => {
        
         setUserData(existingUser);
         setExistingDocs(existingUser.display_documents || []);
-        reset(buildDefaults(existingUser, insuranceCarriers));
        
-      
+        setTimeout(() => {
+          reset(buildDefaults(existingUser, insuranceCarriers));
+        }, 10);
+        
     }
 
     if (fetched.current === false) {
@@ -289,14 +286,7 @@ const UserForm = ({ user: userProp, onClose }) => {
       label: c.name || '',
     })) || [];
 
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    } else {
-      navigate(getRoutePath('/users'));
-    }
-  };
-
+    
   const handleRemoveNewDoc = (index) => {
     setNewDocs((prev) => prev.filter((_, i) => i !== index));
   };
@@ -620,8 +610,10 @@ const UserForm = ({ user: userProp, onClose }) => {
                           <div className="mt-4 pt-3 border-t border-gray-200">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                             
                               {insuranceCarriers?.map((carrier) => {
                                 const key = String(carrier.id);
+                               
                                 const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
                                 const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
 
@@ -904,9 +896,7 @@ const UserForm = ({ user: userProp, onClose }) => {
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button type="button" onClick={handleClose} className="btn-secondary" disabled={isSubmitting}>
-                  Cancel
-                </button>
+                
                 <button type="submit" className="btn-primary flex items-center justify-center" disabled={isSubmitting}>
                   {isSubmitting ? (
                     'Processing...'

@@ -16,6 +16,7 @@ const FormField = ({
   inputClassName = '',
   registration,
 }) => {
+ 
   const inputProps = registration
     ? { ...registration }
     : type === 'checkbox'
@@ -82,6 +83,7 @@ const FormField = ({
             <option value="">Select {label}</option>
             {options.map((option, index) => {
               const optValue = option?.value != null ? option.value : (typeof option !== 'object' ? option : '');
+              
               return (
                
                 <option key={index} value={optValue}>

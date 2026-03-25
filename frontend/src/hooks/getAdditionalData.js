@@ -3,13 +3,21 @@ import { useAuth } from "../context/AuthContext";
 import Api from "../utils/api";
 import { handleApiError } from "../utils/errorHandler";
 
+let cachedData = null;
+
 export function useGetAdditionalData() {
   const { getToken, logout } = useAuth();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(cachedData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchAdditionalData = useCallback(async () => {
+  const fetchAdditionalData = useCallback(async (force = false) => {
+    // ✅ return cached if exists
+    if (cachedData && !force) {
+      setData(cachedData);
+      return cachedData;
+    }
+
     const api = Api(() => getToken());
     if (!api) return;
 
@@ -18,20 +26,11 @@ export function useGetAdditionalData() {
 
     try {
       const response = await api.call("additional-data", "GET", null, true);
+
       if (response.status === 200) {
-       
-        const newData = response.data || {};
-
-        // ✅ compare safely using previous state
-        setData(prev => {
-          if (JSON.stringify(prev) !== JSON.stringify(newData)) {
-            return newData;
-          }
-          return prev;
-        });
-
-        return newData;
-         
+        cachedData = response.data || {};
+        setData(cachedData);
+        return cachedData;
       } else {
         const err = handleApiError(response.error, logout);
         setError(err);

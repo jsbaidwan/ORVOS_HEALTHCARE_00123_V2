@@ -42,6 +42,7 @@ return new class extends Migration
 			$table->integer('expiry_reminder')->default(0)->comment('0 => no,1 => yes');	
 			$table->string('timezone')->nullable();
 			$table->string('country_code')->nullable();
+			$table->boolean('is_archived')->default(0);
 			$table->rememberToken();
 			$table->timestamps();
         });

@@ -157,23 +157,22 @@ const ClinicForm = ({ clinic, onClose }) => {
 
   const loadData = useCallback(async () => {
     try {
+      const getAdditionalData = await fetchAdditionalData()
       const promises = [
         getClinicGroups(1, {}, false),
-        fetchAdditionalData(),
+         
       ];
 
       if (cId) {
         promises.push(getClinicById(cId));
       }
-
+      const additionalData = getAdditionalData?.additionalData;
+      setDeviceTypes(additionalData?.deviceTypes || []);
+      setStates(additionalData?.states || []);
+       
       const results = await Promise.all(promises);
-
-      const resp = results[1];
-      const fresh = results[2];
-
-      setDeviceTypes(resp?.additionalData?.deviceTypes || []);
-      setStates(resp?.additionalData?.states || []);
-
+      const fresh = results[1];
+  
       if (fresh) {
         setClinicData(fresh?.clinic);
         setFiles(fresh?.clinic?.display_files || []);
@@ -184,21 +183,24 @@ const ClinicForm = ({ clinic, onClose }) => {
     }
   }, [cId, getClinicGroups, fetchAdditionalData, getClinicById, hideLoader, reset]);
  
-  useEffect(() => {
-  
+   useEffect(() => {
     const existingClinic = getExistingClinic(id);
-    if(existingClinic && !clinicData){
+  
+    if (existingClinic && !clinicData) {
       setClinicData(existingClinic);
       setFiles(existingClinic.display_files || []);
-      reset(buildDefaults(existingClinic));
+  
+      setTimeout(() => {
+        reset(buildDefaults(existingClinic));
+      }, 10);
     }
-      
+  
     if (fetched.current === false) {
       loadData();
       fetched.current = true;
     }
-    
-  }, [loadData, id,getExistingClinic,reset,clinicData]);
+  
+  }, [loadData, id, getExistingClinic, reset, clinicData]);
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -367,7 +369,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                 inputClassName="gm-city"
                 error={errors.city?.message}
               />
-
+  
               <FormField
                 label="State"
                 name="state_id"

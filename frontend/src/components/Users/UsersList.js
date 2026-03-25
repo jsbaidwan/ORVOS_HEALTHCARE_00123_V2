@@ -5,7 +5,7 @@ import Pagination from '../Common/Pagination';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EyeIcon,ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -13,19 +13,21 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
+import { ArchiveBoxIcon,ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 
-const UsersList = () => {
+const UsersList = ({ archived = false }) => {
   const {
     users,
     setUsers,
     pagination,
     getUsers,
-    deleteUser,
+    archiveUser,
+    unarchiveUser,
   } = useUser();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [userToArchive, setUserToArchive] = useState(null);
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
@@ -36,8 +38,8 @@ const UsersList = () => {
   const [tab, setTab] = useState(1);
 
   useEffect(() => {
-    setPageTitle('Users');
-  }, [setPageTitle]);
+    setPageTitle(archived ? 'Archived Users' : 'Users');
+  }, [setPageTitle, archived]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,6 +52,7 @@ const UsersList = () => {
       const filters = {};
       if (q) filters.q = q;
       filters.active = tab;
+      filters.is_archived = archived;
 
       try {
         const response = await getUsers(page, filters, true);
@@ -69,12 +72,61 @@ const UsersList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useLocation(), tab]);
 
+
+  const handleArchive = (user) => {
+    setShowArchiveConfirm(true);
+    setUserToArchive(user);
+  };
+
+  const confirmArchive = async () => {
+    if (userToArchive) {
+      showLoader();
+      try {
+        const result = await archiveUser(userToArchive.id);
+        if (result && result?.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setUserToArchive(null);
+          navigate(getRoutePath('/users'));
+        } else {
+          toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
+      }
+    }
+  };
+
+  const confirmUnarchive = async () => {
+    if (userToArchive) {
+      showLoader();
+      try {
+        const result = await unarchiveUser(userToArchive.id);
+        if (result && result.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setUserToArchive(null);
+          navigate(getRoutePath('/users'));
+        } else {
+          toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
+      }
+    }
+  };
+
   const filtersData = async (key, value) => {
     if (key === 'q') setSearchTerm(value);
 
     const newUrl = new URL(window.location);
     let filters = {};
     filters.active = tab;
+    filters.is_archived = archived;
 
     if (key === 'q') {
       filters.q = value;
@@ -179,18 +231,14 @@ const UsersList = () => {
           </Link>
 
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setUserToDelete(row);
-              setShowDeleteConfirm(true);
-            }}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-            title="Delete"
+            onClick={() => handleArchive(row)}
+            className="p-2 hover:bg-warning-50 rounded-lg transition-colors duration-200"
+            title={archived ? 'Unarchive' : 'Archive'}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
+          
+
         </div>
       ),
     },
@@ -199,7 +247,7 @@ const UsersList = () => {
   const handlePageChange = async (page) => {
     let filters = {};
     filters.active = tab;
-
+    filters.is_archived = archived;
     if (searchTerm) filters.q = searchTerm;
 
     await getUsers(page, filters, true);
@@ -208,27 +256,7 @@ const UsersList = () => {
     newUrl.searchParams.set('page', page);
     window.history.pushState({}, '', newUrl);
   };
-
-  const confirmDelete = async () => {
-    if (userToDelete) {
-      showLoader();
-      try {
-        const result = await deleteUser(userToDelete.id);
-        if (result && result.status === 200) {
-          toast.success(result?.message);
-          setShowDeleteConfirm(false);
-          setUserToDelete(null);
-          navigate(getRoutePath('/users'));
-        } else {
-          toast.error(result?.message);
-        }
-      } catch (error) {
-        toast.error(error?.message);
-      } finally {
-        hideLoader();
-      }
-    }
-  };
+ 
 
   const filterConfig = [
     {
@@ -248,10 +276,30 @@ const UsersList = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
 
           <div className="flex flex-wrap justify-end items-center gap-3 w-full">
-            <Link to={getRoutePath('/users/create')} className="inline-flex items-center justify-center px-4 py-2.5 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-[0.775rem] xs:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
-              <PlusIcon className="w-3 h-3 mr-1" />
-              Add New User
-            </Link>
+            {!archived ? (
+              <>
+                <button
+                  onClick={() => navigate(getRoutePath('/users/archived'))}
+                  className="inline-flex items-center justify-center px-4 py-2 btn-warning w-full sm:w-auto text-sm sm:text-base"
+                >
+                  <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                  Archived Users
+                </button>
+ 
+                <Link to={getRoutePath('/users/create')} className="inline-flex items-center justify-center px-4 py-2.5 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-[0.775rem] xs:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
+                 <PlusIcon className="w-3 h-3 mr-1" />
+                  Add New User
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate(getRoutePath('/users'))}
+                className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back to List
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -307,32 +355,33 @@ const UsersList = () => {
         onPageChange={handlePageChange}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       <Modal
-        isOpen={showDeleteConfirm}
+        isOpen={showArchiveConfirm}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setUserToDelete(null);
+          setShowArchiveConfirm(false);
+          setUserToArchive(null);
         }}
-        title="Confirm Delete"
+        title={`Confirm ${archived ? 'Unarchive' : 'Archive'}`}
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete <strong>{userToDelete?.first_name} {userToDelete?.last_name}</strong>? This action cannot be undone.
+            Are you sure you want to archive <strong>{userToArchive?.name}</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button
               onClick={() => {
-                setShowDeleteConfirm(false);
-                setUserToDelete(null);
+                setShowArchiveConfirm(false);
+                setUserToArchive(null);
               }}
               className="btn-secondary"
             >
               Cancel
             </button>
-            <button onClick={confirmDelete} className="btn-danger">
-              Delete
+            <button onClick={archived ? confirmUnarchive : confirmArchive} className="btn-danger">
+              {archived ? 'Unarchive' : 'Archive'}
             </button>
           </div>
         </div>
