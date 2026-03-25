@@ -162,7 +162,7 @@ export const errorsFormatted = (response, setError) => {
         });
       }
 
-    }, 200); // 🔥 delay added
+    }, 100); // 🔥 delay added
 
   } catch (error) {
     setTimeout(() => {
