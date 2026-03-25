@@ -42,6 +42,9 @@ import ArchiveUsers from './components/Users/ArchiveUsers';
 // Support Components
 import Support from './components/Support/Support';
 
+//Errors
+import NotFound from './components/Common/Errors/NotFound';
+
 // Hooks
 import useAutoLogoutOnIdle from './hooks/useAutoLogoutOnIdle';
 import { AdditionalDataProvider } from './context/AdditionalDataContext';
@@ -367,7 +370,16 @@ const AppContent = () => {
           )
         } 
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
+      <Route 
+          path={`/${ADMIN_PREFIX}`} 
+          element={<Navigate to={`/${ADMIN_PREFIX}/dashboard`} replace />} 
+        />
+
+      <Route 
+        path={`/${USER_PREFIX}`} 
+        element={<Navigate to={`/${USER_PREFIX}/dashboard`} replace />} 
+      />
     </Routes>
   );
 };
