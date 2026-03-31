@@ -29,7 +29,7 @@ return new class extends Migration
 			// $table->string('first_name');
 			$table->string('last_name')->default('Unknown'); // or nullable() if optional
 			// $table->string('last_name');
-			$table->string('mr_number')->nullable();
+			$table->string('ehr')->nullable();
 			$table->string('address')->nullable();
 			$table->string('latitude')->nullable()->change();  // Default value of '0' if not provided
 			// $table->string('latitude');

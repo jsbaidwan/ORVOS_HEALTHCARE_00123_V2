@@ -20,7 +20,7 @@ class Patient extends Authenticatable
      * @var array
      */
 	protected $fillable = [
-		'slug','study_id','p_code','user_id', 'dob', 'gender', 'phone', 'clinic_id', 'mr_number', 'address', 'city', 'state_id', 'zip', 
+		'slug','study_id','p_code','user_id', 'dob', 'gender', 'phone', 'clinic_id', 'ehr', 'address', 'city', 'state_id', 'zip', 
 		'p_insurance_name', 'p_insurance_group_no', 'p_insurance_member_no', 's_insurance_name', 's_insurance_group_no', 
 		's_insurance_member_no', 'l_eye', 'r_eye', 'l_eye_images', 'r_eye_images','medical_condition_id','medical_history', 'note','last_name','first_name',
 		'latitude','longitude','diagnosis_status','remark_by','remark_status','remark_result','remark_at', 'email','follow_up','is_pdf_report_downloaded','pdf_report_downloaded_by','dicom_json','is_report_sent','report_sent_by','report_sent_at','fax_status','fax_job_id','fax_sent_by','fax_sent_at','fax_json','dos','created_at'
@@ -34,7 +34,7 @@ class Patient extends Authenticatable
 		'gender' => 'nullable|string|max:255',
 		'phone' => 'required|regex:/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/',
 		'clinic_id' => 'required',
-		'mr_number' => 'required|string|max:255',
+		'ehr' => 'required|string|max:255',
 		'address' => 'required',
 		'email' => 'required|email',
 		'city' => 'nullable|string|max:255',

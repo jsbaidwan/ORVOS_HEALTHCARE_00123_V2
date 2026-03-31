@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const EyeImageUploader = ({ label, name, onChange, required = false, eyeType = 'left' }) => {
+const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', setValue, getValues }) => {
   const [dragActive, setDragActive] = useState(false);
   const [previews, setPreviews] = useState([]);
 
@@ -42,15 +42,18 @@ const EyeImageUploader = ({ label, name, onChange, required = false, eyeType = '
       // Create preview URLs
       const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
       setPreviews([...previews, ...newPreviews]);
-      
-      // Call onChange with files
-      onChange({ target: { name, files: validFiles } });
+
+      const prevFiles = getValues(name) || [];
+      setValue(name, [...prevFiles, ...validFiles], { shouldValidate: true });
     }
   };
 
   const removePreview = (index) => {
     const newPreviews = previews.filter((_, i) => i !== index);
     setPreviews(newPreviews);
+
+    const prevFiles = getValues(name) || [];
+    setValue(name, prevFiles.filter((_, i) => i !== index), { shouldValidate: true });
   };
 
   const eyeColor = eyeType === 'left' ? 'blue' : 'green';
@@ -63,13 +66,12 @@ const EyeImageUploader = ({ label, name, onChange, required = false, eyeType = '
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
+
       <div
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-          dragActive
-            ? `border-${eyeColor}-500 bg-${eyeColor}-50`
-            : `border-gray-300 hover:border-${eyeColor}-400 bg-gray-50`
-        }`}
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
+          ? `border-${eyeColor}-500 bg-${eyeColor}-50`
+          : `border-gray-300 hover:border-${eyeColor}-400 bg-gray-50`
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -85,7 +87,7 @@ const EyeImageUploader = ({ label, name, onChange, required = false, eyeType = '
           className="hidden"
           required={required && previews.length === 0}
         />
-        
+
         <label htmlFor={name} className="cursor-pointer">
           <div className="flex flex-col items-center">
             <div className={`w-16 h-16 rounded-full bg-${eyeColor}-100 flex items-center justify-center mb-3`}>

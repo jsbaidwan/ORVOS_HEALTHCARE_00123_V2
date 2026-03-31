@@ -96,6 +96,7 @@ const PatientForm = ({ patient }) => {
     handleSubmit,
     control,
     setValue,
+    getValues,
     setError,
     reset,
     formState: { errors, isSubmitting },
@@ -181,6 +182,19 @@ const PatientForm = ({ patient }) => {
     formData.append('medical_condition_id', data.medical_condition_id || '');
     formData.append('note', data?.note || '');
 
+    // Append eye images
+    if (data.l_eye_images && data.l_eye_images.length > 0) {
+      data.l_eye_images.forEach((file) => {
+        formData.append('l_eye_images[]', file);
+      });
+    }
+
+    if (data.r_eye_images && data.r_eye_images.length > 0) {
+      data.r_eye_images.forEach((file) => {
+        formData.append('r_eye_images[]', file);
+      });
+    }
+
     const medicalHistory = data.medical_history || [];
     medicalHistory.forEach(item => formData.append('medical_history[]', item));
 
@@ -244,7 +258,7 @@ const PatientForm = ({ patient }) => {
                     label="EHR #"
                     name="ehr"
                     registration={register('ehr')}
-                    placeholder="Enter MR Number"
+                    placeholder="Enter EHR Number"
                     required
                     error={errors.ehr?.message}
                   />
@@ -416,9 +430,12 @@ const PatientForm = ({ patient }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <EyeImageUploader
                     label="Left Eye Images"
-                    name="leftEyeImages"
+                    name="l_eye_images"
+                    setValue={setValue}
+                    getValues={getValues}
                     onChange={(e) => {
-                      // handle eye image files if needed
+
+
                     }}
                     required
                     eyeType="left"
@@ -426,9 +443,11 @@ const PatientForm = ({ patient }) => {
 
                   <EyeImageUploader
                     label="Right Eye Images"
-                    name="rightEyeImages"
+                    name="r_eye_images"
+                    setValue={setValue}
+                    getValues={getValues}
                     onChange={(e) => {
-                      // handle eye image files if needed
+
                     }}
                     required
                     eyeType="right"
