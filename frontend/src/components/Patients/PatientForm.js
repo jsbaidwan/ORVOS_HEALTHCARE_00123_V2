@@ -76,6 +76,7 @@ const buildDefaults = (data) => ({
   secondary_insurance_member_no: data?.secondary_insurance_member_no || '',
   medical_condition_id: data?.medical_condition_id || '',
   medical_history: Array.isArray(data?.medical_history) ? data.medical_history : [],
+  note: data?.note || '',
 });
 
 
@@ -178,6 +179,7 @@ const PatientForm = ({ patient }) => {
     formData.append('secondary_insurance_group_no', data.secondary_insurance_group_no?.trim() || '');
     formData.append('secondary_insurance_member_no', data.secondary_insurance_member_no?.trim() || '');
     formData.append('medical_condition_id', data.medical_condition_id || '');
+    formData.append('note', data?.note || '');
 
     const medicalHistory = data.medical_history || [];
     medicalHistory.forEach(item => formData.append('medical_history[]', item));
@@ -467,6 +469,16 @@ const PatientForm = ({ patient }) => {
                   />
                 </div>
               </div>
+
+              {/* Note */}
+              <FormField
+                label="Note"
+                name="note"
+                type="textarea"
+                registration={register('note')}
+                placeholder="Enter Note"
+                error={errors.note?.message}
+              />
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
