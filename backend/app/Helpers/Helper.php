@@ -346,7 +346,10 @@ class Helper{
         }else if(isset($filters['paginate']) && $filters['paginate'] == false){
 			$patients = $query->get();
 		} else{
-			$patients = $query->paginate();
+			
+			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$page = $filters['page'] ?? 1;
+			$patients = $query->paginate($perPage, ['*'], 'page', $page);
 		}  
 		
 		

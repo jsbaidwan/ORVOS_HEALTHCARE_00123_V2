@@ -1,23 +1,13 @@
 import React from 'react';
 
-const MedicalHistorySection = ({ selectedHistory = [], onChange }) => {
-  const medicalHistoryOptions = [
-    'Family history of glaucoma',
-    'HgbA1C',
-    'High cholesterol',
-    'Hypertension',
-    'Obesity',
-    'Kidney disease',
-    'Stroke',
-    'CAD',
-    'Previous myocardial infarction',
-  ];
+const MedicalHistorySection = ({ selectedHistory = [], onChange, medicalHistoryOptions = [] }) => {
 
   const handleCheckboxChange = (option) => {
-    const updatedHistory = selectedHistory.includes(option)
-      ? selectedHistory.filter(item => item !== option)
-      : [...selectedHistory, option];
-    
+    const optionId = option.id;
+    const updatedHistory = selectedHistory.includes(optionId)
+      ? selectedHistory.filter(item => item !== optionId)
+      : [...selectedHistory, optionId];
+
     onChange(updatedHistory);
   };
 
@@ -27,17 +17,17 @@ const MedicalHistorySection = ({ selectedHistory = [], onChange }) => {
         Medical History
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {medicalHistoryOptions.map((option, index) => (
-          <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+        {medicalHistoryOptions?.map((option, index) => (
+          <div key={option.id || index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <input
               type="checkbox"
-              id={`history-${index}`}
-              checked={selectedHistory.includes(option)}
+              id={`history-${option.id || index}`}
+              checked={selectedHistory.includes(option.id)}
               onChange={() => handleCheckboxChange(option)}
               className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />
-            <label htmlFor={`history-${index}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
-              {option}
+            <label htmlFor={`history-${option.id || index}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+              {option.name}
             </label>
           </div>
         ))}
@@ -50,5 +40,3 @@ const MedicalHistorySection = ({ selectedHistory = [], onChange }) => {
 };
 
 export default MedicalHistorySection;
-
-

@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import Api from '../utils/api';
+import { handleApiError } from '../utils/errorHandler';
 
 const PatientContext = createContext();
 
@@ -11,76 +14,173 @@ export const usePatient = () => {
 };
 
 export const PatientProvider = ({ children }) => {
-  const [patients, setPatients] = useState([
-    {
-      id: 1,
-      clinic: 'City Medical Center',
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: '1985-06-15',
-      gender: 'Male',
-      phone: '(555) 111-2222',
-      ehr: 'MR-12345',
-      email: 'john.doe@email.com',
-      address: '789 Patient St, New York, NY 10001',
-      primaryInsuranceName: 'Blue Cross',
-      primaryInsuranceGroupNo: 'GRP-12345',
-      primaryInsuranceMemberNo: 'MEM-67890',
-      secondaryInsuranceName: '',
-      secondaryInsuranceGroupNo: '',
-      secondaryInsuranceMemberNo: '',
-      leftEyeImages: [],
-      rightEyeImages: [],
-      medicalCondition: 'Type 2 Diabetes',
-      medicalHistory: ['HgbA1C', 'Hypertension', 'High cholesterol'],
-      status: 'Pending',
-      createdAt: '2024-10-01',
-    },
-    {
-      id: 2,
-      clinic: 'Valley Health Clinic',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      dateOfBirth: '1990-03-22',
-      gender: 'Female',
-      phone: '(555) 333-4444',
-      ehr: 'MR-54321',
-      email: 'jane.smith@email.com',
-      address: '456 Patient Ave, Los Angeles, CA 90001',
-      primaryInsuranceName: 'Aetna',
-      primaryInsuranceGroupNo: 'GRP-54321',
-      primaryInsuranceMemberNo: 'MEM-09876',
-      secondaryInsuranceName: 'Medicare',
-      secondaryInsuranceGroupNo: 'GRP-99999',
-      secondaryInsuranceMemberNo: 'MEM-11111',
-      leftEyeImages: [],
-      rightEyeImages: [],
-      medicalCondition: 'Type 1 Diabetes',
-      medicalHistory: ['Family history of glaucoma', 'Obesity'],
-      status: 'Completed',
-      createdAt: '2024-09-15',
-    },
-  ]);
+  const { getToken, logout } = useAuth();
+  const [patients, setPatients] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 10,
+    total: 0,
+  });
 
-  const addPatient = (patient) => {
-    const newPatient = {
-      ...patient,
-      id: Date.now(),
-      status: 'Pending',
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setPatients([...patients, newPatient]);
-    return newPatient;
+  const getPatients = useCallback(async (page = 1, filters = {}, paginate) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const data = {
+        paginate,
+        page,
+        ...filters,
+      };
+
+      const endpoint = 'patients?data=' + encodeURIComponent(JSON.stringify(data));
+      const response = await api.call(endpoint, 'GET', null, true);
+
+      if (response.status === 200) {
+        const responseData = response.data.patients;
+
+        if (typeof responseData === 'object' && responseData.data && Array.isArray(responseData.data)) {
+          setPatients(responseData.data);
+          setPagination({
+            currentPage: responseData.current_page || 1,
+            lastPage: responseData.last_page || 1,
+            perPage: responseData.per_page || 10,
+            total: responseData.total || 0,
+          });
+          return responseData;
+        } else if (Array.isArray(responseData)) {
+          setPatients(responseData);
+          setPagination({
+            currentPage: 1,
+            lastPage: 1,
+            perPage: responseData.length,
+            total: responseData.length,
+          });
+          return responseData;
+        }
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const getPatientById = useCallback(async (id, options = {}) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      let url = `patients/${id}/edit`;
+      if (options?.action && options?.action === 'view') {
+        url = `patients/${id}`;
+      }
+      const response = await api.call(url, 'GET', null, true);
+
+      if (response.status === 200) {
+        return { status: 200, patient: response.data.patient };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
+  const addPatient = async (patientData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('patients', 'POST', patientData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Patient created successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const updatePatient = (id, updatedPatient) => {
-    setPatients(
-      patients.map((patient) => (patient.id === id ? { ...patient, ...updatedPatient } : patient))
-    );
+  const updatePatient = async (id, patientData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      let method = 'PUT';
+      if (patientData instanceof FormData) {
+        patientData.append('_method', 'PUT');
+        method = 'POST';
+      }
+
+      const response = await api.call(`patients/${id}`, method, patientData, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Patient updated successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
-  const deletePatient = (id) => {
-    setPatients(patients.filter((patient) => patient.id !== id));
+  const archivePatient = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('archive', 'POST', { module: 'patients', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Patient archived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const unarchivePatient = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('unarchive', 'POST', { module: 'patients', id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Patient unarchived successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const deletePatient = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`patients/${id}`, 'DELETE', null, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Patient deleted successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const getExistingPatient = (id) => {
+    return patients.find(p => p.id === Number(id)) || null;
   };
 
   const getPendingPatients = () => {
@@ -91,17 +191,38 @@ export const PatientProvider = ({ children }) => {
     return patients.filter((patient) => patient.status === 'Completed');
   };
 
-  const markAsCompleted = (id) => {
-    setPatients(
-      patients.map((patient) => (patient.id === id ? { ...patient, status: 'Completed' } : patient))
-    );
+  const markAsCompleted = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`patients/${id}/complete`, 'POST', null, true);
+
+      if (response.status === 200) {
+        setPatients(
+          patients.map((patient) => (patient.id === id ? { ...patient, status: 'Completed' } : patient))
+        );
+        return { status: response.status, message: response.data?.message || 'Patient marked as completed' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
   };
 
   const value = {
     patients,
+    setPatients,
+    pagination,
+    getPatients,
+    getPatientById,
     addPatient,
     updatePatient,
     deletePatient,
+    archivePatient,
+    unarchivePatient,
+    getExistingPatient,
     getPendingPatients,
     getCompletedPatients,
     markAsCompleted,
@@ -109,4 +230,3 @@ export const PatientProvider = ({ children }) => {
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;
 };
-

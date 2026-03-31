@@ -19,6 +19,7 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('roles', 'App\Http\Controllers\Api\RoleController');
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	Route::resource('clinics', 'App\Http\Controllers\Api\ClinicController');
+	Route::resource('patients', 'App\Http\Controllers\Api\PatientController');
 	  
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
@@ -100,6 +101,9 @@ Route::get('additional-data', function(){
 		'deviceTypes' => \Helper::getDeviceTypes(),
 		'roles' => \Helper::getRoles(false)['roles'],
 		'insuranceCarriers' => \Helper::insuranceCarriers(),
+		'medicalConditions' => \Helper::getMedicalConditionLists(),
+		'genders' => \Helper::getGenders(),
+		'medicalHistories' => \Helper::getMedicalHistoryLists(),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);
