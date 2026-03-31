@@ -1,80 +1,187 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePatient } from '../../context/PatientContext';
 import Table from '../Common/Table';
+import Pagination from '../Common/Pagination';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
+import Filters from '../Common/Filters';
+import { PlusIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useLoader } from '../../context/LoaderContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
+import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
+import { usePermissions } from '../../context/PermissionsContext';
 
-const PatientsList = ({ status = 'all' }) => {
-  const navigate = useNavigate();
+const PatientsList = ({ status = 'all', archived = false }) => {
+  const {
+    patients,
+    pagination,
+    getPatients,
+    archivePatient,
+    unarchivePatient,
+    markAsCompleted,
+  } = usePatient();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [patientToArchive, setPatientToArchive] = useState(null);
+  const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
-  const { patients, getPendingPatients, getCompletedPatients, deletePatient, markAsCompleted } = usePatient();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [patientToDelete, setPatientToDelete] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [errors, setErrors] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const { setPageTitle } = useTitle();
+  const { permission } = usePermissions();
 
-  const getPatients = () => {
-    if (status === 'pending') return getPendingPatients();
-    if (status === 'completed') return getCompletedPatients();
-    return patients;
-  };
-
-  const patientList = getPatients();
+  const getTitle = useCallback(() => {
+    if (archived) return 'Archived Patients';
+    if (status === 'pending') return 'Pending Patients';
+    if (status === 'completed') return 'Completed Patients';
+    return 'Patients';
+  }, [archived, status]);
 
   useEffect(() => {
-    setPageTitle(status === 'pending' ? 'Pending Patients' : status === 'completed' ? 'Completed Patients' : 'All Patients');
-  }, [setPageTitle, status]);
+    setPageTitle(getTitle());
+  }, [setPageTitle, status, archived, getTitle]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const page = parseInt(params.get('page')) || 1;
+      const q = params.get('q') || '';
+
+      setSearchTerm(q);
+
+      const filters = {};
+      if (q) filters.q = q;
+      filters.is_archived = archived;
+
+      if (status && status !== 'all') {
+        filters.status = status;
+      }
+
+      try {
+        const response = await getPatients(page, filters, true);
+
+        if (response?.status && response?.status !== 200) {
+          setErrors({ general: response?.message });
+        }
+        setIsDataLoaded(true);
+      } catch (error) {
+        setIsDataLoaded(true);
+        setErrors({ general: error });
+      }
+    };
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, status, archived]);
+
+  const filtersData = async (key, value) => {
+    if (key === 'q') setSearchTerm(value);
+
+    const newUrl = new URL(window.location);
+    let filters = {};
+    filters.is_archived = archived;
+    if (status && status !== 'all') {
+      filters.status = status;
+    }
+
+    if (key === 'q') {
+      filters.q = value;
+      if (value) {
+        newUrl.searchParams.set('q', value);
+      } else {
+        newUrl.searchParams.delete('q');
+      }
+    }
+
+    newUrl.searchParams.delete('page');
+    window.history.pushState({}, '', newUrl);
+    const response = await getPatients(1, filters, true);
+
+    if (response?.status && response?.status !== 200) {
+      setErrors({ general: response?.message });
+    }
+  };
 
   const columns = [
     {
       header: 'Patient Name',
       accessor: 'name',
-      sortValue: (row) => `${row.firstName} ${row.lastName}`,
       render: (row) => (
-        <div>
-          <p className="font-semibold text-gray-900">{row.firstName} {row.lastName}</p>
-          <p className="text-xs text-gray-500">{row.email}</p>
+        <div className='w-48'>
+          <div className="flex items-center">
+            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">{row.first_name?.charAt(0)?.toUpperCase()}</span>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
+              <div className="text-sm text-gray-500">
+                {row.email || '-'}
+              </div>
+            </div>
+          </div>
         </div>
       ),
     },
     {
       header: 'Clinic',
       accessor: 'clinic',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row.clinic?.name || '-'}</p>
+        </div>
+      ),
     },
     {
       header: 'Contact',
       accessor: 'contact',
-      sortValue: (row) => row.phone,
       render: (row) => (
         <div>
-          <p className="text-gray-900">{row.phone}</p>
-          <p className="text-xs text-gray-500">EHR: {row.ehr}</p>
+          <p className="text-gray-900 text-sm">{row.phone || '-'}</p>
+          <p className="text-gray-500 text-xs">EHR: {row.ehr || '-'}</p>
         </div>
       ),
     },
     {
       header: 'Medical Condition',
-      accessor: 'medicalCondition',
+      accessor: 'medical_condition',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row.medical_condition?.name || '-'}</p>
+        </div>
+      ),
     },
     {
       header: 'Status',
       accessor: 'status',
+      sortable: false,
       render: (row) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 'Pending'
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${(row.status === 'Pending' || row.status === 'pending')
             ? 'bg-yellow-100 text-yellow-800'
             : 'bg-green-100 text-green-800'
-          }`}>
-          {row.status}
+            }`}
+        >
+          {row.status
+            ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+            : '-'}
         </span>
       ),
     },
     {
       header: 'Date Added',
-      accessor: 'createdAt',
-      sortValue: (row) => new Date(row.createdAt).getTime(),
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      accessor: 'created_at',
+      sortValue: (row) => row?.formated_created_at,
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row?.formated_created_at || new Date(row.created_at).toLocaleDateString()}</p>
+        </div>
+      ),
     },
     {
       header: 'Actions',
@@ -82,157 +189,217 @@ const PatientsList = ({ status = 'all' }) => {
       sortable: false,
       render: (row) => (
         <div className="flex items-center space-x-2">
-          <Link
-            to={getRoutePath(`/patients/edit/${row.id}`)}
-            className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200"
-            title="Edit"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </Link>
-          {row.status === 'Pending' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                markAsCompleted(row.id);
-              }}
-              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-              title="Mark as Completed"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
+          {!archived && (
+            <>
+              <Link to={getRoutePath(`/patients/edit/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </Link>
+
+              {(row.status === 'Pending' || row.status === 'pending') && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkAsCompleted(row.id);
+                  }}
+                  className="p-2 text-green-600 hover:bg-green-200 rounded-lg transition-colors duration-200"
+                  title="Mark as Completed"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
+            </>
           )}
+
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setPatientToDelete(row);
-              setShowDeleteConfirm(true);
-            }}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-            title="Delete"
+            onClick={() => handleArchive(row)}
+            className="p-2 hover:bg-warning-50 rounded-lg transition-colors duration-200"
+            title={archived ? 'Unarchive' : 'Archive'}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
         </div>
       ),
     },
   ];
 
-  const handleDelete = () => {
-    if (patientToDelete) {
-      deletePatient(patientToDelete.id);
-      setShowDeleteConfirm(false);
-      setPatientToDelete(null);
+  const handlePageChange = async (page) => {
+    let filters = {};
+    filters.is_archived = archived;
+    if (status && status !== 'all') {
+      filters.status = status;
+    }
+
+    if (searchTerm) filters.q = searchTerm;
+
+    await getPatients(page, filters, true);
+
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('page', page);
+    window.history.pushState({}, '', newUrl);
+  };
+
+  const handleArchive = (patient) => {
+    setShowArchiveConfirm(true);
+    setPatientToArchive(patient);
+  };
+
+  const confirmArchive = async () => {
+    if (patientToArchive) {
+      showLoader();
+      try {
+        const result = await archivePatient(patientToArchive.id);
+        if (result && result.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setPatientToArchive(null);
+          // Refresh data
+          filtersData('q', searchTerm);
+        } else {
+          toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
+      }
     }
   };
 
-  const getTitle = () => {
-    if (status === 'pending') return 'Pending Patients';
-    if (status === 'completed') return 'Completed Patients';
-    return 'All Patients';
+  const confirmUnarchive = async () => {
+    if (patientToArchive) {
+      showLoader();
+      try {
+        const result = await unarchivePatient(patientToArchive.id);
+        if (result && result.status === 200) {
+          toast.success(result?.message);
+          setShowArchiveConfirm(false);
+          setPatientToArchive(null);
+          // Refresh data
+          filtersData('q', searchTerm);
+        } else {
+          toast.error(result?.message);
+        }
+      } catch (error) {
+        toast.error(error?.message);
+      } finally {
+        hideLoader();
+      }
+    }
   };
 
-  return (
-    <div>
-      <Breadcrumb />
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{getTitle()}</h1>
-          <p className="text-gray-600 mt-1">Manage patient records</p>
-        </div>
-        <div className="flex space-x-3">
-          {status === 'all' && (
-            <>
-              <button
-                onClick={() => navigate('/patients/pending')}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <span>Pending</span>
-                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                  {getPendingPatients().length}
-                </span>
-              </button>
-              <button
-                onClick={() => navigate('/patients/completed')}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <span>Completed</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                  {getCompletedPatients().length}
-                </span>
-              </button>
-            </>
-          )}
+  const handleMarkAsCompleted = async (id) => {
+    showLoader();
+    try {
+      const result = await markAsCompleted(id);
+      if (result && result.status === 200) {
+        toast.success(result?.message);
+        filtersData('q', searchTerm);
+      } else {
+        toast.error(result?.message);
+      }
+    } catch (error) {
+      toast.error(error?.message);
+    } finally {
+      hideLoader();
+    }
+  };
 
-          <Link
-            to={getRoutePath('/patients/create')}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add Patient</span>
-          </Link>
+  const filterConfig = [
+    {
+      key: 'q',
+      type: 'text',
+      placeholder: 'Search patients...',
+      value: searchTerm,
+    },
+  ];
+
+  return (
+    <div className="py-6">
+      <Breadcrumb />
+
+      <div className="mb-3">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold text-gray-900">{getTitle()}</h1>
+
+          <div className="flex flex-wrap justify-end items-center gap-3 w-full">
+            {!archived ? (
+              <>
+                <Link to={getRoutePath('/patients/create')} className="inline-flex items-center justify-center px-4 py-2.5 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-[0.775rem] xs:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
+                  <PlusIcon className="w-3 h-3 mr-1" />
+                  Add New Patient
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate(getRoutePath('/patients'))}
+                className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back to List
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      {status === 'all' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-            <p className="text-blue-100 text-sm mb-1">Total Patients</p>
-            <p className="text-3xl font-bold">{patients.length}</p>
-          </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl p-6 text-white">
-            <p className="text-yellow-100 text-sm mb-1">Pending</p>
-            <p className="text-3xl font-bold">{getPendingPatients().length}</p>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-            <p className="text-green-100 text-sm mb-1">Completed</p>
-            <p className="text-3xl font-bold">{getCompletedPatients().length}</p>
-          </div>
-        </div>
-      )}
+      <ErrorHandle errors={errors} />
+      <Filters filters={filterConfig} onFilterChange={filtersData} />
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        data={patientList}
-        emptyMessage={`No ${status !== 'all' ? status : ''} patients found`}
+      <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6'>
+        <div className="px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Patients</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Patient records and details.
+          </p>
+        </div>
+      </div>
+      <div className="mb-6">
+        <Table
+          columns={columns}
+          data={patients || []}
+          emptyMessage="No patients found"
+          isDataLoaded={isDataLoaded}
+          permissions={{ 'read': permission(2, 'read'), 'write': permission(2, 'write') }}
+        />
+      </div>
+
+      <Pagination
+        currentPage={pagination.currentPage}
+        lastPage={pagination.lastPage}
+        onPageChange={handlePageChange}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       <Modal
-        isOpen={showDeleteConfirm}
+        isOpen={showArchiveConfirm}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setPatientToDelete(null);
+          setShowArchiveConfirm(false);
+          setPatientToArchive(null);
         }}
-        title="Confirm Delete"
+        title={`Confirm ${archived ? 'Unarchive' : 'Archive'}`}
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete patient <strong>{patientToDelete?.firstName} {patientToDelete?.lastName}</strong>? This action cannot be undone.
+            Are you sure you want to {archived ? 'unarchive' : 'archive'} <strong>{patientToArchive?.first_name} {patientToArchive?.last_name}</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button
               onClick={() => {
-                setShowDeleteConfirm(false);
-                setPatientToDelete(null);
+                setShowArchiveConfirm(false);
+                setPatientToArchive(null);
               }}
               className="btn-secondary"
             >
               Cancel
             </button>
-            <button onClick={handleDelete} className="btn-danger">
-              Delete
+            <button onClick={archived ? confirmUnarchive : confirmArchive} className="btn-danger">
+              {archived ? 'Unarchive' : 'Archive'}
             </button>
           </div>
         </div>
@@ -242,4 +409,3 @@ const PatientsList = ({ status = 'all' }) => {
 };
 
 export default PatientsList;
-
