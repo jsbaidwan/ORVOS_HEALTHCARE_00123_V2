@@ -14,7 +14,7 @@ const PatientsList = ({ status = 'all' }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   const { setPageTitle } = useTitle();
- 
+
   const getPatients = () => {
     if (status === 'pending') return getPendingPatients();
     if (status === 'completed') return getCompletedPatients();
@@ -62,11 +62,10 @@ const PatientsList = ({ status = 'all' }) => {
       header: 'Status',
       accessor: 'status',
       render: (row) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-          row.status === 'Pending' 
-            ? 'bg-yellow-100 text-yellow-800' 
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 'Pending'
+            ? 'bg-yellow-100 text-yellow-800'
             : 'bg-green-100 text-green-800'
-        }`}>
+          }`}>
           {row.status}
         </span>
       ),
@@ -170,15 +169,15 @@ const PatientsList = ({ status = 'all' }) => {
               </button>
             </>
           )}
-          
+
           <Link
-            to={getRoutePath('/patients/add')}
+            to={getRoutePath('/patients/create')}
             className="btn-primary flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span>Add Patient</span> 
+            <span>Add Patient</span>
           </Link>
         </div>
       </div>
