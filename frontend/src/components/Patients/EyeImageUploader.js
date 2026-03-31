@@ -66,7 +66,7 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
             {/* ✅ Close button inside container */}
             <button
               onClick={() => setIsViewerOpen(false)}
-              className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/70 text-white hover:bg-black transition"
+              className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-red-400/80 text-white hover:bg-red-400/100 transition"
               aria-label="Close"
             >
               ✕
