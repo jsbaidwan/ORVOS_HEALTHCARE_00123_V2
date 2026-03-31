@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       subItems: [
         { title: 'Pending Patients', basePath: '/patients/pending', module_id: 2 },
         { title: 'Completed Patients', basePath: '/patients/completed', module_id: 2 },
-        { title: 'Add Patient', basePath: '/patients/add', icon: <PlusIcon className="w-4 h-4" />, module_id: 2 },
+        { title: 'Add Patient', basePath: '/patients/create', icon: <PlusIcon className="w-4 h-4" />, module_id: 2 },
       ],
     },
     { title: 'Reports', basePath: '/reports', icon: <DocumentChartBarIcon className="w-5 h-5" />, module_id: 6 },
@@ -42,24 +42,24 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   ];
 
   const filteredMenuItems = menuItems
-  .filter(item => {
+    .filter(item => {
 
-    // Always show menu items with no module_id
-    if (!item.module_id) return true;
-     
-    // Show only if read permission exists
-    return permission(item.module_id, 'read');
-  })
-  .map(item => ({
-    ...item,
-    subItems: item.subItems
-      ? item.subItems.filter(sub => {
+      // Always show menu items with no module_id
+      if (!item.module_id) return true;
+
+      // Show only if read permission exists
+      return permission(item.module_id, 'read');
+    })
+    .map(item => ({
+      ...item,
+      subItems: item.subItems
+        ? item.subItems.filter(sub => {
           if (!sub.module_id) return true;
           return permission(sub.module_id, 'read');
         })
-      : null,
-  }));
- 
+        : null,
+    }));
+
   // Add actual paths
   const menuItemsWithPaths = filteredMenuItems.map(item => ({
     ...item,
@@ -93,9 +93,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Logo */}
         <div className="flex items-center justify-center px-3 py-4 border-b border-primary-100 relative">
@@ -122,20 +121,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       onClick={() =>
                         setOpenParentId(prev => (prev === item.basePath ? null : item.basePath))
                       }
-                      className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
-                        isActive(item.path) || openParentId === item.basePath
+                      className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path) || openParentId === item.basePath
                           ? 'bg-white text-primary'
                           : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
-                      }`}
+                        }`}
                     >
                       <span className="flex items-center space-x-3">
                         {item.icon}
                         <span className="text-sm">{item.title}</span>
                       </span>
                       <ChevronRightIcon
-                        className={`w-4 h-4 text-current transition-transform duration-200 ${
-                          openParentId === item.basePath ? 'rotate-90' : ''
-                        }`}
+                        className={`w-4 h-4 text-current transition-transform duration-200 ${openParentId === item.basePath ? 'rotate-90' : ''
+                          }`}
                       />
                     </button>
 
@@ -146,11 +143,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           <li key={subIndex}>
                             <Link
                               to={subItem.path}
-                              className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                                location.pathname === subItem.path
+                              className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${location.pathname === subItem.path
                                   ? 'bg-primary-100 text-primary border'
                                   : 'hover:bg-primary-50 hover:text-primary'
-                              }`}
+                                }`}
                             >
                               {subItem.icon && (
                                 <span className="mr-2 flex items-center">{subItem.icon}</span>
@@ -165,11 +161,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 ) : (
                   <Link
                     to={item.path}
-                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive(item.path)
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
                         ? 'bg-white text-primary'
                         : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center space-x-3">
                       {item.icon}
