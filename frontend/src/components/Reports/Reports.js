@@ -15,7 +15,7 @@ const Reports = () => {
   
   const getClinicPatients = () => {
     if (!selectedClinic) return patients;
-    return patients.filter(p => p.clinic === selectedClinic);
+    return patients.filter(p => String(p.clinic?.id) === String(selectedClinic) || String(p.clinic_id) === String(selectedClinic) || p.clinic === selectedClinic);
   };
 
   const clinicPatients = getClinicPatients();
@@ -30,9 +30,9 @@ const Reports = () => {
       `${p.firstName} ${p.lastName}`,
       p.email,
       p.phone,
-      p.clinic,
+      p.clinic?.name || (typeof p.clinic === 'string' ? p.clinic : '-'),
       p.status,
-      p.medicalCondition,
+      p.medicalCondition || '-',
       p.createdAt
     ]);
 
@@ -179,6 +179,7 @@ const Reports = () => {
             {
               header: 'Clinic',
               accessor: 'clinic',
+              render: (row) => row.clinic?.name || (typeof row.clinic === 'string' ? row.clinic : '-'),
             },
             {
               header: 'Contact',

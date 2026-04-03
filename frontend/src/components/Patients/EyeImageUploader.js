@@ -26,7 +26,7 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
         <div className="absolute  inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
         {fileloading ? (
-          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
+          <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
         ) : (
           <>
             {!blobUrl ? (
