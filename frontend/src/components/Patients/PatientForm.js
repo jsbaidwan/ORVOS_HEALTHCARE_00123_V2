@@ -90,6 +90,13 @@ const PatientForm = ({ patient }) => {
   const fetched = useRef(false);
   const [patientData, setPatientData] = useState(patient);
   const { additionalData } = useAdditionalData();
+  const [lEyeChecked, setLEyeChecked] = useState(true);
+  const [rEyeChecked, setREyeChecked] = useState(true);
+
+  const [existingLeftEyes, setExistingLeftEyes] = useState([]);
+  const [existingRightEyes, setExistingRightEyes] = useState([]);
+  const [removedLeftEyeFiles, setRemovedLeftEyeFiles] = useState([]);
+  const [removedRightEyeFiles, setRemovedRightEyeFiles] = useState([]);
 
   const {
     register,
@@ -136,6 +143,13 @@ const PatientForm = ({ patient }) => {
       if (fresh) {
         setPatientData(fresh?.patient);
         reset(buildDefaults(fresh?.patient));
+        
+        setExistingLeftEyes(fresh?.patient?.display_left_eye_images || []);
+        setExistingRightEyes(fresh?.patient?.display_right_eye_images || []);
+
+        // Auto-check eye checkboxes if patient already has eye images
+        if (fresh?.patient?.l_eye_images?.length > 0) setLEyeChecked(true);
+        if (fresh?.patient?.r_eye_images?.length > 0) setREyeChecked(true);
       }
     } finally {
       hideLoader();
@@ -147,6 +161,8 @@ const PatientForm = ({ patient }) => {
 
     if (existingPatient && !patientData) {
       setPatientData(existingPatient);
+      setExistingLeftEyes(existingPatient?.display_left_eye_images || []);
+      setExistingRightEyes(existingPatient?.display_right_eye_images || []);
 
       setTimeout(() => {
         reset(buildDefaults(existingPatient));
@@ -158,6 +174,16 @@ const PatientForm = ({ patient }) => {
       fetched.current = true;
     }
   }, [loadData, id, getExistingPatient, reset, patientData]);
+
+  const handleRemoveExistingLeftEye = (imgObj) => {
+    if (imgObj?.name) setRemovedLeftEyeFiles(prev => [...prev, imgObj.name]);
+    setExistingLeftEyes(prev => prev.filter(item => item.name !== imgObj.name));
+  };
+
+  const handleRemoveExistingRightEye = (imgObj) => {
+    if (imgObj?.name) setRemovedRightEyeFiles(prev => [...prev, imgObj.name]);
+    setExistingRightEyes(prev => prev.filter(item => item.name !== imgObj.name));
+  };
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -181,19 +207,38 @@ const PatientForm = ({ patient }) => {
     formData.append('secondary_insurance_member_no', data.secondary_insurance_member_no?.trim() || '');
     formData.append('medical_condition_id', data.medical_condition_id || '');
     formData.append('note', data?.note || '');
+    formData.append('l_eye', lEyeChecked ? '1' : '0');
+    formData.append('r_eye', rEyeChecked ? '1' : '0');
 
     // Append eye images
+    let hasLeftNew = false;
     if (data.l_eye_images && data.l_eye_images.length > 0) {
       data.l_eye_images.forEach((file) => {
         formData.append('l_eye_images[]', file);
       });
+      hasLeftNew = true;
+    }
+    
+    // Add dummy array item to satisfy backend validation if no new images but existing images are present
+    if (!hasLeftNew && lEyeChecked && existingLeftEyes?.length > 0) {
+      formData.append('l_eye_images[]', 'existing');
     }
 
+    let hasRightNew = false;
     if (data.r_eye_images && data.r_eye_images.length > 0) {
       data.r_eye_images.forEach((file) => {
         formData.append('r_eye_images[]', file);
       });
+      hasRightNew = true;
     }
+
+    // Add dummy array item to satisfy backend validation
+    if (!hasRightNew && rEyeChecked && existingRightEyes?.length > 0) {
+      formData.append('r_eye_images[]', 'existing');
+    }
+
+    removedLeftEyeFiles.forEach(name => formData.append('removed_leftEyePreview_files[]', name));
+    removedRightEyeFiles.forEach(name => formData.append('removed_rightEyePreview_files[]', name));
 
     const medicalHistory = data.medical_history || [];
     medicalHistory.forEach(item => formData.append('medical_history[]', item));
@@ -428,30 +473,65 @@ const PatientForm = ({ patient }) => {
               <div className="border-b border-gray-200 pb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Eye Images</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <EyeImageUploader
-                    label="Left Eye Images"
-                    name="l_eye_images"
-                    setValue={setValue}
-                    getValues={getValues}
-                    onChange={(e) => {
+                  <div>
+                    <label className="inline-flex items-center cursor-pointer mb-3">
+                      <input
+                        type="checkbox"
+                        name="l_eye"
+                        checked={lEyeChecked}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setLEyeChecked(checked);
+                          if (!checked) setValue('l_eye_images', []);
+                        }}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">Left Eye</span>
+                    </label>
+                    {lEyeChecked && (
+                      <EyeImageUploader
+                        label="Left Eye Images"
+                        name="l_eye_images"
+                        setValue={setValue}
+                        getValues={getValues}
+                        onChange={(e) => { }}
+                        required
+                        eyeType="left"
+                        existingImages={existingLeftEyes}
+                        onRemoveExisting={handleRemoveExistingLeftEye}
+                      />
+                    )}
+                  </div>
 
-
-                    }}
-                    required
-                    eyeType="left"
-                  />
-
-                  <EyeImageUploader
-                    label="Right Eye Images"
-                    name="r_eye_images"
-                    setValue={setValue}
-                    getValues={getValues}
-                    onChange={(e) => {
-
-                    }}
-                    required
-                    eyeType="right"
-                  />
+                  <div>
+                    <label className="inline-flex items-center cursor-pointer mb-3">
+                      <input
+                        type="checkbox"
+                        name="r_eye"
+                        checked={rEyeChecked}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setREyeChecked(checked);
+                          if (!checked) setValue('r_eye_images', []);
+                        }}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">Right Eye</span>
+                    </label>
+                    {rEyeChecked && (
+                      <EyeImageUploader
+                        label="Right Eye Images"
+                        name="r_eye_images"
+                        setValue={setValue}
+                        getValues={getValues}
+                        onChange={(e) => { }}
+                        required
+                        eyeType="right"
+                        existingImages={existingRightEyes}
+                        onRemoveExisting={handleRemoveExistingRightEye}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 

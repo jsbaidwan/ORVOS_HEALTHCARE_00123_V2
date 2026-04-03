@@ -65,10 +65,10 @@ class PatientController extends Controller
         }else{
             $input['user_id'] = 0;
         }
- 
+		$settingsData = [];
         $clinicId = $input['clinic_id']; 
-        $settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
-        $settingsData = $settings ? json_decode($settings->data, true) : [];
+        // $settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
+        // $settingsData = $settings ? json_decode($settings->data, true) : [];
 
 		$clinic = \Helper::getClinicById($clinicId)['clinic'];
 		if($clinic){
@@ -102,58 +102,54 @@ class PatientController extends Controller
 		 
 		$input['slug'] = \Helper::genSlug(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7))['slug'];
         if (!empty($input['l_eye_images'])) {
-            $lEyeImgs = $input['l_eye_images'];
-            $uLeftEyeFiles = [];
-    
-            foreach ($lEyeImgs as $lFile) {
+			$lEyeImgs = $input['l_eye_images'];
+			$uLeftEyeFiles = [];
+
+			foreach ($lEyeImgs as $lFile) {
 				if ($lFile instanceof \Illuminate\Http\UploadedFile) {
-					// Generate a unique lEfilename with a timestamp
+
+					// Generate unique filename
 					$lEfilename = time() . '_' . uniqid() . '.' . $lFile->getClientOriginalExtension();
-		
-					// Create the directory if it doesn't exist
-					$destinationPath = public_path('uploads/patients/' . $input['slug']);
-					if (!file_exists($destinationPath)) {
-						mkdir($destinationPath, 0755, true);
-					}
-		
-					// Move the file to the directory
-					$lFile->move($destinationPath, $lEfilename);
-		
-					// Store the lEfilename in an array
+
+					// Define path inside storage/app/public
+					$path = 'uploads/patients/' . $input['slug'];
+
+					// Store file
+					$lFile->storeAs('public/' . $path, $lEfilename);
+
+					// Save only relative path (important)
 					$uLeftEyeFiles[] = $lEfilename;
 				}
-            }
-    
-            // Store the file paths as a JSON array in the database
-            $input['l_eye_images'] = json_encode($uLeftEyeFiles);
-        }
+			}
+
+			// Store as JSON
+			$input['l_eye_images'] = json_encode($uLeftEyeFiles);
+		}
 		
 		if (!empty($input['r_eye_images'])) {
-            $rEyeImgs = $input['r_eye_images'];
-            $uRightEyeFiles = [];
-    
-            foreach ($rEyeImgs as $rFile) {
+			$rEyeImgs = $input['r_eye_images'];
+			$uRightEyeFiles = [];
+
+			foreach ($rEyeImgs as $rFile) {
 				if ($rFile instanceof \Illuminate\Http\UploadedFile) {
-					// Generate a unique rEfilename with a timestamp
+
+					// Generate unique filename
 					$rEfilename = time() . '_' . uniqid() . '.' . $rFile->getClientOriginalExtension();
-		
-					// Create the directory if it doesn't exist
-					$destinationPath = public_path('uploads/patients/' . $input['slug']);
-					if (!file_exists($destinationPath)) {
-						mkdir($destinationPath, 0755, true);
-					}
-		
-					// Move the file to the directory
-					$rFile->move($destinationPath, $rEfilename);
-		
-					// Store the rEfilename in an array
+
+					// Define storage path
+					$path = 'uploads/patients/' . $input['slug'];
+
+					// Store file in storage/app/public
+					$rFile->storeAs('public/' . $path, $rEfilename);
+
+					// Save relative path
 					$uRightEyeFiles[] = $rEfilename;
 				}
-            }
-    
-            // Store the file paths as a JSON array in the database
-            $input['r_eye_images'] = json_encode($uRightEyeFiles);
-        }
+			}
+
+			// Store JSON
+			$input['r_eye_images'] = json_encode($uRightEyeFiles);
+		}
 		 
         $input['medical_history'] = !empty($input['medical_history']) ? json_encode($input['medical_history']) : json_encode([]);
 		$input['p_code'] = \Helper::genPatientCode()['code'];
@@ -173,13 +169,8 @@ class PatientController extends Controller
 		$input['dos'] = \Helper::changeDateFormat(now()->format('m-d-Y'),'Y-m-d H:i:s')['date'];
         // Create new Patient record
         Patient::create($input);
-		 
-		if(empty($input['guest'])){
-			$route = route(\Helper::prefix(\Auth::user()->role_id)['prefix'].'.patients.pending');
-		} else {
-			$route = $settingsData['clinic_url']; // already a full URL
-		}
-		return response()->json(['user' => $user,'message' => 'Patient created successfully.', 'route' => $route], 200);
+		  
+		return response()->json(['message' => 'Patient created successfully.'], 200);
 		 
 		 
     }
@@ -196,14 +187,6 @@ class PatientController extends Controller
 		if(!$patient){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
-		
-		if (!empty($input['l_eye_images2'])) {
-			$input['l_eye_images'] = $input['l_eye_images2'];
-		}
-		
-		if (!empty($input['r_eye_images2'])) {
-			$input['r_eye_images'] = $input['r_eye_images2'];
-		}
 		 
         $clinicId = $input['clinic_id']; 
 		// Validation rules
@@ -217,9 +200,9 @@ class PatientController extends Controller
 			$input['longitude'] = $getLatLng['longitude'];
 		}
         //$rules['email'] .= ',email,' . $id;
-
-        $settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
-        $settingsData = $settings ? json_decode($settings->data, true) : [];
+		$settingsData = [];
+        // $settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
+        // $settingsData = $settings ? json_decode($settings->data, true) : [];
 
         if (empty($settingsData['patient_ins_billing_fields'])  || $settingsData['patient_ins_billing_fields'] == 'off' ) {
 
@@ -247,162 +230,178 @@ class PatientController extends Controller
 			$rules['remark_at'] = 'required';
 		}
 
-		$validate = Validator::make($input, $rules,$messages);
+		$validator = Validator::make($input, $rules,$messages);
      
-		if ($validate->fails()) {
+		if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()], 422);
 		}
 		  
-		if(!empty($input['removed_leftEyePreview_files'])){
-			foreach($input['removed_leftEyePreview_files'] as $lImgFile){
-				$lFilePath = public_path('uploads/patients/' . $patient->slug . '/' . $lImgFile);
-				if (file_exists($lFilePath)) {
-							 
-					unlink($lFilePath);  
-				 
-				} 
-				if ($patient->l_eye_images) { 
-					$lExistingFiles = json_decode($patient->l_eye_images, true);
-					foreach ($lExistingFiles as $file) {
-						   // Filter out the removed file
-						$lExistingFiles = array_filter($lExistingFiles, function ($file) use ($lImgFile) {
-							return $file !== $lImgFile;
-						});
+		if (!empty($input['removed_leftEyePreview_files'])) {
 
-						// Re-save JSON (reset array keys for clean JSON)
-						$patient->l_eye_images = json_encode(array_values($lExistingFiles));
-						$patient->save();
-						
+			foreach ($input['removed_leftEyePreview_files'] as $lImgFile) {
+
+				// Delete from storage
+				if (!empty($lImgFile)) {
+					
+					$path = 'uploads/patients/' . $patient['slug'];
+					// File path inside storage
+					$filePath = $path .'/'. $lImgFile;
+					
+					// Delete if exists
+					if (Storage::disk('public')->exists($filePath)) {
+						Storage::disk('public')->delete($filePath); 
 					}
+					 
 				}
-				
+
+				// Remove from DB JSON
+				if ($patient->l_eye_images) {
+
+					$lExistingFiles = json_decode($patient->l_eye_images, true);
+
+					// Filter out removed file
+					$lExistingFiles = array_filter($lExistingFiles, function ($file) use ($lImgFile) {
+						return $file !== $lImgFile;
+					});
+
+					// Reindex + save
+					$patient->l_eye_images = json_encode(array_values($lExistingFiles));
+					$patient->save();
+				}
 			}
 		}
-			
+		  	
 		
-		if(!empty($input['removed_rightEyePreview_files'])){
-			foreach($input['removed_rightEyePreview_files'] as $rImgFile){
-				$rFilePath = public_path('uploads/patients/' . $patient->slug . '/' . $rImgFile);
-				if (file_exists($rFilePath)) {
-							 
-					unlink($rFilePath); 
+		if (!empty($input['removed_rightEyePreview_files']) && $patient->r_eye_images) {
 
-				} 
-				
-				if ($patient->r_eye_images) { 
-					$rExistingFiles = json_decode($patient->r_eye_images, true);
-					foreach ($rExistingFiles as $file) {
-						   // Filter out the removed file
-						$rExistingFiles = array_filter($rExistingFiles, function ($file) use ($rImgFile) {
-							return $file !== $rImgFile;
-						});
+			$rExistingFiles = json_decode($patient->r_eye_images, true);
 
-						// Re-save JSON (reset array keys for clean JSON)
-						$patient->r_eye_images = json_encode(array_values($rExistingFiles));
-						$patient->save();
-						 
+			foreach ($input['removed_rightEyePreview_files'] as $rImgFile) {
+
+				if ($rImgFile) {
+					// Delete from storage
+					$path = 'uploads/patients/' . $patient['slug'];
+					// File path inside storage
+					$filePath = $path .'/'. $rImgFile;
+
+					// Delete if exists
+					if (Storage::disk('public')->exists($filePath)) {
+						Storage::disk('public')->delete($filePath); 
 					}
-				}					
-					 
+						 
+					// Remove from array
+					$rExistingFiles = array_filter($rExistingFiles, fn($file) => $file !== $rImgFile);
+				}
 			}
+
+			// Reindex + save once
+			$patient->r_eye_images = json_encode(array_values($rExistingFiles));
+			$patient->save();
 		}
 		
 		$uLeftEyeFiles = json_decode($patient->l_eye_images, true);
 		$uRightEyeFiles = json_decode($patient->r_eye_images, true);
 		
-		if (!empty($input['l_eye_images'])) {
-            $lEyeImgs = $input['l_eye_images']; 
-             
-            foreach ($lEyeImgs as $lFile) {
-				
-				if ($lFile instanceof \Illuminate\Http\UploadedFile) {
-					// Generate a unique lEfilename with a timestamp
-					$lEfilename = time() . '_' . uniqid() . '.' . $lFile->getClientOriginalExtension();
-		
-					// Create the directory if it doesn't exist
-					$destinationPath = public_path('uploads/patients/' . $patient['slug']);
-					if (!file_exists($destinationPath)) {
-						mkdir($destinationPath, 0755, true);
-					}
-		
-					// Move the file to the directory
-					$lFile->move($destinationPath, $lEfilename);
-		
-					// Store the lEfilename in an array
-					$uLeftEyeFiles[] = $lEfilename;
-				}
-            }
-    
-            // Store the file paths as a JSON array in the database
-            $input['l_eye_images'] = json_encode($uLeftEyeFiles);
-        }
-		
-		if (!empty($input['r_eye_images'])) {
-            $rEyeImgs = $input['r_eye_images'];
-             
-            foreach ($rEyeImgs as $rFile) {
-				if ($rFile instanceof \Illuminate\Http\UploadedFile) {
-					// Generate a unique rEfilename with a timestamp
-					$rEfilename = time() . '_' . uniqid() . '.' . $rFile->getClientOriginalExtension();
-		
-					// Create the directory if it doesn't exist
-					$destinationPath = public_path('uploads/patients/' . $patient['slug']);
-					if (!file_exists($destinationPath)) {
-						mkdir($destinationPath, 0755, true);
-					}
-		
-					// Move the file to the directory
-					$rFile->move($destinationPath, $rEfilename);
-		
-					// Store the rEfilename in an array
-					$uRightEyeFiles[] = $rEfilename;
-				}
-            }
-    
-            // Store the file paths as a JSON array in the database
-            $input['r_eye_images'] = json_encode($uRightEyeFiles);
-        }
-		 
-        $input['medical_history'] = !empty($input['medical_history']) ? json_encode($input['medical_history']) : json_encode([]);
+		$input['medical_history'] = !empty($input['medical_history']) ? json_encode($input['medical_history']) : json_encode([]);
 		$input['l_eye'] = !empty($input['l_eye']) ? $input['l_eye'] : 0;
 		$input['r_eye'] = !empty($input['r_eye']) ? $input['r_eye'] : 0;
 		
+		if (!empty($input['l_eye_images'])) {
+			$lEyeImgs = $input['l_eye_images']; 
+			
+			foreach ($lEyeImgs as $lFile) {
+
+				if ($lFile instanceof \Illuminate\Http\UploadedFile) {
+
+					// Generate unique filename
+					$lEfilename = time() . '_' . uniqid() . '.' . $lFile->getClientOriginalExtension();
+
+					// Define path
+					$path = 'uploads/patients/' . $patient['slug'];
+
+					// Store file in storage/app/public
+					$lFile->storeAs('public/' . $path, $lEfilename);
+
+					// Save relative path
+					$uLeftEyeFiles[] = $lEfilename;
+				}
+			}
+
+			// Store JSON
+			$input['l_eye_images'] = json_encode($uLeftEyeFiles);
+		}
+		
+		if (!empty($input['r_eye_images'])) {
+			$rEyeImgs = $input['r_eye_images'];
+			 
+			foreach ($rEyeImgs as $rFile) {
+				if ($rFile instanceof \Illuminate\Http\UploadedFile) {
+
+					// Generate unique filename
+					$rEfilename = time() . '_' . uniqid() . '.' . $rFile->getClientOriginalExtension();
+
+					// Define path
+					$path = 'uploads/patients/' . $patient['slug'];
+
+					// Store file
+					$rFile->storeAs('public/' . $path, $rEfilename);
+
+					// Save relative path
+					$uRightEyeFiles[] = $rEfilename;
+				}
+			}
+
+			// Store JSON
+			$input['r_eye_images'] = json_encode($uRightEyeFiles);
+		}
+		  
 		if(empty($input['l_eye'])){
 			 
-            if ($patient->l_eye_images) { 
-                $lExistingFiles = json_decode($patient->l_eye_images, true);
+           if ($patient->l_eye_images) { 
+				$lExistingFiles = json_decode($patient->l_eye_images, true);
 
-                foreach ($lExistingFiles as $file) {
-					if(!empty($file)){
-						$filePath = public_path('uploads/patients/' . $patient->slug . '/' . $file);
-						if (file_exists($filePath)) {
-							unlink($filePath); // Delete the file
+				foreach ($lExistingFiles as $file) {
+					if (!empty($file)) {
+
+						$path = 'uploads/patients/' . $patient['slug'];
+						// File path inside storage
+						$filePath = $path .'/'. $file;
+
+						// Delete if exists
+						if (Storage::disk('public')->exists($filePath)) {
+							Storage::disk('public')->delete($filePath); 
 						}
-						$input['l_eye_images'] = [];
 					}
-                   
-                }
-                 
-            }
+				}
+
+				// Reset input
+				$input['l_eye_images'] = [];
+			}
 		}
 		
 		if(empty($input['r_eye'])){
 			// unlink Existing files
             if ($patient->r_eye_images) { 
-                $rExistingFiles = json_decode($patient->r_eye_images, true);
+				$rExistingFiles = json_decode($patient->r_eye_images, true);
 
-                foreach ($rExistingFiles as $file) {
-					if(!empty($file)){
-						$filePath = public_path('uploads/patients/' . $patient->slug . '/' . $file);
-						if (file_exists($filePath)) {
-							unlink($filePath); // Delete the file
+				foreach ($rExistingFiles as $file) {
+					if (!empty($file)) {
+
+						// Path inside storage
+						$path = 'uploads/patients/' . $patient['slug'];
+						// File path inside storage
+						$filePath = $path .'/'. $file;
+
+						// Delete file
+						if (Storage::disk('public')->exists($filePath)) {
+							Storage::disk('public')->delete($filePath); 
 						}
-						$input['r_eye_images'] = [];
 					}
-                   
-                }
-                 
-            } 
+				}
+
+				// Reset input
+				$input['r_eye_images'] = [];
+			}
 		}
 		
 		if(!empty($input['created_at'])){
@@ -424,49 +423,42 @@ class PatientController extends Controller
 		 
 		// Update the patient's data
 		$patient->update($input);
-     
-		$routeParam = 'index';
-		if($patient->diagnosis_status == 1){
-			$routeParam = 'completed';
-		}else if($patient->diagnosis_status == 0) {
-			$routeParam = 'pending';
-		}
-        
-		return response()->json(['user' => $user,'message' => 'Patient created successfully.','route' => route(\Helper::prefix(\Auth::user()->role_id)['prefix'].'.patients.'.$routeParam)], 200);
+      
+		return response()->json(['message' => 'Patient updated successfully.'], 200);
 		  
      }
 	
 	public function edit($id)
     {  
-		$haveAccess = \Helper::permission(3,'write');
+		$haveAccess = \Helper::permission(2,'write');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
-		$user = \Helper::getUserById($id)['user'];
-		if(!$user){
-			return response()->json(['message' => \Helper::alertMsg('edit','User','error')['message']], 404);
+		$patient = \Helper::getPatientById($id)['patient'];
+		if(!$patient){
+			return response()->json(['message' => \Helper::alertMsg('edit','Patient','error')['message']], 404);
 		}
-		return response()->json(['user' => $user], 200);
+		return response()->json(['patient' => $patient], 200);
     }
 	
 	public function show($id)
 	{
-		$haveAccess = \Helper::permission(3,'view');
+		$haveAccess = \Helper::permission(2,'write');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
-		$user = \Helper::getUserById($id)['user'];
-		if(!$user){
-			return response()->json(['message' => \Helper::alertMsg('view','User','error')['message']], 404);
+		$patient = \Helper::getPatientById($id)['patient'];
+		if(!$patient){
+			return response()->json(['message' => \Helper::alertMsg('edit','Patient','error')['message']], 404);
 		}
-		return response()->json(['user' => $user], 200);
+		return response()->json(['patient' => $patient], 200);
 	}
 	
 	public function destroy($id)
 	{ 
-		$haveAccess = \Helper::permission(3,'delete');
+		$haveAccess = \Helper::permission(2,'delete');
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}

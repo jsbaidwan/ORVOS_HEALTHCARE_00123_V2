@@ -12,7 +12,7 @@ class Patient extends Authenticatable
 
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -80,16 +80,73 @@ class Patient extends Authenticatable
     {
         return $this->hasOne('App\Models\user','id','user_id');
     }
+	
+	public function getDisplayLeftEyeImagesAttribute()
+	{
+		$value = $this->attributes['l_eye_images'];
+		$arrFiles = !empty($value) ? json_decode($value, true) : [];
+		$files = [];
+
+		if (!empty($arrFiles)) {
+
+			$files = collect($arrFiles)->map(function ($file) {
+
+				$path = 'uploads/patients/' . $this->slug . '/' . $file;
+				$exists = !empty($file) && \Storage::disk('public')->exists($path);
+				$status = $exists ? 200 : 422;
+				 
+				$token = \Helper::fileTokenGen($path,$file,\Helper::hasSigned());
+				$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+				$src = $signedUrl;
+				
+				return [
+					'status' => $status,
+					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'name' => $file
+				];
+			})->values()->toArray(); // reset index (important)
+		}
+
+		return $files;
+	}
+	
+	public function getDisplayRightEyeImagesAttribute()
+	{
+		$value = $this->attributes['r_eye_images'];
+		$arrFiles = !empty($value) ? json_decode($value, true) : [];
+		$files = [];
+
+		if (!empty($arrFiles)) {
+
+			$files = collect($arrFiles)->map(function ($file) {
+
+				$path = 'uploads/patients/' . $this->slug . '/' . $file;
+				$exists = !empty($file) && \Storage::disk('public')->exists($path);
+				$status = $exists ? 200 : 422;
+				 
+				$token = \Helper::fileTokenGen($path,$file,\Helper::hasSigned());
+				$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+				$src = $signedUrl;
+				
+				return [
+					'status' => $status,
+					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'name' => $file
+				];
+			})->values()->toArray(); // reset index (important)
+		}
+
+		return $files;
+	}
 	 
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (empty($this->created_at)) {
 			return '';
 		}
-		$timezone = \Config('app.custom_timezone');
-		 
+		
 		try {
-			return \Carbon\Carbon::parse($this->created_at)->setTimezone($timezone)->format('D, M d Y');
+			return \Carbon\Carbon::parse($this->created_at)->format('D, M d Y');
 		} catch (\Exception $e) {
 			return '';
 		}

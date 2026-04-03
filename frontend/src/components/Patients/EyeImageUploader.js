@@ -87,7 +87,7 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
   );
 };
 
-const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', setValue, getValues }) => {
+const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', setValue, getValues, existingImages = [], onRemoveExisting }) => {
   const [dragActive, setDragActive] = useState(false);
   const [previews, setPreviews] = useState([]);
 
@@ -172,7 +172,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
           accept="image/jpeg,image/jpg,image/png,image/webp"
           multiple
           className="hidden"
-          required={required && previews.length === 0}
+          required={required && previews.length === 0 && (!existingImages || existingImages.length === 0)}
         />
 
         <label htmlFor={name} className="cursor-pointer">
@@ -211,25 +211,50 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
         </label>
       </div>
 
-      {/* Image Previews */}
+      {/* Existing Images (from server) */}
+      {existingImages && existingImages.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-gray-500 mb-2">Existing Images</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {existingImages.map((img, index) => (
+              <PreviewImage
+                key={`existing-${index}`}
+                preview={img.src ? img.src : img}
+                index={index}
+                eyeType={eyeType}
+                removePreview={() => onRemoveExisting && onRemoveExisting(img)}
+                eyeColor={eyeColor}
+                hasRemoveButton={true}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Newly Uploaded Image Previews */}
       {previews.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-          {previews.map((preview, index) => (
-            <PreviewImage
-              key={index}
-              preview={preview}
-              index={index}
-              eyeType={eyeType}
-              removePreview={removePreview}
-              eyeColor={eyeColor}
-              hasRemoveButton={true}
-            />
-          ))}
+        <div className="mt-4">
+          {existingImages && existingImages.length > 0 && (
+            <p className="text-xs font-medium text-gray-500 mb-2">New Uploads</p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {previews.map((preview, index) => (
+              <PreviewImage
+                key={index}
+                preview={preview}
+                index={index}
+                eyeType={eyeType}
+                removePreview={removePreview}
+                eyeColor={eyeColor}
+                hasRemoveButton={true}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       <p className="text-xs text-gray-500 mt-2">
-        {previews.length} image(s) selected • Multiple files allowed
+        {previews.length} new image(s) selected{existingImages && existingImages.length > 0 ? ` • ${existingImages.length} existing` : ''} • Multiple files allowed
       </p>
     </div>
   );

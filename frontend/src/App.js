@@ -198,9 +198,9 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
         }
       />
       <Route
-        path={`${basePath}/patients/edit/:id`}
+        path={`${basePath}/patients/:id/edit`}
         element={
-          <ProtectedRoute permission={permission(2, 'edit')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(2, 'write')} requiredRole={roleId}>
             <MainLayout><PatientForm /></MainLayout>
           </ProtectedRoute>
         }
