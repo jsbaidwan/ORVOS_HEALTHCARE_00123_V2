@@ -45,18 +45,6 @@ const patientSchema = yup.object({
   medical_history: yup.array().of(yup.string()),
 });
 
-const parseDateOfBirth = (dob) => {
-  if (!dob) return null;
-  const str = String(dob);
-  const parts = str.split('-');
-  if (parts.length === 3) {
-    const [m, d, y] = parts.map(Number);
-    const fullYear = y < 100 ? 2000 + y : y;
-    return new Date(fullYear, m - 1, d);
-  }
-  const fallback = new Date(str);
-  return isNaN(fallback.getTime()) ? null : fallback;
-};
 
 const parseMedicalHistory = (mh) => {
   if (Array.isArray(mh)) return mh;
@@ -74,7 +62,7 @@ const buildDefaults = (data) => ({
   clinic_id: data?.clinic_id || '',
   first_name: data?.first_name || '',
   last_name: data?.last_name || '',
-  dob: parseDateOfBirth(data?.dob),
+  dob: data?.dob,
   gender: data?.gender || '',
   phone: data?.phone || '',
   ehr: data?.ehr || '',
