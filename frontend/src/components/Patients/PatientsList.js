@@ -165,6 +165,33 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       ),
     },
     {
+      header: 'DOS',
+      accessor: 'dos',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row?.dos || '-'}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'EHR',
+      accessor: 'ehr',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row?.ehr || '-'}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Date of Birth',
+      accessor: 'date_of_birth',
+      render: (row) => (
+        <div>
+          <p className="text-gray-900 text-sm">{row?.date_of_birth || '-'}</p>
+        </div>
+      ),
+    },
+    {
       header: 'Created At',
       accessor: 'created_at',
       sortValue: (row) => row?.formated_created_at,

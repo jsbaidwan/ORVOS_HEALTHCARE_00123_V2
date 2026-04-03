@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -149,6 +149,18 @@ class Patient extends Authenticatable
 	{
 		$diagnosisStatus = $this->attributes['diagnosis_status'];
 		return empty($diagnosisStatus) ?  ['status' => 0,'name' => 'Pending','class' => 'warning','color' => 'yellow'] : ['status' => 1,'name' => 'Completed','class' => 'success','color' => 'green'];
+	}
+	
+	public function getDosAttribute()
+	{
+		$dos = $this->attributes['dos'];
+		return !empty($dos) ? \Carbon\Carbon::parse($dos)->format('D, M d Y') : NULL;
+	}
+	
+	public function getDateOfBirthAttribute()
+	{
+		$dob = $this->attributes['dob'];
+		return !empty($dob) ? \Carbon\Carbon::parse($dob)->format('D, M d Y') : NULL;
 	}
 	 
 	 
