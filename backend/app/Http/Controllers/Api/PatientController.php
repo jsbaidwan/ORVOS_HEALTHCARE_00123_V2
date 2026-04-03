@@ -168,7 +168,14 @@ class PatientController extends Controller
 		$input['dob'] = \Helper::changeDateFormat($input['dob'])['date'];
 		$input['dos'] = \Helper::changeDateFormat(now()->format('m-d-Y'),'Y-m-d H:i:s')['date'];
         // Create new Patient record
-        Patient::create($input);
+        $patient = Patient::create($input);
+		
+		\Log::save(
+			'Patient Created.',
+			'The Patient has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Patient',
+			$patient->id
+		);
 		  
 		return response()->json(['message' => 'Patient created successfully.'], 200);
 		 
@@ -423,6 +430,13 @@ class PatientController extends Controller
 		 
 		// Update the patient's data
 		$patient->update($input);
+		
+		\Log::save(
+			'Patient Updated.',
+			'The Patient has been updated by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Patient',
+			$patient->id
+		);
       
 		return response()->json(['message' => 'Patient updated successfully.'], 200);
 		  
@@ -463,19 +477,19 @@ class PatientController extends Controller
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
-		$user = \Helper::getUserById($id)['user'];
-		if(!$user){
-			return response()->json(['message' => 'We couldn’t find the user you’re looking for.'], 404);
+		$patient = \Helper::getPatientById($id)['patient'];
+		if(!$patient){
+			return response()->json(['message' => 'We couldn’t find the patient you’re looking for.'], 404);
 		}
 		 
-		$user->delete();
+		$patient->delete();
 		\Log::save(
-			'User Deleted.',
-			'The User has been deleted by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
-			'User', 
-			$user->id
+			'Patient Deleted.',
+			'The Patient has been deleted by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Patient', 
+			$patient->id
 		);
-		return response()->json(['message' => 'User deleted successfully.'], 200);
+		return response()->json(['message' => 'Patient deleted successfully.'], 200);
 		
 	}
 	
