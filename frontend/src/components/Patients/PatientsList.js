@@ -153,15 +153,16 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     {
       header: 'Diagnosis Status',
       accessor: 'diagnosis_status',
-      sortable: false,
       render: (row) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold bg-${row?.diagnosis_status_data?.color}-100 text-${row?.diagnosis_status_data?.color}-800`}
-        >
-          {row?.diagnosis_status_data
-            ? row.diagnosis_status_data?.name.charAt(0).toUpperCase() + row.diagnosis_status_data?.name.slice(1)
-            : '-'}
-        </span>
+        <div className='flex items-center justify-center'>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold bg-${row?.diagnosis_status_data?.color}-100 text-${row?.diagnosis_status_data?.color}-800`}
+          >
+            {row?.diagnosis_status_data
+              ? row.diagnosis_status_data?.name.charAt(0).toUpperCase() + row.diagnosis_status_data?.name.slice(1)
+              : '-'}
+          </span>
+        </div>
       ),
     },
     {
