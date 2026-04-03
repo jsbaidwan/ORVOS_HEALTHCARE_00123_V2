@@ -14,7 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 
-const PatientsList = ({ status = 'all', archived = false }) => {
+const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'all' }) => {
   const {
     patients,
     pagination,
@@ -58,6 +58,7 @@ const PatientsList = ({ status = 'all', archived = false }) => {
       const filters = {};
       if (q) filters.q = q;
       filters.is_archived = archived;
+      filters.diagnosis_status = diagnosis_status;
 
       if (status && status !== 'all') {
         filters.status = status;
@@ -86,6 +87,7 @@ const PatientsList = ({ status = 'all', archived = false }) => {
     const newUrl = new URL(window.location);
     let filters = {};
     filters.is_archived = archived;
+    filters.diagnosis_status = diagnosis_status;
     if (status && status !== 'all') {
       filters.status = status;
     }
@@ -163,7 +165,7 @@ const PatientsList = ({ status = 'all', archived = false }) => {
       ),
     },
     {
-      header: 'Date Added',
+      header: 'Created At',
       accessor: 'created_at',
       sortValue: (row) => row?.formated_created_at,
       render: (row) => (
@@ -218,6 +220,7 @@ const PatientsList = ({ status = 'all', archived = false }) => {
   const handlePageChange = async (page) => {
     let filters = {};
     filters.is_archived = archived;
+    filters.diagnosis_status = diagnosis_status;
     if (status && status !== 'all') {
       filters.status = status;
     }

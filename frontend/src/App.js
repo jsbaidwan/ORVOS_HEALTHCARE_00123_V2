@@ -169,7 +169,7 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
         path={`${basePath}/patients`}
         element={
           <ProtectedRoute permission={permission(2, 'read')} requiredRole={roleId}>
-            <MainLayout><PatientsList status="all" /></MainLayout>
+            <MainLayout><PatientsList status="all" diagnosis_status='all' /></MainLayout>
           </ProtectedRoute>
         }
       />
@@ -177,7 +177,7 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
         path={`${basePath}/patients/pending`}
         element={
           <ProtectedRoute permission={permission(2, 'read')} requiredRole={roleId}>
-            <MainLayout><PatientsList status="pending" /></MainLayout>
+            <MainLayout><PatientsList status="pending" diagnosis_status='0' /></MainLayout>
           </ProtectedRoute>
         }
       />
@@ -185,7 +185,7 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
         path={`${basePath}/patients/completed`}
         element={
           <ProtectedRoute permission={permission(2, 'read')} requiredRole={roleId}>
-            <MainLayout><PatientsList status="completed" /></MainLayout>
+            <MainLayout><PatientsList status="completed" diagnosis_status='1' /></MainLayout>
           </ProtectedRoute>
         }
       />

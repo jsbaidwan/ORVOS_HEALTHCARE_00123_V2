@@ -205,24 +205,10 @@ class Helper{
 	 * -----------------------------
 	 */
 	
-	public static function getPatients($filters = [])
+	public static function getPatients($isAdmin = true,$filters = [])
 	{
 		$query = Patient::with('remarkBy','user','clinic')->orderBy('id','DESC');
-		
-		/*if (isset($filters['from_date']) && isset($filters['to_date'])) {
-			$from = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['from_date'])->format('Y-m-d');
-			 
-			$to = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['to_date'])->format('Y-m-d');
-			 //$query->whereBetween('created_at', [$from, $to]);
-			 $query->whereDate('created_at', '>=', $from)->whereDate('created_at', '<=', $to);
-		} elseif (isset($filters['from_date'])) {
-			$from = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['from_date'])->format('Y-m-d');
-			$query->whereDate('created_at', $from);
-		} elseif (isset($filters['to_date'])) {
-			$to = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['to_date'])->format('Y-m-d');
-			$query->whereDate('created_at', $to);
-		}*/
-		
+		  
 		$from = null;
 		$to   = null;
 		// If month is set → define base start and end of month
@@ -251,6 +237,21 @@ class Helper{
 			$query->whereDate('created_at', $from->format('Y-m-d'));
 		} elseif ($to) {
 			$query->whereDate('created_at', $to->format('Y-m-d'));
+		}
+		
+		if(!empty($filters['q'])){
+			$search = $filters['q'];
+			$query->where(function ($q) use ($search) {
+				$q->where('first_name', 'LIKE', "%$search%")
+				  ->orWhere('last_name', 'LIKE', "%$search%")
+				  ->orWhere('email', 'LIKE', "%$search%")
+				  ->orWhere('phone', 'LIKE', "%$search%")
+				  ->orWhere('p_code', 'LIKE', "%$search%")
+				  ->orWhere('ehr', 'LIKE', "%$search%")
+				  ->orWhereHas('clinic', function ($q2) use ($search) {
+					  $q2->where('name', 'LIKE', "%$search%");
+				});
+			}); 
 		}
 		
 		if(!empty($filters['remark_by'])){
