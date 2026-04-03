@@ -3,6 +3,7 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import InnerImageZoom from 'react-inner-image-zoom';
 import 'react-inner-image-zoom/lib/styles.min.css';
 import { PhotoIcon } from '@heroicons/react/24/outline';
+//import { createRoot } from "react-dom/client";
 
 const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRemoveButton = true }) => {
 
@@ -13,34 +14,38 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
   const imgSrc = blobUrl || preview;
 
   useEffect(() => {
-    if (fileRef.current === imgSrc) {
+    if (fileRef.current === preview) {
       fileloading === true ? setFileLoading(true) : setFileLoading(false);
     }
-  }, [imgSrc, fileloading]);
+
+  }, [preview, fileloading]);
 
   return (
     <>
       <div className={`relative group overflow-hidden rounded-lg border-2 border-${eyeColor}-200`}>
         {/* Dark overlay on hover */}
-        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
+        <div className="absolute  inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
         {fileloading ? (
-          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 bg-gray-100" />
+          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 object-cover bg-gray-100" />
         ) : (
           <>
-            {!imgSrc ? (
-              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 bg-gray-100" />
+            {!blobUrl ? (
+              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100" />
             ) : (
+
               <img
                 src={imgSrc}
-                alt=''
+                alt=""
                 className="w-full h-32 object-cover bg-gray-200"
+
               />
             )}
           </>
         )}
 
         {/* View Icon */}
+
 
         <button
           type="button"
@@ -52,6 +57,7 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
         </button>
+
 
         {hasRemoveButton && (
           <>
@@ -99,6 +105,7 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
               zoomScale={1.0}
               hasSpacer={false}
               className="rounded w-full h-auto"
+
             />
           </div>
         </div>
