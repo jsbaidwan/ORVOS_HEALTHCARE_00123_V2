@@ -11,7 +11,6 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const fileRef = useRef(preview);
   const { blobUrl } = useBlobUrl(preview);
-  const imgSrc = blobUrl || preview;
 
   useEffect(() => {
     if (fileRef.current === preview) {
@@ -27,15 +26,15 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
         <div className="absolute  inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
         {fileloading ? (
-          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 object-cover bg-gray-100" />
+          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
         ) : (
           <>
             {!blobUrl ? (
-              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100" />
+              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
             ) : (
 
               <img
-                src={imgSrc}
+                src={blobUrl}
                 alt=""
                 className="w-full h-32 object-cover bg-gray-200"
 
@@ -45,8 +44,6 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
         )}
 
         {/* View Icon */}
-
-
         <button
           type="button"
           onClick={() => setIsViewerOpen(true)}
@@ -57,7 +54,6 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
         </button>
-
 
         {hasRemoveButton && (
           <>
@@ -99,8 +95,8 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
             </button>
 
             <InnerImageZoom
-              src={imgSrc}
-              zoomSrc={imgSrc}
+              src={blobUrl}
+              zoomSrc={blobUrl}
               zoomType="hover"
               zoomScale={1.0}
               hasSpacer={false}
