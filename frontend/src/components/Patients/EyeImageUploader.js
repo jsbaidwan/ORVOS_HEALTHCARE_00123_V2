@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import InnerImageZoom from 'react-inner-image-zoom';
 import 'react-inner-image-zoom/lib/styles.min.css';
+import { PhotoIcon } from '@heroicons/react/24/outline';
 
 const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRemoveButton = true }) => {
-  const { blobUrl } = useBlobUrl(preview);
+
+  const [fileloading, setFileLoading] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const fileRef = useRef(preview);
+  const { blobUrl } = useBlobUrl(preview);
   const imgSrc = blobUrl || preview;
+
+  useEffect(() => {
+    if (fileRef.current === imgSrc) {
+      fileloading === true ? setFileLoading(true) : setFileLoading(false);
+    }
+  }, [imgSrc, fileloading]);
 
   return (
     <>
@@ -14,11 +24,21 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
         {/* Dark overlay on hover */}
         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
-        <img
-          src={imgSrc}
-          alt={`${eyeType} eye ${index + 1}`}
-          className="w-full h-32 object-cover"
-        />
+        {fileloading ? (
+          <PhotoIcon className="w-8 h-8 border border-gray-200 rounded p-1 bg-gray-100" />
+        ) : (
+          <>
+            {!imgSrc ? (
+              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 bg-gray-100" />
+            ) : (
+              <img
+                src={imgSrc}
+                alt=''
+                className="w-full h-32 object-cover bg-gray-200"
+              />
+            )}
+          </>
+        )}
 
         {/* View Icon */}
 

@@ -9,10 +9,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class Patient extends Authenticatable
 {
     use Notifiable;
-
+ 
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -101,7 +101,7 @@ class Patient extends Authenticatable
 				
 				return [
 					'status' => $status,
-					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -130,7 +130,7 @@ class Patient extends Authenticatable
 				
 				return [
 					'status' => $status,
-					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -138,6 +138,19 @@ class Patient extends Authenticatable
 
 		return $files;
 	}
+	
+	public function getMedicalHistoryAttribute()
+	{
+		$value = $this->attributes['medical_history'];
+		return !empty($value) ? json_decode($value,true) : null;
+	}
+	
+	public function getDiagnosisStatusDataAttribute()
+	{
+		$diagnosisStatus = $this->attributes['diagnosis_status'];
+		return empty($diagnosisStatus) ?  ['status' => 0,'name' => 'Pending','class' => 'warning','color' => 'yellow'] : ['status' => 1,'name' => 'Completed','class' => 'success','color' => 'green'];
+	}
+	 
 	 
 	public function getFormatedCreatedAtAttribute()
 	{

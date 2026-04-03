@@ -207,7 +207,7 @@ class Helper{
 	
 	public static function getPatients($filters = [])
 	{
-		$query = Patient::with('remarkBy','user')->orderBy('id','DESC');
+		$query = Patient::with('remarkBy','user','clinic')->orderBy('id','DESC');
 		
 		/*if (isset($filters['from_date']) && isset($filters['to_date'])) {
 			$from = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['from_date'])->format('Y-m-d');

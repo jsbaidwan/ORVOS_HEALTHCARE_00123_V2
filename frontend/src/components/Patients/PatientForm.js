@@ -35,12 +35,12 @@ const patientSchema = yup.object({
   ehr: yup.string().required('EHR # is required').trim(),
   email: yup.string().email('Invalid email address').required('Email is required').trim(),
   address: yup.string().required('Address is required').trim(),
-  primary_insurance_name: yup.string().required('Primary Insurance Name is required').trim(),
-  primary_insurance_group_no: yup.string().required('Primary Insurance Group No is required').trim(),
-  primary_insurance_member_no: yup.string().required('Primary Insurance Member No is required').trim(),
-  secondary_insurance_name: yup.string().trim(),
-  secondary_insurance_group_no: yup.string().trim(),
-  secondary_insurance_member_no: yup.string().trim(),
+  p_insurance_name: yup.string().required('Primary Insurance Name is required').trim(),
+  p_insurance_group_no: yup.string().required('Primary Insurance Group No is required').trim(),
+  p_insurance_member_no: yup.string().required('Primary Insurance Member No is required').trim(),
+  s_insurance_name: yup.string().trim(),
+  s_insurance_group_no: yup.string().trim(),
+  s_insurance_member_no: yup.string().trim(),
   medical_condition_id: yup.string().required('Medical Condition is required'),
   medical_history: yup.array().of(yup.string()),
 });
@@ -58,6 +58,18 @@ const parseDateOfBirth = (dob) => {
   return isNaN(fallback.getTime()) ? null : fallback;
 };
 
+const parseMedicalHistory = (mh) => {
+  if (Array.isArray(mh)) return mh;
+  if (typeof mh === 'string') {
+    try {
+      return JSON.parse(mh);
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
+
 const buildDefaults = (data) => ({
   clinic_id: data?.clinic_id || '',
   first_name: data?.first_name || '',
@@ -68,14 +80,14 @@ const buildDefaults = (data) => ({
   ehr: data?.ehr || '',
   email: data?.email || '',
   address: data?.address || '',
-  primary_insurance_name: data?.primary_insurance_name || '',
-  primary_insurance_group_no: data?.primary_insurance_group_no || '',
-  primary_insurance_member_no: data?.primary_insurance_member_no || '',
-  secondary_insurance_name: data?.secondary_insurance_name || '',
-  secondary_insurance_group_no: data?.secondary_insurance_group_no || '',
-  secondary_insurance_member_no: data?.secondary_insurance_member_no || '',
+  p_insurance_name: data?.p_insurance_name || '',
+  p_insurance_group_no: data?.p_insurance_group_no || '',
+  p_insurance_member_no: data?.p_insurance_member_no || '',
+  s_insurance_name: data?.s_insurance_name || '',
+  s_insurance_group_no: data?.s_insurance_group_no || '',
+  s_insurance_member_no: data?.s_insurance_member_no || '',
   medical_condition_id: data?.medical_condition_id || '',
-  medical_history: Array.isArray(data?.medical_history) ? data.medical_history : [],
+  medical_history: parseMedicalHistory(data?.medical_history),
   note: data?.note || '',
 });
 
@@ -143,7 +155,7 @@ const PatientForm = ({ patient }) => {
       if (fresh) {
         setPatientData(fresh?.patient);
         reset(buildDefaults(fresh?.patient));
-        
+
         setExistingLeftEyes(fresh?.patient?.display_left_eye_images || []);
         setExistingRightEyes(fresh?.patient?.display_right_eye_images || []);
 
@@ -157,23 +169,35 @@ const PatientForm = ({ patient }) => {
   }, [pId, getClinics, getPatientById, hideLoader, reset, setError]);
 
   useEffect(() => {
-    const existingPatient = getExistingPatient(id);
-
-    if (existingPatient && !patientData) {
-      setPatientData(existingPatient);
-      setExistingLeftEyes(existingPatient?.display_left_eye_images || []);
-      setExistingRightEyes(existingPatient?.display_right_eye_images || []);
-
-      setTimeout(() => {
-        reset(buildDefaults(existingPatient));
-      }, 10);
+    if (!id && patientData) {
+      // Transition from Edit -> Create
+      setPatientData(null);
+      setExistingLeftEyes([]);
+      setExistingRightEyes([]);
+      setRemovedLeftEyeFiles([]);
+      setRemovedRightEyeFiles([]);
+      reset(buildDefaults(null));
+    } else if (id && (!patientData || String(patientData.id) !== String(id))) {
+      // Transition from Create -> Edit, or Edit A -> Edit B
+      const existingPatient = getExistingPatient(id);
+      if (existingPatient) {
+        setPatientData(existingPatient);
+        setExistingLeftEyes(existingPatient?.display_left_eye_images || []);
+        setExistingRightEyes(existingPatient?.display_right_eye_images || []);
+        setTimeout(() => {
+          reset(buildDefaults(existingPatient));
+        }, 10);
+      } else {
+        // We have an ID but no cached data, fetch it
+        loadData();
+      }
     }
 
     if (fetched.current === false) {
       loadData();
       fetched.current = true;
     }
-  }, [loadData, id, getExistingPatient, reset, patientData]);
+  }, [id, patientData, getExistingPatient, reset, loadData]);
 
   const handleRemoveExistingLeftEye = (imgObj) => {
     if (imgObj?.name) setRemovedLeftEyeFiles(prev => [...prev, imgObj.name]);
@@ -199,12 +223,12 @@ const PatientForm = ({ patient }) => {
     formData.append('ehr', data.ehr?.trim() || '');
     formData.append('email', data.email?.trim() || '');
     formData.append('address', data.address?.trim() || '');
-    formData.append('primary_insurance_name', data.primary_insurance_name?.trim() || '');
-    formData.append('primary_insurance_group_no', data.primary_insurance_group_no?.trim() || '');
-    formData.append('primary_insurance_member_no', data.primary_insurance_member_no?.trim() || '');
-    formData.append('secondary_insurance_name', data.secondary_insurance_name?.trim() || '');
-    formData.append('secondary_insurance_group_no', data.secondary_insurance_group_no?.trim() || '');
-    formData.append('secondary_insurance_member_no', data.secondary_insurance_member_no?.trim() || '');
+    formData.append('p_insurance_name', data.p_insurance_name?.trim() || '');
+    formData.append('p_insurance_group_no', data.p_insurance_group_no?.trim() || '');
+    formData.append('p_insurance_member_no', data.p_insurance_member_no?.trim() || '');
+    formData.append('s_insurance_name', data.s_insurance_name?.trim() || '');
+    formData.append('s_insurance_group_no', data.s_insurance_group_no?.trim() || '');
+    formData.append('s_insurance_member_no', data.s_insurance_member_no?.trim() || '');
     formData.append('medical_condition_id', data.medical_condition_id || '');
     formData.append('note', data?.note || '');
     formData.append('l_eye', lEyeChecked ? '1' : '0');
@@ -218,7 +242,7 @@ const PatientForm = ({ patient }) => {
       });
       hasLeftNew = true;
     }
-    
+
     // Add dummy array item to satisfy backend validation if no new images but existing images are present
     if (!hasLeftNew && lEyeChecked && existingLeftEyes?.length > 0) {
       formData.append('l_eye_images[]', 'existing');
@@ -414,29 +438,29 @@ const PatientForm = ({ patient }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <FormField
                     label="Insurance Name"
-                    name="primary_insurance_name"
-                    registration={register('primary_insurance_name')}
+                    name="p_insurance_name"
+                    registration={register('p_insurance_name')}
                     placeholder="Enter Primary Insurance Name"
                     required
-                    error={errors.primary_insurance_name?.message}
+                    error={errors.p_insurance_name?.message}
                   />
 
                   <FormField
                     label="Group No"
-                    name="primary_insurance_group_no"
-                    registration={register('primary_insurance_group_no')}
+                    name="p_insurance_group_no"
+                    registration={register('p_insurance_group_no')}
                     placeholder="Enter Group No"
                     required
-                    error={errors.primary_insurance_group_no?.message}
+                    error={errors.p_insurance_group_no?.message}
                   />
 
                   <FormField
                     label="Member No"
-                    name="primary_insurance_member_no"
-                    registration={register('primary_insurance_member_no')}
+                    name="p_insurance_member_no"
+                    registration={register('p_insurance_member_no')}
                     placeholder="Enter Member No"
                     required
-                    error={errors.primary_insurance_member_no?.message}
+                    error={errors.p_insurance_member_no?.message}
                   />
                 </div>
 
@@ -445,26 +469,26 @@ const PatientForm = ({ patient }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     label="Insurance Name"
-                    name="secondary_insurance_name"
-                    registration={register('secondary_insurance_name')}
+                    name="s_insurance_name"
+                    registration={register('s_insurance_name')}
                     placeholder="Enter Secondary Insurance Name"
-                    error={errors.secondary_insurance_name?.message}
+                    error={errors.s_insurance_name?.message}
                   />
 
                   <FormField
                     label="Group No"
-                    name="secondary_insurance_group_no"
-                    registration={register('secondary_insurance_group_no')}
+                    name="s_insurance_group_no"
+                    registration={register('s_insurance_group_no')}
                     placeholder="Enter Group No"
-                    error={errors.secondary_insurance_group_no?.message}
+                    error={errors.s_insurance_group_no?.message}
                   />
 
                   <FormField
                     label="Member No"
-                    name="secondary_insurance_member_no"
-                    registration={register('secondary_insurance_member_no')}
+                    name="s_insurance_member_no"
+                    registration={register('s_insurance_member_no')}
                     placeholder="Enter Member No"
-                    error={errors.secondary_insurance_member_no?.message}
+                    error={errors.s_insurance_member_no?.message}
                   />
                 </div>
               </div>
@@ -559,8 +583,9 @@ const PatientForm = ({ patient }) => {
                     name="medical_history"
                     control={control}
                     render={({ field }) => (
+
                       <MedicalHistorySection
-                        selectedHistory={field.value || []}
+                        selectedHistory={field.value || patient?.medical_history || []}
                         medicalHistoryOptions={additionalData?.medicalHistories}
                         onChange={(updatedHistory) => field.onChange(updatedHistory)}
                       />

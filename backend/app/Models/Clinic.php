@@ -119,7 +119,7 @@ class Clinic extends Authenticatable
 				
 				return [
 					'status' => $status,
-					'src' => $status ? $src : asset('assets/images/dummy.png'),
+					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)

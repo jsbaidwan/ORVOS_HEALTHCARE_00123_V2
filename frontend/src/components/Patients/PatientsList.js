@@ -121,7 +121,7 @@ const PatientsList = ({ status = 'all', archived = false }) => {
             <div>
               <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
               <div className="text-sm text-gray-500">
-                {row.email || '-'}
+                <Link to={getRoutePath(`/patients/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row?.p_code || '-'}</Link>
               </div>
             </div>
           </div>
@@ -147,28 +147,17 @@ const PatientsList = ({ status = 'all', archived = false }) => {
         </div>
       ),
     },
+
     {
-      header: 'Medical Condition',
-      accessor: 'medical_condition',
-      render: (row) => (
-        <div>
-          <p className="text-gray-900 text-sm">{row.medical_condition?.name || '-'}</p>
-        </div>
-      ),
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
+      header: 'Diagnosis Status',
+      accessor: 'diagnosis_status',
       sortable: false,
       render: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${(row.status === 'Pending' || row.status === 'pending')
-            ? 'bg-yellow-100 text-yellow-800'
-            : 'bg-green-100 text-green-800'
-            }`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold bg-${row?.diagnosis_status_data?.color}-100 text-${row?.diagnosis_status_data?.color}-800`}
         >
-          {row.status
-            ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+          {row?.diagnosis_status_data
+            ? row.diagnosis_status_data?.name.charAt(0).toUpperCase() + row.diagnosis_status_data?.name.slice(1)
             : '-'}
         </span>
       ),

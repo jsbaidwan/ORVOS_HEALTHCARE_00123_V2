@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const MedicalHistorySection = ({ selectedHistory = [], onChange, medicalHistoryOptions = [] }) => {
 
+  const [selHistory, setSelHistory] = useState(selectedHistory);
+
+  useEffect(() => {
+    setSelHistory(selectedHistory);
+  }, [selectedHistory]); // 👈 watch changes
+
   const handleCheckboxChange = (option) => {
-    const optionId = option.id;
+    const optionId = String(option.id); // ✅ force string
+
     const updatedHistory = selectedHistory.includes(optionId)
-      ? selectedHistory.filter(item => item !== optionId)
-      : [...selectedHistory, optionId];
+      ? selectedHistory.filter(item => item !== optionId) // remove
+      : [...selectedHistory, optionId]; // add
 
     onChange(updatedHistory);
+    setSelHistory(updatedHistory);
   };
 
   return (
@@ -19,10 +27,11 @@ const MedicalHistorySection = ({ selectedHistory = [], onChange, medicalHistoryO
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {medicalHistoryOptions?.map((option, index) => (
           <div key={option.id || index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+
             <input
               type="checkbox"
               id={`history-${option.id || index}`}
-              checked={selectedHistory.includes(option.id)}
+              checked={selHistory.includes(String(option.id))}
               onChange={() => handleCheckboxChange(option)}
               className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />
