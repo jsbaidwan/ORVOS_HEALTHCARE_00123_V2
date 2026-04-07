@@ -234,7 +234,7 @@ class PatientController extends Controller
 		}
 		
 		if($patient->diagnosis_status == 1){
-			//$rules['remark_at'] = 'required';
+			$rules['remark_at'] = 'required';
 		}
 
 		$validator = Validator::make($input, $rules,$messages);
