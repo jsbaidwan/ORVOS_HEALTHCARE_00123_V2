@@ -19,7 +19,7 @@ export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor,
 
   }, [preview, fileloading]);
 
-  const heightClass = fullSize ? "h-32 object-cover" : "h-32 object-cover";
+  const heightClass = fullSize ? "h-40 object-cover" : "h-40 object-cover";
 
   return (
     <>
@@ -28,11 +28,11 @@ export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor,
         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
         {fileloading ? (
-          <PhotoIcon className={`w-full ${fullSize ? 'h-32' : 'h-32'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
+          <PhotoIcon className={`w-full ${fullSize ? 'h-40' : 'h-40'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
         ) : (
           <>
             {!blobUrl ? (
-              <PhotoIcon className={`w-full ${fullSize ? 'h-32' : 'h-32'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
+              <PhotoIcon className={`w-full ${fullSize ? 'h-40' : 'h-40'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
             ) : (
 
               <img

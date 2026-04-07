@@ -239,7 +239,7 @@ const PatientView = () => {
                                         <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
                                             <div>
                                                 <div className="text-sm font-medium text-gray-700 mb-2">Right Eye: Yes</div>
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                     {rightEyeImages}
 
                                                 </div>
@@ -249,7 +249,7 @@ const PatientView = () => {
                                         <div className={currentStepName === 'LEFT_EYE' ? 'block' : 'hidden'}>
                                             <div>
                                                 <div className="text-sm font-medium text-gray-700 mb-2">Left Eye: Yes</div>
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                     {leftEyeImages}
                                                 </div>
                                             </div>
@@ -382,7 +382,7 @@ const PatientView = () => {
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-800 mb-4">Right Eye Images</h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[120px]">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[120px]">
                                             {patient?.display_right_eye_images?.length > 0 ? (
                                                 patient.display_right_eye_images.map((img, i) => (
                                                     <div key={i} className="relative rounded-lg overflow-hidden border">
@@ -403,7 +403,7 @@ const PatientView = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-800 mb-4">Left Eye Images</h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[120px]">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[120px]">
                                             {patient?.display_left_eye_images?.length > 0 ? (
                                                 patient.display_left_eye_images.map((img, i) => (
                                                     <div key={i} className="relative rounded-lg overflow-hidden border">
