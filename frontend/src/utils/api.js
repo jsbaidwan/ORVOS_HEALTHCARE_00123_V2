@@ -44,7 +44,7 @@ const Api = (getToken) => {
     try {
       // Read response as text
       const rawText = await response.text();
-  
+
       // Parse JSON (obfuscated or regular)
       let json = {};
       if (response.headers.get('X-Obfuscated')) {
@@ -57,7 +57,7 @@ const Api = (getToken) => {
         // Regular JSON
         json = rawText ? JSON.parse(rawText) : {};
       }
-      
+
       // If response is not OK, throw ApiError
       if (!response.ok) {
         const apiError = new ApiError(
@@ -67,10 +67,10 @@ const Api = (getToken) => {
         );
         return { status: response.status, data: json, error: apiError };
       }
-  
+
       return { status: response.status, data: json };
     } catch (err) {
-     
+
       return {
         status: response.status,
         data: {},
@@ -79,7 +79,7 @@ const Api = (getToken) => {
       };
     }
   };
-   
+
   /**
    * Append app_url to endpoint if not already present
    */
@@ -117,15 +117,15 @@ const Api = (getToken) => {
       }
 
       const response = await fetch(`${BASE_URL}/${endpoint}`, {
-        ...options,       
+        ...options,
       });
       return await handleResponse(response);
     } catch (error) {
-       
+
       const status = error?.response?.status || 500;
-     
+
       let message = error?.message || 'An error occurred';
-      if(status === 500){
+      if (status === 500) {
         message = 'An unexpected error has occurred. Please try again later or contact support if the issue persists.'
       }
       const apiError = new ApiError(status, message);

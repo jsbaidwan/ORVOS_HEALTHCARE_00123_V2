@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',isDataLoaded,permissions }) => {
- 
+const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions }) => {
+
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
- 
+
   // Sort data based on current sort configuration
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
-  
+
     const sorted = [...data].sort((a, b) => {
       const column = columns.find(col => col.accessor === sortConfig.key);
-      
+
       // Get values - use sortValue if provided, otherwise accessor
       let aValue = column?.sortValue ? column.sortValue(a) : a[sortConfig.key];
       let bValue = column?.sortValue ? column.sortValue(b) : b[sortConfig.key];
@@ -37,12 +37,12 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
   }, [data, sortConfig, columns]);
 
   const [loading, setLoading] = useState(() => (sortedData.length > 0 ? false : true));
-  
+
   useEffect(() => {
-    if(isDataLoaded){
+    if (isDataLoaded) {
       setLoading(false)
     }
-     
+
   }, [isDataLoaded]);
 
   // Handle column header click for sorting
@@ -82,41 +82,41 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
       </svg>
     );
   };
- 
- let blockedTitles = [];
-  if(permissions?.read === false){
-    blockedTitles = ['view','edit', 'delete', 'archive', 'unarchive'];
+
+  let blockedTitles = [];
+  if (permissions?.read === false) {
+    blockedTitles = ['view', 'edit', 'delete', 'archive', 'unarchive'];
   }
 
-  if(permissions?.write === false){
+  if (permissions?.write === false) {
     blockedTitles = ['edit', 'delete', 'archive', 'unarchive'];
   }
 
   let filteredColumns = columns.map(col => {
     if (col.accessor === 'actions' && typeof col.render === 'function') {
       const OriginalRender = col.render;
-  
+
       col.render = (row) => {
         const element = OriginalRender(row);
-  
+
         if (element?.props?.children) {
           // List all title 
-  
+
           const newChildren = React.Children.toArray(element.props.children)
             .filter(child => {
               const title = child?.props?.title?.toLowerCase?.() || '';
               return !blockedTitles.includes(title);
             });
-  
+
           return React.cloneElement(element, {}, newChildren);
         }
-  
+
         return element;
       };
     }
     return col;
   });
- 
+
   return (
     <div className="overflow-x-auto bg-white shadow-card">
       <table className="min-w-full divide-y divide-gray-200">
@@ -126,11 +126,10 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
               <th
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
-                  column.sortable !== false
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
                     ? 'cursor-pointer select-none   border-r   hover:bg-primary-600 transition-colors duration-150'
                     : ''
-                }`}
+                  }`}
               >
                 <div className="flex items-center">
                   {column.header}
@@ -140,7 +139,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
             ))}
           </tr>
         </thead>
-  
+
         <tbody className={`${loading ? 'blur-sm animate-pulse' : ''}`}>
           {/* 🌀 Show skeleton while loading */}
           {loading ? (
@@ -171,11 +170,10 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
               <tr
                 key={rowIndex}
                 onClick={() => onRowClick && onRowClick(row)}
-                className={`${
-                  onRowClick
+                className={`${onRowClick
                     ? 'cursor-pointer hover:bg-primary-50'
                     : 'odd:bg-white even:bg-gray-50 hover:bg-primary-50'
-                } transition-colors duration-150`}
+                  } transition-colors duration-150`}
               >
                 {filteredColumns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-normal text-sm break-words">
@@ -189,7 +187,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available',i
       </table>
     </div>
   );
-  
+
 };
 
 export default Table;

@@ -372,7 +372,7 @@ class Helper{
 	
 	public static function getPatientById($id)
 	{
-		$patient = Patient::find($id);
+		$patient = Patient::with('remarkBy','user','clinic')->find($id);
 		if(!$patient){
 			return ['patient' => Null];
 		}

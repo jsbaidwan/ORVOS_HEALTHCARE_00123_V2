@@ -12,7 +12,7 @@ const useBlobUrl = (url, options = {}) => {
   const [loading, setLoading] = useState(!blobCache.has(url));
   const [error, setError] = useState(null);
   const allowBlobUrl = process.env.REACT_APP_ALLOW_BLOB_URL;
-  
+
   const prevUrlRef = useRef(null);
 
   // ✅ stable headers object for dependency
@@ -20,25 +20,25 @@ const useBlobUrl = (url, options = {}) => {
 
   useEffect(() => {
     if (!url) return;
-    
-    if(!allowBlobUrl){
+
+    if (!allowBlobUrl) {
       setBlobUrl(url);
       setLoading(false);
       prevUrlRef.current = url; // track current url
       return;
     }
-    
+
     // 🔹 If same as previous URL, skip fetch
     if (prevUrlRef.current === url) return;
-   
+
     // 🔹 If already cached, use instantly
     if (blobCache.has(url)) {
-     
+
       setBlobUrl(blobCache.get(url));
-      
+
       setLoading(false);
       prevUrlRef.current = url; // track current url
-      
+
       return;
     }
 
@@ -72,9 +72,9 @@ const useBlobUrl = (url, options = {}) => {
     return () => {
       isMounted = false;
     };
-  }, [url, headers,allowBlobUrl]);
+  }, [url, headers, allowBlobUrl]);
 
-  return { blobUrl, loading, error };
+  return { blobUrl, loading, error, setBlobUrl };
 };
 
 export default useBlobUrl;

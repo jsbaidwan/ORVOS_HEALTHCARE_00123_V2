@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useClinicGroup } from '../../context/ClinicGroupContext';
 import Table from '../Common/Table';
 import Pagination from '../Common/Pagination';
@@ -6,8 +6,8 @@ import Modal from '../Common/Modal';
 import ClinicGroupForm from './ClinicGroupForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon,EyeIcon,ArchiveBoxIcon,ArrowLeftIcon,ArrowUpCircleIcon  } from '@heroicons/react/24/outline';
-import { useLocation,useNavigate,Link } from 'react-router-dom';
+import { PlusIcon, EyeIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
@@ -35,26 +35,33 @@ const ClinicGroupList = ({ archived = false }) => {
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
-  const [errors,setErrors] = useState(null);
-  const [isDataLoaded,setIsDataLoaded] = useState(false);
+  const [errors, setErrors] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const { setPageTitle } = useTitle();
   const { permission } = usePermissions();
-  const [tab, setTab] = useState(1);  
+  const [tab, setTab] = useState(1);
+  const prevTab = useRef(tab);
+
   useEffect(() => {
     setPageTitle('Clinic Groups');
   }, [setPageTitle]);
 
+
   useEffect(() => {
-    
+
+    if (tab !== prevTab.current) {
+      setClinicGroups([])
+    }
+
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
       const q = params.get('q') || '';
       const active = params.get('active') || 'all';
-      
+
       setSearchTerm(q);
       setStatusFilter(active);
-  
+
       // Prepare filters
       const filters = {};
       if (q) filters.q = q;
@@ -62,27 +69,28 @@ const ClinicGroupList = ({ archived = false }) => {
       filters.is_archived = archived;
       filters.active = tab;
       try {
+        setIsDataLoaded(true);
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
-       
-        if(response?.status && response?.status !== 200){
+
+        if (response?.status && response?.status !== 200) {
           setClinicGroups([])
-           setErrors({general:response?.message});
-         
+          setErrors({ general: response?.message });
+
         }
-        setIsDataLoaded(true);
+
         // hideLoader();
       } catch (error) {
         // hideLoader();
         setIsDataLoaded(true);
-        setErrors({general:error});
+        setErrors({ general: error });
       }
     };
-  
+
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [useLocation(),tab]);
-   
+  }, [useLocation(), tab]);
+
   const filtersData = async (key, value) => {
     // Update the state first
     if (key === 'q') {
@@ -91,42 +99,42 @@ const ClinicGroupList = ({ archived = false }) => {
     if (key === 'active') {
       setStatusFilter(value);
     }
-    
+
     const newUrl = new URL(window.location);
     let filters = {};
     filters.is_archived = archived;
     filters.active = tab;
-    
+
     if (key === 'q') {
       filters.q = value;
-      if(value) {
+      if (value) {
         newUrl.searchParams.set('q', value);
       } else {
         newUrl.searchParams.delete('q');
       }
     }
-    
+
     if (key === 'active') {
       filters.active = value;
-      if(value && value !== 'all') {
+      if (value && value !== 'all') {
         newUrl.searchParams.set('active', value);
       } else {
         newUrl.searchParams.delete('active');
       }
     }
-  
+
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
-    const response = await getClinicGroups(1, filters,true);
+    const response = await getClinicGroups(1, filters, true);
 
-    if(response?.status && response?.status !== 200){
-      
+    if (response?.status && response?.status !== 200) {
+
       setClinicGroups([])
-      setErrors({general:response?.message});
-     
+      setErrors({ general: response?.message });
+
     }
   };
-  
+
   const columns = [
     {
       header: 'Name',
@@ -140,7 +148,7 @@ const ClinicGroupList = ({ archived = false }) => {
             <div>
               <div className="text-sm font-medium text-gray-900">{row?.name}</div>
               <div className="text-sm ">
-              <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
+                <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
               </div>
             </div>
           </div>
@@ -149,7 +157,7 @@ const ClinicGroupList = ({ archived = false }) => {
     },
     {
       header: 'Description',
-      accessor:'description',
+      accessor: 'description',
       render: (row) => (
         <div className='w-80'>
           <p className="text-gray-900 text-sm line-clamp-3">{row.description || '-'}</p>
@@ -162,11 +170,10 @@ const ClinicGroupList = ({ archived = false }) => {
       sortable: false,
       render: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            row.active === 1
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${row.active === 1
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}
         >
           {row.is_active_status?.name
             ? row.is_active_status.name.charAt(0).toUpperCase() + row.is_active_status.name.slice(1)
@@ -213,13 +220,13 @@ const ClinicGroupList = ({ archived = false }) => {
           </button>
 
           <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View"> <EyeIcon className="w-5 h-5" /> </Link>
- 
+
           <button
             onClick={() => handleArchive(row)}
             className="p-2 hover:bg-warning-50 rounded-lg transition-colors duration-200"
             title={archived ? 'Unarchive' : 'Archive'}
           >
-             {archived ? <ArrowUpCircleIcon  className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon  className="w-5 h-5 text-warning" />}
+            {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
         </div>
       ),
@@ -230,20 +237,20 @@ const ClinicGroupList = ({ archived = false }) => {
     let filters = {};
     filters.is_archived = archived;
     filters.active = tab;
-    
-    if(searchTerm) {
+
+    if (searchTerm) {
       filters.q = searchTerm;
     }
-    if(statusFilter && statusFilter !== 'all') {
+    if (statusFilter && statusFilter !== 'all') {
       filters.active = statusFilter;
     }
-    
+
     await getClinicGroups(page, filters, true);
-    
+
     const newUrl = new URL(window.location);
     newUrl.searchParams.set('page', page);
     window.history.pushState({}, '', newUrl);
-    
+
   };
 
   const handleEdit = (clinicGroup) => {
@@ -252,7 +259,7 @@ const ClinicGroupList = ({ archived = false }) => {
   };
 
   const handleArchive = (clinicGroup) => {
-    
+
     setShowArchiveConfirm(true);
     setClinicGroupToArchive(clinicGroup);
   };
@@ -325,106 +332,106 @@ const ClinicGroupList = ({ archived = false }) => {
 
   return (
     <div className="py-6">
-        <Breadcrumb />
-  
-        <div className="mb-3">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-gray-900">{archived ? 'Archived' : ''} Clinic Groups</h1>
+      <Breadcrumb />
 
-            <div className="flex flex-wrap justify-end items-center gap-3 w-full">
-              {!archived ? (
-                <>
-                  {/* 📦 Archived Clinic Groups */}
-                  <button
-                    onClick={() => navigate(getRoutePath('/clinic-groups/archived'))}
-                    className="inline-flex items-center justify-center px-4 py-2 btn-warning w-full sm:w-auto text-sm sm:text-base"
-                  >
-                    <ArchiveBoxIcon className="w-4 h-4 mr-2" />
-                    Archived Clinic Groups
-                  </button>
+      <div className="mb-3">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold text-gray-900">{archived ? 'Archived' : ''} Clinic Groups</h1>
 
-                  {/* ➕ Add New Clinic Group */}
-                  <button
-                    onClick={() => {
-                      setEditingClinicGroup(null);
-                      setShowModal(true);
-                    }}
-                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
-                  >
-                    <PlusIcon className="w-4 h-4 mr-2" />
-                    Add New Clinic Group
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* 🔙 Back to List */}
-                  <button
-                    onClick={() => navigate(getRoutePath('/clinic-groups'))}
-                    className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back to List
-                  </button>
-                </>
-              )}
-            </div>
- 
+          <div className="flex flex-wrap justify-end items-center gap-3 w-full">
+            {!archived ? (
+              <>
+                {/* 📦 Archived Clinic Groups */}
+                <button
+                  onClick={() => navigate(getRoutePath('/clinic-groups/archived'))}
+                  className="inline-flex items-center justify-center px-4 py-2 btn-warning w-full sm:w-auto text-sm sm:text-base"
+                >
+                  <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                  Archived Clinic Groups
+                </button>
+
+                {/* ➕ Add New Clinic Group */}
+                <button
+                  onClick={() => {
+                    setEditingClinicGroup(null);
+                    setShowModal(true);
+                  }}
+                  className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add New Clinic Group
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 🔙 Back to List */}
+                <button
+                  onClick={() => navigate(getRoutePath('/clinic-groups'))}
+                  className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
+                >
+                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                  Back to List
+                </button>
+              </>
+            )}
           </div>
+
         </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6 ">
         <button
           onClick={() => setTab(1)}
-          className={`px-4 py-2 font-medium transition-all duration-200 ${
-            tab === 1
-              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
-              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-          }`}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${tab === 1
+            ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+            : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
         >
           Active
         </button>
         <button
           onClick={() => setTab(0)}
-          className={`px-4 py-2 font-medium transition-all duration-200 ${
-            tab === 0
-              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
-              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-          }`}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${tab === 0
+            ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+            : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
         >
           Inactive
         </button>
       </div>
-         
-        <ErrorHandle errors={errors} />
-        <Filters filters={filterConfig} onFilterChange={filtersData} />
-        
-        <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm'>
-          <div className="px-4 py-5 sm:px-6" bis_skin_checked="1">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+
+      <ErrorHandle errors={errors} />
+      <Filters filters={filterConfig} onFilterChange={filtersData} />
+
+      <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm'>
+        <div className="px-4 py-5 sm:px-6" bis_skin_checked="1">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
             Clinic Groups</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Clinic groups information and details.
-            </p>
-          </div>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Clinic groups information and details.
+          </p>
         </div>
-        <div className="mb-6">
-         
-          <Table
-            columns={columns}
-            data={clinicGroups || []}
-            emptyMessage="No clinic groups found"
-            isDataLoaded={isDataLoaded}
-            permissions={{'read': permission(8,'read'),'write': permission(8,'write')}}
-          />
-        </div>
-        
+      </div>
+      <div className="mb-6">
+
+        <Table
+          columns={columns}
+          data={clinicGroups || []}
+          emptyMessage="No clinic groups found"
+          isDataLoaded={isDataLoaded}
+          permissions={{ 'read': permission(8, 'read'), 'write': permission(8, 'write') }}
+        />
+      </div>
+
+      {clinicGroups?.length > 0 && (
         <Pagination
           currentPage={pagination.currentPage}
           lastPage={pagination.lastPage}
           onPageChange={handlePageChange}
         />
-       
+      )}
+
       {/* Add/Edit Clinic Group Modal */}
       <Modal
         isOpen={showModal}
@@ -445,7 +452,7 @@ const ClinicGroupList = ({ archived = false }) => {
           setShowArchiveConfirm(false);
           setClinicGroupToArchive(null);
         }}
-        title={`Confirm ${archived ? 'Unarchive' : 'Archive'}`} 
+        title={`Confirm ${archived ? 'Unarchive' : 'Archive'}`}
         size="sm"
       >
         <div className="space-y-4">
@@ -464,7 +471,7 @@ const ClinicGroupList = ({ archived = false }) => {
               Cancel
             </button>
             <button onClick={archived ? confirmUnarchive : confirmArchive} className="btn-danger">
-            {archived ? 'Unarchive' : 'Archive'}
+              {archived ? 'Unarchive' : 'Archive'}
             </button>
           </div>
         </div>

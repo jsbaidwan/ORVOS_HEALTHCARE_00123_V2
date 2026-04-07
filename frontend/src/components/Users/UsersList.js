@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../context/UserContext';
 import Table from '../Common/Table';
 import Pagination from '../Common/Pagination';
@@ -36,12 +36,18 @@ const UsersList = ({ archived = false }) => {
   const { setPageTitle } = useTitle();
   const { permission } = usePermissions();
   const [tab, setTab] = useState(1);
+  const prevTab = useRef(tab);
 
   useEffect(() => {
     setPageTitle(archived ? 'Archived Users' : 'Users');
   }, [setPageTitle, archived]);
 
   useEffect(() => {
+
+    if (tab !== prevTab.current) {
+      setUsers([])
+    }
+
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
@@ -346,11 +352,13 @@ const UsersList = ({ archived = false }) => {
         />
       </div>
 
-      <Pagination
-        currentPage={pagination.currentPage}
-        lastPage={pagination.lastPage}
-        onPageChange={handlePageChange}
-      />
+      {users?.length > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          lastPage={pagination.lastPage}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       {/* Archive Confirmation Modal */}
       <Modal

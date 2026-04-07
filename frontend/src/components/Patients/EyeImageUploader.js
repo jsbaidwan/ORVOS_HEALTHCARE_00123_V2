@@ -5,7 +5,7 @@ import 'react-inner-image-zoom/lib/styles.min.css';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 //import { createRoot } from "react-dom/client";
 
-const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRemoveButton = true }) => {
+export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRemoveButton = true, fullSize = false }) => {
 
   const [fileloading, setFileLoading] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -19,25 +19,26 @@ const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor, hasRem
 
   }, [preview, fileloading]);
 
+  const heightClass = fullSize ? "h-32 object-cover" : "h-32 object-cover";
+
   return (
     <>
       <div className={`relative group overflow-hidden rounded-lg border-2 border-${eyeColor}-200`}>
         {/* Dark overlay on hover */}
-        <div className="absolute  inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 
         {fileloading ? (
-          <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
+          <PhotoIcon className={`w-full ${fullSize ? 'h-32' : 'h-32'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
         ) : (
           <>
             {!blobUrl ? (
-              <PhotoIcon className="w-full h-32 border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse" />
+              <PhotoIcon className={`w-full ${fullSize ? 'h-32' : 'h-32'} border border-gray-200 rounded p-1 object-cover bg-gray-100 animate-pulse`} />
             ) : (
 
               <img
                 src={blobUrl}
                 alt=""
-                className="w-full h-32 object-cover bg-gray-200"
-
+                className={`w-full bg-gray-200 ${heightClass}`}
               />
             )}
           </>

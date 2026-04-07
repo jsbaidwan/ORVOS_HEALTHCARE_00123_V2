@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useClinic } from '../../context/ClinicContext';
 import Table from '../Common/Table';
 import Pagination from '../Common/Pagination';
@@ -39,12 +39,19 @@ const ClinicsList = ({ archived = false }) => {
   const { setPageTitle } = useTitle();
   const { permission } = usePermissions();
   const [tab, setTab] = useState(1);
+  const prevTab = useRef(tab);
 
   useEffect(() => {
     setPageTitle(archived ? 'Archived Clinics' : 'Clinics');
   }, [setPageTitle, archived]);
 
+
   useEffect(() => {
+
+    if (tab !== prevTab.current) {
+      setClinics([])
+    }
+
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
@@ -161,11 +168,10 @@ const ClinicsList = ({ archived = false }) => {
       sortable: false,
       render: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            row.status === 1
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 1
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}
         >
           {row.is_active_status?.name
             ? row.is_active_status.name.charAt(0).toUpperCase() + row.is_active_status.name.slice(1)
@@ -331,9 +337,9 @@ const ClinicsList = ({ archived = false }) => {
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Add New Clinic
                 </button> */}
-                
+
                 <Link to={getRoutePath('/clinics/create')} className="inline-flex items-center justify-center px-4 py-2.5 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-[0.775rem] xs:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
-                 <PlusIcon className="w-3 h-3 mr-1" />
+                  <PlusIcon className="w-3 h-3 mr-1" />
                   Add New Clinic
                 </Link>
               </>
@@ -354,26 +360,24 @@ const ClinicsList = ({ archived = false }) => {
       <div className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setTab(1)}
-          className={`px-4 py-2 font-medium transition-all duration-200 ${
-            tab === 1
-              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
-              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-          }`}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${tab === 1
+            ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+            : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
         >
           Active
         </button>
         <button
           onClick={() => setTab(0)}
-          className={`px-4 py-2 font-medium transition-all duration-200 ${
-            tab === 0
-              ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
-              : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-          }`}
+          className={`px-4 py-2 font-medium transition-all duration-200 ${tab === 0
+            ? "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 border-b-2 border-primary-600 text-primary-600 bg-primary-50"
+            : "flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
         >
           Inactive
         </button>
       </div>
-      
+
       <ErrorHandle errors={errors} />
       <Filters filters={filterConfig} onFilterChange={filtersData} />
 
@@ -395,11 +399,13 @@ const ClinicsList = ({ archived = false }) => {
         />
       </div>
 
-      <Pagination
-        currentPage={pagination.currentPage}
-        lastPage={pagination.lastPage}
-        onPageChange={handlePageChange}
-      />
+      {clinics?.length > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          lastPage={pagination.lastPage}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       {/* Add/Edit Clinic Modal */}
       <Modal
