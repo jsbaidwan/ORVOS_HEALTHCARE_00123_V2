@@ -37,6 +37,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   const { permission } = usePermissions();
 
   const getTitle = useCallback(() => {
+
     if (archived) return 'Archived Patients';
     if (status === 'pending') return 'Pending Patients';
     if (status === 'completed') return 'Completed Patients';
@@ -384,7 +385,8 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           </p>
         </div>
       </div>
-      <div className="mb-6">
+
+      <div className={`mb-6 `}>
         <Table
           columns={columns}
           data={patients || []}
