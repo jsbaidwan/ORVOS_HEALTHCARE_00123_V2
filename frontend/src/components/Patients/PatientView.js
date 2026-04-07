@@ -9,6 +9,7 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { PreviewImage } from './EyeImageUploader';
 import { useAuth } from '../../context/AuthContext';
 import FormField from '../UI/FormField';
+import PageLoader from '../Common/PageLoader';
 
 const DIAGNOSIS_OPTIONS = [
     "No diabetic retinopathy (E10.9)",
@@ -187,6 +188,15 @@ const PatientView = () => {
             <ErrorHandle errors={errors} />
 
             <div className={`bg-white rounded-lg shadow-sm border ${loading ? 'animate-pulse opacity-70' : ''} ${user?.role_id === 2 ? 'orvos-doctor-section' : ''}`}>
+
+                <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Overview</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Basic information about the patient.
+                    </p>
+                </div>
+
+                <PageLoader loading={loading} title="Loading Patient Details..." />
 
                 {patient ? (
                     <div className="p-6">

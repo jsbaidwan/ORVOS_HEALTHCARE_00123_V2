@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions }) => {
+const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions, forceLoading = 'not_loading' }) => {
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -39,11 +39,21 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   const [loading, setLoading] = useState(() => (sortedData.length > 0 ? false : true));
 
   useEffect(() => {
+
     if (isDataLoaded) {
       setLoading(false)
     }
 
   }, [isDataLoaded]);
+
+  useEffect(() => {
+    if (forceLoading !== 'not_loading') {
+      setLoading(true)
+      setTimeout(() => setLoading(false), 1000)
+    } else {
+      setLoading(false)
+    }
+  }, [forceLoading]);
 
   // Handle column header click for sorting
   const handleSort = (accessor, sortable) => {
@@ -127,8 +137,8 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
-                    ? 'cursor-pointer select-none   border-r   hover:bg-primary-600 transition-colors duration-150'
-                    : ''
+                  ? 'cursor-pointer select-none   border-r   hover:bg-primary-600 transition-colors duration-150'
+                  : ''
                   }`}
               >
                 <div className="flex items-center">
@@ -171,8 +181,8 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 key={rowIndex}
                 onClick={() => onRowClick && onRowClick(row)}
                 className={`${onRowClick
-                    ? 'cursor-pointer hover:bg-primary-50'
-                    : 'odd:bg-white even:bg-gray-50 hover:bg-primary-50'
+                  ? 'cursor-pointer hover:bg-primary-50'
+                  : 'odd:bg-white even:bg-gray-50 hover:bg-primary-50'
                   } transition-colors duration-150`}
               >
                 {filteredColumns.map((column, colIndex) => (

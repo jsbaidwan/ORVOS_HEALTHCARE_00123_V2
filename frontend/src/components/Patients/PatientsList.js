@@ -386,13 +386,14 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         </div>
       </div>
 
-      <div className={`mb-6 `}>
+      <div className={`mb-6`}>
         <Table
           columns={columns}
           data={patients || []}
           emptyMessage="No patients found"
           isDataLoaded={isDataLoaded}
           permissions={{ 'read': permission(2, 'read'), 'write': permission(2, 'write') }}
+          forceLoading={diagnosis_status}
         />
       </div>
 
