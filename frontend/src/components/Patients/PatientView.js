@@ -200,7 +200,7 @@ const PatientView = () => {
                                     <div className="space-y-1">
                                         <InfoItem label="Patient Name" value={`${patient?.first_name || ''} ${patient?.last_name || ''}`} />
                                         <InfoItem label="#EMR" value={patient?.ehr} />
-                                        <InfoItem label="Medical History" value={Array.isArray(patient?.medical_history) ? patient.medical_history.join(', ') : patient?.medical_history} />
+                                        <InfoItem label="Medical History" value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'} />
                                         <InfoItem label="Note" value={patient?.note} />
                                         <InfoItem label="Remark Status" value="Pending" valueClass="text-red-500 font-medium" />
                                         <InfoItem label="Doctor's Comments" value="No Yet remark by orvos doctor" valueClass="text-red-500 font-medium" />
@@ -219,7 +219,7 @@ const PatientView = () => {
                                             }
                                         />
                                         <InfoItem label="DOB" value={patient?.dob} />
-                                        <InfoItem label="Gender" value={patient?.gender} />
+                                        <InfoItem label="Gender" value={patient?.gender_data?.name} />
                                         <InfoItem label="Diagnosis Status" value="Pending" valueClass="text-red-500 font-medium" />
                                         <InfoItem label="DOS" value={patient?.dos} />
                                     </div>
@@ -433,7 +433,7 @@ const PatientView = () => {
                                         <InfoItem label="#EMR" value={patient?.ehr} />
                                         <InfoItem
                                             label="Medical History"
-                                            value={Array.isArray(patient?.medical_history) ? patient.medical_history.join(', ') : patient?.medical_history}
+                                            value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'}
                                         />
                                         <InfoItem label="Note" value={patient?.note} />
                                         <InfoItem
@@ -466,7 +466,7 @@ const PatientView = () => {
                                             }
                                         />
                                         <InfoItem label="DOB" value={patient?.dob} />
-                                        <InfoItem label="Gender" value={patient?.gender} />
+                                        <InfoItem label="Gender" value={patient?.gender_data?.name} />
                                         <InfoItem
                                             label="Right Eye Diagnosis Details"
                                             valueNode={

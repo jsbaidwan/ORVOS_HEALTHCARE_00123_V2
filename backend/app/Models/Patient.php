@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -161,6 +161,24 @@ class Patient extends Authenticatable
 	{
 		$dob = $this->attributes['dob'];
 		return !empty($dob) ? \Carbon\Carbon::parse($dob)->format('D, M d Y') : NULL;
+	}
+	
+	public function getMedicalConditionAttribute()
+	{
+		$value = $this->attributes['medical_condition_id'];
+		return !empty($value) ? \Helper::getMedicalConditionById($value)['medicalCondition'] : NULL;
+	}
+	
+	public function getMedicalHistoryDataAttribute()
+	{
+		$ids = !empty($this->attributes['medical_history']) ?  $this->attributes['medical_history']  : [];
+		return !empty($ids) ? \Helper::getMedicalHistoryById($ids)['medical_history'] :  [];
+	}
+	
+	public function getGenderDataAttribute()
+	{
+		$gender = !empty($this->attributes['gender']) ?  $this->attributes['gender']  : [];
+		return !empty($gender) ? \Helper::getGenderById($gender)['gender'] :  [];
 	}
 	 
 	 
