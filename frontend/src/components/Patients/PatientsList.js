@@ -111,7 +111,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     }
   };
 
-  const columns = [
+  let columns = [
     {
       header: 'Patient Name',
       accessor: 'name',
@@ -128,6 +128,32 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
               </div>
             </div>
           </div>
+        </div>
+      ),
+    },
+
+    {
+      header: 'Chart Code',
+      accessor: 'chart_code',
+      render: (row) => (
+        <div>
+
+          <p className={`${row.report_download_status_data?.class} text-sm`}>
+            {row.report_download_status_data?.name}
+          </p>
+
+
+          {row?.clinic?.is_patient_report_email_enabled === 1 && (
+            <p className={`${row.report_sent_status?.class} text-sm`}>
+              {row.report_sent_status?.status}
+            </p>
+          )}
+
+          {row?.clinic?.is_fax_enabled === 1 &&
+            <p className={`${row.fax_status_data?.class} text-sm`}>
+              {row.fax_status_data?.name}
+            </p>
+          }
         </div>
       ),
     },
@@ -252,6 +278,10 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       ),
     },
   ];
+
+  if (diagnosis_status === 0 || diagnosis_status === '0') {
+    columns = columns.filter(c => c.accessor !== 'chart_code');
+  }
 
   const handlePageChange = async (page) => {
     let filters = {};

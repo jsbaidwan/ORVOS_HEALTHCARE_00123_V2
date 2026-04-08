@@ -63,6 +63,8 @@ const buildDefaults = (data) => ({
   first_name: data?.first_name || '',
   last_name: data?.last_name || '',
   dob: data?.dob,
+  dos: data?.dos,
+  remark_at: data?.remark_at,
   gender: data?.gender || '',
   phone: data?.phone || '',
   ehr: data?.ehr || '',
@@ -203,9 +205,9 @@ const PatientForm = ({ patient }) => {
     formData.append('clinic_id', data.clinic_id || '');
     formData.append('first_name', data.first_name?.trim() || '');
     formData.append('last_name', data.last_name?.trim() || '');
-    formData.append('dob', data.dob
-      ? `${String(data.dob.getMonth() + 1).padStart(2, '0')}-${String(data.dob.getDate()).padStart(2, '0')}-${data.dob.getFullYear()}`
-      : '');
+    formData.append('dob', data.dob ? (() => { let d = new Date(data.dob); return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}` })() : '');
+    formData.append('dos', data.dos ? (() => { let d = new Date(data.dos); return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}` })() : '');
+    formData.append('remark_at', data.remark_at ? (() => { let d = new Date(data.remark_at); return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}` })() : '');
     formData.append('gender', data.gender || '');
     formData.append('phone', data.phone || '');
     formData.append('ehr', data.ehr?.trim() || '');
@@ -263,7 +265,8 @@ const PatientForm = ({ patient }) => {
 
       if (result && (result.status === 200 || result.success)) {
         toast.success(result?.message);
-        navigate(getRoutePath('/patients'));
+        const status = patientData?.diagnosis_status === 1 ? 'completed' : 'pending';
+        navigate(getRoutePath('/patients/' + status));
       } else {
         errorsFormatted(result, setError);
       }
@@ -361,6 +364,59 @@ const PatientForm = ({ patient }) => {
                       </div>
                     )}
                   />
+                  {patientData?.id && (<>
+                    <Controller
+                      name="dos"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            DOS <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <DatePicker
+                            selected={field.value}
+                            onChange={field.onChange}
+                            dateFormat="MM-dd-yyyy"
+                            placeholderText="MM-DD-YYYY"
+                            className={`w-full border ${errors.dos ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                            showYearDropdown
+                            showMonthDropdown
+                            dropdownMode="select"
+                            maxDate={new Date()}
+                          />
+                          {errors.dos && <p className="mt-1 text-sm text-red-600">{errors.dos.message}</p>}
+                        </div>
+                      )}
+                    />
+
+                    {patientData?.diagnosis_status === 1 && (
+                      < Controller
+                        name="remark_at"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Remark At <span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <DatePicker
+                              selected={field.value}
+                              onChange={field.onChange}
+                              dateFormat="MM-dd-yyyy"
+                              placeholderText="MM-DD-YYYY"
+                              className={`w-full border ${errors.remark_at ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                              showYearDropdown
+                              showMonthDropdown
+                              dropdownMode="select"
+                              maxDate={new Date()}
+                            />
+                            {errors.remark_at && <p className="mt-1 text-sm text-red-600">{errors.remark_at.message}</p>}
+                          </div>
+                        )}
+                      />
+                    )}
+
+                  </>
+                  )}
 
                   <FormField
                     label="Gender"
@@ -617,8 +673,8 @@ const PatientForm = ({ patient }) => {
             </form>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

@@ -2432,8 +2432,8 @@ class Helper{
 	public static function pdfReportDownloadStatus()
 	{
 		return [
-			0 => ['id' => 1,'name' => 'pending','class' => 'text-danger'],
-			1 => ['id' => 2,'name' => 'downloaded','class' => 'text-success']
+			0 => ['id' => 1,'name' => 'Pending','class' => 'text-warning'],
+			1 => ['id' => 2,'name' => 'Downloaded','class' => 'text-green-800']
 		];
 	}
 	 
@@ -2921,6 +2921,182 @@ class Helper{
 	/*
 	 *-----------------------------------------
 	 * End: Get Insurance Carrier By Id
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Fax Send
+	 * -----------------------------------------
+	 */
+	 
+	public static function faxSend($data,$checkStatus = false)
+	{
+		$client = new Client();
+		
+		$faxNumber = $data['fax_number'] ?? '';
+		$faxNumber = preg_replace('/\s+/', '', $faxNumber); // remove spaces
+
+		if (!str_starts_with($faxNumber, '+1')) {
+			$faxNumber = '+1' . ltrim($faxNumber, '+');
+		}
+
+		
+		//$data['file_url'] = 'https://login.orvoshealthcare.com/public/uploads/users/sandeep-sharma/documents/1765258461_6937b4dd026c4.pdf';
+		 
+		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-send', [
+			'headers' => [
+				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'Content-Type' => 'application/json',
+				'Accept' => 'application/json',
+			],
+			'json' => [
+				'faxNumber' => '+' . $faxNumber,
+				'message' => ($data['message'] ?? NULL),
+				'subject' => 'Patient Diagnosis Report - '.($data['first_name'] ?? NULL).' '.($data['last_name'] ?? NULL),
+				'from_name' => ($data['first_name'] ?? NULL).' '.($data['last_name'] ?? NULL),
+				'to_name' => env('APP_NAME'),
+				'callerId' => env('Fax_CALLER_ID'),
+				'faxQuality' => 'HD',
+				'faxData' => [
+					[
+						'fileName' => ($data['file_name'] ?? NULL),
+						'fileUrl' => ($data['file_url'] ?? NULL)
+					]
+				]
+			],
+		]);
+		
+		$rspData = json_decode($response->getBody(), true);
+		if($checkStatus == true){
+			if($rspData['status'] == 1){
+				sleep(15);
+				return self::faxStatus($rspData['data']['jobId']);	
+			}
+			
+		}
+		
+		return $rspData; 
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Fax Send
+	 * -----------------------------------------
+	 */
+	
+	/*
+	 *-----------------------------------------
+	 * Start: Get Fax Status
+	 * -----------------------------------------
+	 */
+	 
+	public static function faxStatus($jobId)
+	{
+		$client = new Client();
+		
+		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-status', [
+			'headers' => [
+				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'Content-Type' => 'application/json',
+				'Accept' => 'application/json',
+			],
+			'json' => [
+				'jobId' => $jobId,
+			],
+		]);
+		
+		return json_decode($response->getBody(), true);
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Get Fax Status
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Fax Resend
+	 * -----------------------------------------
+	 */
+	 
+	public static function faxResend($jobId,$checkStatus = false)
+	{
+		$client = new Client();
+		
+		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-resend', [
+			'headers' => [
+				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'Content-Type' => 'application/json',
+				'Accept' => 'application/json',
+			],
+			'json' => [
+				'jobId' => $jobId,
+			],
+		]);
+		
+		$rspData = json_decode($response->getBody(), true);
+		if($checkStatus == true){
+			if($rspData['status'] == 1){
+				sleep(15);
+				return self::faxStatus($rspData['data']['jobId']);	
+			}
+		}
+		
+		return $rspData;
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Fax Resend
+	 * -----------------------------------------
+	 */
+	
+	/*
+	 *-----------------------------------------
+	 * Start: Fax Status
+	 * -----------------------------------------
+	 */
+	 
+	public static function faxDynamicStatus()
+	{
+		return [
+			0 => ['name' => 'Fax Pending','class' => 'text-primary'],
+			1 => ['name' => 'Fax Sending','class' => 'text-warning'],
+			2 => ['name' => 'Fax Delivered','class' => 'text-green-800'],
+			3 => ['name' => 'Fax Failed','class' => 'text-danger'],
+		];
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: Fax Status
+	 * -----------------------------------------
+	 */
+	 
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get Fax Status By Id
+	 * -----------------------------------------
+	 */
+	 
+	public static function faxStatusById($id)
+	{
+		$faxStatus = self::faxDynamicStatus();
+		foreach($faxStatus as $fKey => $fVal){
+			if($fKey == $id){
+				return ['status' => 200 ,'faxStatus' => $fVal];
+			}
+		}
+		
+		return ['status' => 422];
+		
+	}
+	/*
+	 *-----------------------------------------
+	 * End: Get Fax Status By Id
 	 * -----------------------------------------
 	 */
 	 

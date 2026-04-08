@@ -104,6 +104,9 @@ Route::get('additional-data', function(){
 		'medicalConditions' => \Helper::getMedicalConditionLists(),
 		'genders' => \Helper::getGenders(),
 		'medicalHistories' => \Helper::getMedicalHistoryLists(),
+		'followUps' =>  \Helper::followupStatus(),
+		'examTypes1' => \Helper::getExamTypeLists(1),
+		'examTypes2' => \Helper::getExamTypeLists(2),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);

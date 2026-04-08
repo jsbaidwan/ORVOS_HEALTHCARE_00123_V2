@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -181,7 +181,31 @@ class Patient extends Authenticatable
 		return !empty($gender) ? \Helper::getGenderById($gender)['gender'] :  [];
 	}
 	 
+	public function getReportDownloadStatusDataAttribute()
+	{
+		$value = $this->attributes['is_pdf_report_downloaded'];
+		return \Helper::pdfReportDownloadStatusById($value)['pdfReportDownloadStatus'] ?? [];
+	}
+	
+	public function getReportSentStatusAttribute()
+	{
+		$value = $this->attributes['is_report_sent'];
+		return  $value ? ['status' =>'PDF Sent','class' => 'text-green-800'] : ['status' => 'PDF Pending','class' => 'text-warning'];
+	}
+	
+	public function getFaxStatusDataAttribute()
+	{
+		$value = $this->attributes['fax_status'];
+		$faxJson = $this->attributes['fax_json'];
+		$faxStatusData = \Helper::faxStatusById($value);
+		$faxArr = ($faxStatusData['status'] == 3 && !empty($faxJson))
+		? json_decode($faxJson, true)
+		: [];
+														
+		return  $faxStatusData['status'] == 200 ? [ 'class' => $faxStatusData['faxStatus']['class'],'name' => $faxStatusData['faxStatus']['name']] : ['status' => 'No Status Found','class' => 'text-danger','name' => NULL];
+	}
 	 
+	  
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (empty($this->created_at)) {

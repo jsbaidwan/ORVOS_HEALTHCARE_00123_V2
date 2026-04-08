@@ -10,28 +10,7 @@ import { PreviewImage } from './EyeImageUploader';
 import { useAuth } from '../../context/AuthContext';
 import FormField from '../UI/FormField';
 import PageLoader from '../Common/PageLoader';
-
-const DIAGNOSIS_OPTIONS = [
-    "No diabetic retinopathy (E10.9)",
-    "NPDR Mild/Minimal (E10.3291)",
-    "NPDR Mild/Minimal with CSME (E10.3211)",
-    "NPDR Moderate (E10.3391)",
-    "NPDR Moderate with CSME (E10.3311)",
-    "NPDR Severe (E10.349)",
-    "NPDR Severe with CSME (E10.341)",
-    "PDR (E10.3591)",
-    "PDR with CSME (E10.3511)",
-    "AMD Grade 1, Dry (H35.3111)",
-    "AMD Grade 2, Drusen, Degenerative (H35.311x)",
-    "AMD Grade 3, Degeneration, Retinal, Secondary Pigmentary (H35.4x)",
-    "AMD Grade 4, Exudative (H35.32)",
-    "AMD Grade 4, Chorioretinal scar, Posterior Pole (H31.011)",
-    "Drusen, Hereditary (extramacular drusen) (H31.101)",
-    "OTHER (H35.89)",
-    "Glaucoma. Optic nerve cupping (H40.011)",
-    "Image inadequate for assessment of retinal pathology (H57.89)",
-    "This image is low quality and inadequate for interpretation (N/A)"
-];
+import { useAdditionalData } from '../../context/AdditionalDataContext';
 
 const InfoItem = ({ label, value, valueNode, valueClass = "text-gray-900", labelClass = "" }) => (
     <div className="flex flex-col sm:flex-row py-3">
@@ -63,6 +42,8 @@ const PatientView = () => {
     const [formErrors, setFormErrors] = useState({});
 
     const { setPageTitle } = useTitle();
+    const { additionalData } = useAdditionalData();
+    const DIAGNOSIS_OPTIONS = patient?.medical_condition_id === 1 ? additionalData?.examTypes1 : additionalData?.examTypes2;
 
     useEffect(() => {
         setPageTitle('Patient Details');
@@ -106,6 +87,7 @@ const PatientView = () => {
 
     // Derived logic for pending / steps
     const isPending = patient?.diagnosis_status === 0 || patient?.diagnosis_status === '0';
+    const isOrvosDoctor = user?.role_id === 1 || user?.role_id === 2;
 
     const steps = useMemo(() => {
         if (!patient) return [];
@@ -187,7 +169,7 @@ const PatientView = () => {
 
             <ErrorHandle errors={errors} />
 
-            <div className={`bg-white rounded-lg shadow-sm border ${loading ? 'animate-pulse opacity-70' : ''} ${user?.role_id === 2 ? 'orvos-doctor-section' : ''}`}>
+            <div className={`bg-white rounded-lg shadow-sm border ${loading ? 'animate-pulse opacity-70' : ''} ${isOrvosDoctor ? 'orvos-doctor-section' : ''}`}>
 
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">Overview</h3>
@@ -202,7 +184,7 @@ const PatientView = () => {
                     <div className="p-6">
 
                         {/* CONDITIONAL RENDER BASED ON isPending */}
-                        {isPending ? (
+                        {isPending && isOrvosDoctor ? (
                             <>
                                 {/* 1. TOP SUMMARY GRID FOR PENDING STATUS */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200">
@@ -286,25 +268,11 @@ const PatientView = () => {
                                                         name="follow_up"
                                                         value={formData.follow_up}
                                                         onChange={(e) => setFormData({ ...formData, follow_up: e.target.value })}
-                                                        options={[
-                                                            { value: "", label: "Choose Follow Up" },
-                                                            { value: "Schedule Dr Visit", label: "Schedule Dr Visit" },
-                                                            { value: "Follow up in 6 months", label: "Follow up in 6 months" },
-                                                            { value: "Follow up in 1 year", label: "Follow up in 1 year" },
-                                                            { value: "Follow up in 2 years", label: "Follow up in 2 years" },
-                                                            { value: "Follow up in 3 years", label: "Follow up in 3 years" },
-                                                            { value: "Follow up in 4 years", label: "Follow up in 4 years" },
-                                                            { value: "Follow up in 5 years", label: "Follow up in 5 years" },
-                                                            { value: "Follow up in 6 years", label: "Follow up in 6 years" },
-                                                            { value: "Follow up in 7 years", label: "Follow up in 7 years" },
-                                                            { value: "Follow up in 8 years", label: "Follow up in 8 years" },
-                                                            { value: "Follow up in 9 years", label: "Follow up in 9 years" },
-                                                            { value: "Follow up in 10 years", label: "Follow up in 10 years" },
-                                                        ]}
-                                                        className={`w-full border ${formErrors.follow_up ? 'border-red-500' : 'border-gray-300'} rounded-md p-3 text-sm focus:ring-primary focus:border-primary shadow-sm`}
+                                                        options={additionalData?.followUps?.map((item) => ({ value: item?.id, label: item?.name }))}
+                                                        error={formErrors.follow_up}
+
                                                     />
 
-                                                    {formErrors.follow_up && <p className="text-red-500 text-xs">{formErrors.follow_up}</p>}
                                                 </div>
                                             </div>
                                         </div>
@@ -316,22 +284,22 @@ const PatientView = () => {
                                         <div className="mb-4 pt-4 border-t border-gray-100">
                                             <div className="text-sm font-semibold mb-2 text-gray-800">Right Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
                                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                                {DIAGNOSIS_OPTIONS.map((opt, i) => (
+                                                {DIAGNOSIS_OPTIONS?.rightEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
                                                         <input type="checkbox"
                                                             className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
-                                                            checked={formData.rightEyeSelections.includes(opt)}
+                                                            checked={formData.rightEyeSelections.includes(opt?.id)}
                                                             onChange={(e) => {
                                                                 const checked = e.target.checked;
                                                                 setFormData(prev => ({
                                                                     ...prev,
                                                                     rightEyeSelections: checked
-                                                                        ? [...prev.rightEyeSelections, opt]
-                                                                        : prev.rightEyeSelections.filter(x => x !== opt)
+                                                                        ? [...prev.rightEyeSelections, opt?.id]
+                                                                        : prev.rightEyeSelections.filter(x => x !== opt?.id)
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{opt}</span>
+                                                        <span>{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -343,22 +311,22 @@ const PatientView = () => {
                                         <div className="mb-4 pt-4 border-t border-gray-100">
                                             <div className="text-sm font-semibold mb-2 text-gray-800">Left Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
                                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                                {DIAGNOSIS_OPTIONS.map((opt, i) => (
+                                                {DIAGNOSIS_OPTIONS?.leftEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
                                                         <input type="checkbox"
                                                             className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
-                                                            checked={formData.leftEyeSelections.includes(opt)}
+                                                            checked={formData.leftEyeSelections.includes(opt?.id)}
                                                             onChange={(e) => {
                                                                 const checked = e.target.checked;
                                                                 setFormData(prev => ({
                                                                     ...prev,
                                                                     leftEyeSelections: checked
-                                                                        ? [...prev.leftEyeSelections, opt]
-                                                                        : prev.leftEyeSelections.filter(x => x !== opt)
+                                                                        ? [...prev.leftEyeSelections, opt?.id]
+                                                                        : prev.leftEyeSelections.filter(x => x !== opt?.id)
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{opt}</span>
+                                                        <span>{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -456,7 +424,7 @@ const PatientView = () => {
                                             label="Follow Up"
                                             valueNode={
                                                 <span className="inline-flex px-3 py-1 rounded-sm text-xs font-semibold bg-green-500 text-white cursor-pointer hover:bg-green-600">
-                                                    Schedule Dr Visit
+                                                    {additionalData?.followUps?.find((item) => item?.id === patient?.follow_up)?.name}
                                                 </span>
                                             }
                                         />
