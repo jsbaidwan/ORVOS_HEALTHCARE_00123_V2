@@ -1034,8 +1034,8 @@ class Helper{
 	public static function getGenders()
 	{
 		return [
-			['id' => 1,'name' => 'male'],
-			['id' => 2,'name' => 'female']
+			['id' => 1,'name' => 'Male'],
+			['id' => 2,'name' => 'Female']
 		];
 	}
 
