@@ -4,20 +4,80 @@ import { usePatient } from '../../context/PatientContext';
 import { useClinic } from '../../context/ClinicContext';
 import StatsCard from './StatsCard';
 import { useTitle } from "../../context/TitleContext";
+import Table from '../Common/Table';
+import { useUser } from '../../context/UserContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { getPendingPatients, getCompletedPatients } = usePatient();
+  const { patients, getPatients } = usePatient();
   const { clinics, getClinics } = useClinic();
+  const { users, getUsers } = useUser();
   const { setPageTitle } = useTitle();
 
-  const pendingPatients = getPendingPatients();
-  const completedPatients = getCompletedPatients();
+  const pendingPatients = patients?.filter(patient => patient.diagnosis_status === 0) || [];
+  const completedPatients = patients?.filter(patient => patient.diagnosis_status === 1) || [];
+  const orvosDoctors = users?.filter(user => user.role_id === 2) || [];
 
   useEffect(() => {
     getClinics(1, { active: 1 }, false);
   }, [getClinics]);
- 
+
+  useEffect(() => {
+    getPatients(1, { active: 1 }, false);
+  }, [getPatients]);
+
+  useEffect(() => {
+    getUsers(1, { active: 1 }, false);
+  }, [getUsers]);
+
+  const topClinics = clinics?.slice(0, 5) || [];
+
+  const clinicColumns = [
+    {
+      header: 'Clinics',
+      accessor: 'name',
+      render: (row) => (
+        <div className='w-48'>
+          <div className="flex items-center">
+            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">{row.name?.charAt(0)?.toUpperCase()}</span>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{row?.name}</div>
+              <div className="text-xs text-gray-500">{row?.code || '-'}</div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Email',
+      accessor: 'poc_email',
+      render: (row) => (
+        <p className="text-sm text-primary-500">{row.poc_email || '-'}</p>
+      )
+    },
+    {
+      header: 'Address',
+      accessor: 'address',
+      render: (row) => (
+        <p className="text-sm text-gray-500 truncate" title={row?.city ? `${row.city}${row.state?.name ? `, ${row.state.name}` : ''}` : row?.address || '-'}>
+          {row?.city ? `${row.city}${row.state?.name ? `, ${row.state.name}` : ''}` : row?.address || '-'}
+        </p>
+      )
+    },
+    {
+      header: 'Status',
+      accessor: 'status',
+      render: (row) => (
+        <span className={`text-sm ${row?.status === 1 ? 'text-gray-500' : 'text-red-500'}`}>
+          {row?.is_active_status?.name
+            ? row.is_active_status.name.charAt(0).toUpperCase() + row.is_active_status.name.slice(1)
+            : (row?.status === 1 ? 'Active' : 'Inactive')}
+        </span>
+      )
+    }
+  ];
 
   useEffect(() => {
     setPageTitle("Dashboard");
@@ -37,8 +97,20 @@ const Dashboard = () => {
       bgColor: 'bg-blue-50',
     },
     {
+      title: 'Orvos Doctors',
+      value: orvosDoctors?.length || 0,
+      icon: (
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      color: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
+      textColor: 'text-cyan-600',
+      bgColor: 'bg-cyan-50',
+    },
+    {
       title: 'Pending Patients',
-      value: pendingPatients.length,
+      value: pendingPatients?.length,
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -50,7 +122,7 @@ const Dashboard = () => {
     },
     {
       title: 'Completed Patients',
-      value: completedPatients.length,
+      value: completedPatients?.length,
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -62,7 +134,7 @@ const Dashboard = () => {
     },
     {
       title: 'Total Patients',
-      value: pendingPatients.length + completedPatients.length,
+      value: pendingPatients?.length + completedPatients?.length,
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -83,7 +155,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {stats.map((stat, index) => (
           <StatsCard key={index} {...stat} />
         ))}
@@ -96,28 +168,28 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Pending Patients</h2>
             <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-              {pendingPatients.length}
+              {pendingPatients?.length}
             </span>
           </div>
 
           <div className="space-y-3 mb-4">
-            {pendingPatients.slice(0, 5).map((patient) => (
+            {pendingPatients?.slice(0, 5)?.map((patient) => (
               <div
                 key={patient.id}
                 className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors duration-200 cursor-pointer"
-                onClick={() => navigate(`/patients/${patient.id}`)}
+                onClick={() => navigate(`/patients/view/${patient.id}`)}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
                     <span className="text-yellow-700 font-semibold text-sm">
-                      {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+                      {patient?.first_name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
-                      {patient.firstName} {patient.lastName}
+                      {patient?.first_name} {patient?.last_name}
                     </p>
-                    <p className="text-xs text-gray-500">{patient.clinic}</p>
+                    <p className="text-xs text-gray-500">{patient?.clinic?.name || '-'}</p>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +198,7 @@ const Dashboard = () => {
               </div>
             ))}
 
-            {pendingPatients.length === 0 && (
+            {pendingPatients?.length === 0 && (
               <div className="text-center py-8">
                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -149,37 +221,40 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Completed Patients</h2>
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              {completedPatients.length}
+              {completedPatients?.length}
             </span>
           </div>
 
           <div className="space-y-3 mb-4">
-            {completedPatients.slice(0, 5).map((patient) => (
-              <div
-                key={patient.id}
-                className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
-                onClick={() => navigate(`/patients/${patient.id}`)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-                    <span className="text-green-700 font-semibold text-sm">
-                      {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
-                    </span>
+            {completedPatients?.slice(0, 5)?.map((patient) => (
+              <>
+
+                < div
+                  key={patient.id}
+                  className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
+                  onClick={() => navigate(`/patients/view/${patient.id}`)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+                      <span className="text-green-700 font-semibold text-sm">
+                        {patient?.first_name?.charAt(0)?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {patient?.first_name} {patient?.last_name}
+                      </p>
+                      <p className="text-xs text-gray-500">{patient?.clinic?.name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {patient.firstName} {patient.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500">{patient.clinic}</p>
-                  </div>
+                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              </>
             ))}
 
-            {completedPatients.length === 0 && (
+            {completedPatients?.length === 0 && (
               <div className="text-center py-8">
                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -198,37 +273,68 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-        <div className="space-y-4">
-          {[...pendingPatients, ...completedPatients].slice(0, 5).map((patient, index) => (
-            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span className="text-primary-700 font-semibold">
-                    {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
-                  </span>
+      {/* Clinics and Doctors Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Clinics Table */}
+        <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Clinics</h2>
+            <button
+              onClick={() => navigate('/clinics')}
+              className="btn-primary text-sm px-4 py-1.5"
+            >
+              View all
+            </button>
+          </div>
+          <div className="mb-4">
+            <Table
+              columns={clinicColumns}
+              data={topClinics}
+              emptyMessage="No clinics available"
+              isDataLoaded={true}
+              onRowClick={(row) => navigate(`/clinics/view/${row.id}`)}
+              permissions={{ read: true, write: true }}
+            />
+          </div>
+        </div>
+
+        {/* Orvos Doctors */}
+        <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-1">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Orvos Doctors</h2>
+            <button
+              onClick={() => navigate('/users')}
+              className="btn-primary text-sm px-4 py-1.5"
+            >
+              View all
+            </button>
+          </div>
+          <div className="space-y-3">
+            {orvosDoctors?.slice(0, 5)?.map(doctor => (
+              <div
+                key={doctor.id}
+                className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                onClick={() => navigate(`/users/view/${doctor.id}`)}
+              >
+                <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                  {doctor.profile_image ? (
+                    <img src={doctor.profile_image} alt={doctor.first_name} className="h-10 w-10 rounded-full object-cover" />
+                  ) : (
+                    <span className="text-gray-500 font-medium">{doctor.first_name?.charAt(0)?.toUpperCase()}</span>
+                  )}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">
-                    {patient.firstName} {patient.lastName}
-                  </p>
-                  <p className="text-sm text-gray-500">{patient.clinic}</p>
+                  <p className="font-medium text-gray-900 text-sm">{doctor.first_name} {doctor.last_name}</p>
                 </div>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                patient.status === 'Pending' 
-                  ? 'bg-yellow-100 text-yellow-800' 
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {patient.status}
-              </span>
-            </div>
-          ))}
+            ))}
+            {orvosDoctors?.length === 0 && (
+              <div className="text-center py-6 text-gray-500">No doctors available</div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
