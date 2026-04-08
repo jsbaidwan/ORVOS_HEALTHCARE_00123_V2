@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
@@ -151,6 +151,22 @@ const UserView = () => {
                 { label: 'Phone', value: user?.phone_number },
                 { label: 'Address', value: user?.address },
                 { label: 'User Type', value: user?.role?.name || '-' },
+                {
+                  label: 'Clinics',
+                  value: user?.clinic_users?.length ? (
+                    user.clinic_users.map((cUser, i) => (
+                      <Link
+                        key={i}
+                        to={getRoutePath(`/clinics/view/${cUser?.clinic?.id}`)}
+                        className="text-primary hover:underline"
+                        target="_blank"
+                      >
+                        {cUser?.clinic?.name}
+                        {i < user.clinic_users.length - 1 ? ', ' : '.'}
+                      </Link>
+                    ))
+                  ) : '-'
+                },
                 { label: 'Archived', value: user?.is_archived ? 'Yes' : 'No' },
 
               ].map((item, i) => (
@@ -163,23 +179,48 @@ const UserView = () => {
               ))}
 
 
+              {/* Signature */}
+              <div className="md:col-span-2 lg:col-span-3 bg-gray-50 rounded-xl p-4 border">
+                <p className="text-xs text-gray-500 mb-2">Signature</p>
+                {user?.display_signature?.status === 200 && user?.display_signature?.src ? (
+                  <BlobFileItem
+                    key={0}
+                    file={user?.display_signature}
+                    index={0}
+                    onRemove={null}
+                    onRemoveEnable={false}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-400">No signature available</p>
+                )}
+              </div>
+
               {/* Files */}
               <div className="md:col-span-2 lg:col-span-3 bg-gray-50 rounded-xl p-4 border">
                 <p className="text-xs text-gray-500 mb-2">Contract Documents</p>
 
-                {user?.display_documents?.length ? (
+                {user?.display_documents?.length > 0 ? (
                   <div className="space-y-2">
-                    {user.display_documents.map((file, index) =>
-                      file.status === 200 && (
-                        <BlobFileItem
-                          key={index}
-                          file={file}
-                          index={index}
-                          onRemove={null}
-                          onRemoveEnable={false}
-                        />
+                    {
+                      user.display_documents.map((file, index) =>
+                        file.status === 200 ? (
+                          <BlobFileItem
+                            key={index}
+                            file={file}
+                            index={index}
+                            onRemove={null}
+                            onRemoveEnable={false}
+                          />
+                        ) : (
+                          index === user.display_documents.length - 1 &&
+                            !user.display_documents.some(f => f.status === 200) ? (
+                            <p key="no-file" className="text-sm text-gray-400">
+                              No files available
+                            </p>
+                          ) : null
+                        )
                       )
-                    )}
+                    }
                   </div>
                 ) : (
                   <p className="text-sm text-gray-400">No files available</p>

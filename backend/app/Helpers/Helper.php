@@ -81,7 +81,7 @@ class Helper{
 
 	public static function users($isAdmin = false,$filters = [])
 	{
-		$query = User::with('role','clinicUsers','licenses')->orderBy('id', 'DESC');
+		$query = User::with('role','clinicUsers','licenses','clinicUsers.clinic')->orderBy('id', 'DESC');
 
 		if(!empty($filters['role_id'])){
 			$query->where('role_id', $filters['role_id']);
@@ -157,7 +157,7 @@ class Helper{
 
 	public static function getUserById($id)
 	{
-		$user = User::with('role','clinicUsers','licenses')->find($id);
+		$user = User::with('role','clinicUsers','licenses','clinicUsers.clinic')->find($id);
 		
 		return ['user' => $user];
 	}

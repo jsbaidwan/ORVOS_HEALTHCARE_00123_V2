@@ -136,12 +136,11 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       header: 'Chart Code',
       accessor: 'chart_code',
       render: (row) => (
-        <div>
+        <div className="space-y-1">
 
           <p className={`${row.report_download_status_data?.class} text-sm`}>
             {row.report_download_status_data?.name}
           </p>
-
 
           {row?.clinic?.is_patient_report_email_enabled === 1 && (
             <p className={`${row.report_sent_status?.class} text-sm`}>
