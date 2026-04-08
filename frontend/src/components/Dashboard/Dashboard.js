@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import { useClinic } from '../../context/ClinicContext';
 import StatsCard from './StatsCard';
 import { useTitle } from "../../context/TitleContext";
 import Table from '../Common/Table';
 import { useUser } from '../../context/UserContext';
+import { useRoutePath } from '../../hooks/useRoutePath';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -13,17 +15,19 @@ const Dashboard = () => {
   const { clinics, getClinics } = useClinic();
   const { users, getUsers } = useUser();
   const { setPageTitle } = useTitle();
+  const getRoutePath = useRoutePath();
 
   const pendingPatients = patients?.filter(patient => patient.diagnosis_status === 0) || [];
   const completedPatients = patients?.filter(patient => patient.diagnosis_status === 1) || [];
   const orvosDoctors = users?.filter(user => user.role_id === 2) || [];
+  const topOrvosDoctors = orvosDoctors?.slice(0, 5) || [];
 
   useEffect(() => {
     getClinics(1, { active: 1 }, false);
   }, [getClinics]);
 
   useEffect(() => {
-    getPatients(1, { active: 1 }, false);
+    getPatients(1, {}, false);
   }, [getPatients]);
 
   useEffect(() => {
@@ -44,7 +48,7 @@ const Dashboard = () => {
             </div>
             <div>
               <div className="text-sm font-medium text-gray-900">{row?.name}</div>
-              <div className="text-xs text-gray-500">{row?.code || '-'}</div>
+              <div className="text-xs text-gray-500"><Link to={getRoutePath(`/clinics/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row?.code || '-'}</Link></div>
             </div>
           </div>
         </div>
@@ -146,6 +150,50 @@ const Dashboard = () => {
     },
   ];
 
+  const doctorColumns = [
+    {
+      header: 'User',
+      accessor: 'name',
+      render: (row) => (
+        <div className="w-48">
+          <div className="flex items-center">
+            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <div className="w-full  object-cover">
+                {row?.display_avatar?.src ? (
+                  <PreviewImage
+                    preview={row.display_avatar.src}
+                    hasCustomClass="h-10"
+                    hasRemoveButton={false}
+                    hasViewButton={false}
+                    index={0}
+                    key={0}
+                  />
+                ) : (
+                  <span className="text-gray-500 text-sm">{row.first_name?.charAt(0)?.toUpperCase()}</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
+              <Link to={getRoutePath(`/users/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      render: (row) => (
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+          {row.first_name || '-'} {row.last_name || '-'}
+        </span>
+      ),
+
+    },
+
+  ];
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -227,31 +275,30 @@ const Dashboard = () => {
 
           <div className="space-y-3 mb-4">
             {completedPatients?.slice(0, 5)?.map((patient) => (
-              <>
 
-                < div
-                  key={patient.id}
-                  className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
-                  onClick={() => navigate(`/patients/view/${patient.id}`)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-                      <span className="text-green-700 font-semibold text-sm">
-                        {patient?.first_name?.charAt(0)?.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {patient?.first_name} {patient?.last_name}
-                      </p>
-                      <p className="text-xs text-gray-500">{patient?.clinic?.name}</p>
-                    </div>
+              < div
+                key={patient.id}
+                className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
+                onClick={() => navigate(`/patients/view/${patient.id}`)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+                    <span className="text-green-700 font-semibold text-sm">
+                      {patient?.first_name?.charAt(0)?.toUpperCase()}
+                    </span>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {patient?.first_name} {patient?.last_name}
+                    </p>
+                    <p className="text-xs text-gray-500">{patient?.clinic?.name}</p>
+                  </div>
                 </div>
-              </>
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+
             ))}
 
             {completedPatients?.length === 0 && (
@@ -310,27 +357,16 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {orvosDoctors?.slice(0, 5)?.map(doctor => (
-              <div
-                key={doctor.id}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                onClick={() => navigate(`/users/view/${doctor.id}`)}
-              >
-                <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                  {doctor.profile_image ? (
-                    <img src={doctor.profile_image} alt={doctor.first_name} className="h-10 w-10 rounded-full object-cover" />
-                  ) : (
-                    <span className="text-gray-500 font-medium">{doctor.first_name?.charAt(0)?.toUpperCase()}</span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{doctor.first_name} {doctor.last_name}</p>
-                </div>
-              </div>
-            ))}
-            {orvosDoctors?.length === 0 && (
-              <div className="text-center py-6 text-gray-500">No doctors available</div>
-            )}
+
+            <Table
+              columns={doctorColumns}
+              data={topOrvosDoctors}
+              emptyMessage="No doctors available"
+              isDataLoaded={true}
+              onRowClick={(row) => navigate(`/users/view/${row.id}`)}
+              permissions={{ read: true, write: true }}
+            />
+
           </div>
         </div>
       </div>
