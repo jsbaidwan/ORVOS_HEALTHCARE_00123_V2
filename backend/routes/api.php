@@ -107,6 +107,7 @@ Route::get('additional-data', function(){
 		'followUps' =>  \Helper::followupStatus(),
 		'examTypes1' => \Helper::getExamTypeLists(1),
 		'examTypes2' => \Helper::getExamTypeLists(2),
+		'examTypes' => \Helper::getExamTypeLists(0),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);

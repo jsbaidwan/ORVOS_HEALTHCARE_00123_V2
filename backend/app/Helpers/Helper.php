@@ -658,9 +658,7 @@ class Helper{
                 ['id' => 19, 'code' => 'N/A',       'name' => 'This image is low quality and inadequate for interpretation.'],
 				
 			];
-		}
-		
-		if($medicalConditionId == 2){
+		}else if($medicalConditionId == 2){
 			$leftEye = [
 			
 			    ['id' => 1,  'code' => 'E11.9',     'name' => 'No diabetic retinopathy'],
@@ -707,6 +705,33 @@ class Helper{
                 ['id' => 19, 'code' => 'N/A',       'name' => 'This image is low quality and inadequate for interpretation.'],
 				
 			];
+		}else{
+			
+			$eData = [
+				['id' => 1,  'code' => NULL, 'name' => 'No diabetic retinopathy'],
+                ['id' => 2,  'code' => NULL, 'name' => 'NPDR Mild/Minimal'],
+                ['id' => 3,  'code' => NULL, 'name' => 'NPDR Mild/Minimal with CSME'],
+                ['id' => 4,  'code' => NULL, 'name' => 'NPDR Moderate'],
+                ['id' => 5,  'code' => NULL, 'name' => 'NPDR Moderate with CSME'],
+                ['id' => 6,  'code' => NULL, 'name' => 'NPDR Severe'],
+                ['id' => 7,  'code' => NULL, 'name' => 'NPDR Severe with CSME'],
+                ['id' => 8,  'code' => NULL, 'name' => 'PDR'],
+                ['id' => 9,  'code' => NULL, 'name' => 'PDR with CSME'],
+                ['id' => 10, 'code' => NULL, 'name' => 'AMD Grade 1, Dry'],
+                ['id' => 11, 'code' => NULL, 'name' => 'AMD Grade 2, Drusen, Degenerative'],
+                ['id' => 12, 'code' => NULL, 'name' => 'AMD Grade 3, Degeneration, Retinal, Secondary Pigmentary'],
+                ['id' => 13, 'code' => NULL, 'name' => 'AMD Grade 4, Exudative'],
+                ['id' => 14, 'code' => NULL, 'name' => 'AMD Grade 4, Chorioretinal scar, Posterior Pole'],
+                ['id' => 15, 'code' => NULL, 'name' => 'Drusen, Hereditary (extramacular drusen)'],
+                ['id' => 16, 'code' => NULL, 'name' => 'OTHER'],
+                ['id' => 17, 'code' => NULL, 'name' => 'Glaucoma: Optic nerve cupping'],
+                ['id' => 18, 'code' => NULL, 'name' => 'Image inadequate for assessment of retinal pathology'],
+                ['id' => 19, 'code' => NULL,  'name' => 'This image is low quality and inadequate for interpretation.'],
+			];
+			
+			$leftEye = $eData;
+			
+			$rightEye = $eData;
 		}
 		
 		

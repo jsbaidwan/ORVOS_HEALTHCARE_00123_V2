@@ -43,7 +43,13 @@ const PatientView = () => {
 
     const { setPageTitle } = useTitle();
     const { additionalData } = useAdditionalData();
-    const DIAGNOSIS_OPTIONS = patient?.medical_condition_id === 1 ? additionalData?.examTypes1 : additionalData?.examTypes2;
+
+    const DIAGNOSIS_OPTIONS =
+        patient?.medical_condition_id === 1
+            ? additionalData?.examTypes1
+            : patient?.medical_condition_id === 2
+                ? additionalData?.examTypes2
+                : additionalData?.examTypes;
 
     useEffect(() => {
         setPageTitle('Patient Details');
