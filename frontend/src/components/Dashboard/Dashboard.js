@@ -150,7 +150,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-primary rounded-xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome to Orvos Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome to {process.env.REACT_APP_NAME} Dashboard</h1>
         <p className="text-primary-100">Manage your medical clinic operations efficiently</p>
       </div>
 
