@@ -142,15 +142,29 @@ const ClinicGroupList = ({ archived = false }) => {
       render: (row) => (
         <div className='w-48'>
           <div className="flex items-center">
-            <div className=" h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">{row.name.charAt(0).toUpperCase()}</span>
+
+            <div className="h-10 w-10 min-w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center shrink-0">
+              <span className="text-gray-500 text-sm">
+                {row.name.charAt(0).toUpperCase()}
+              </span>
             </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">{row?.name}</div>
-              <div className="text-sm ">
-                <Link to={getRoutePath(`/clinic-groups/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
+
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900 break-words">
+                {row?.name}
+              </div>
+
+              <div className="text-sm">
+                <Link
+                  to={getRoutePath(`/clinic-groups/view/${row.id}`)}
+                  className='text-primary hover:text-primary-700'
+                  target='_blank'
+                >
+                  {row.code || '-'}
+                </Link>
               </div>
             </div>
+
           </div>
         </div>
       ),

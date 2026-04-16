@@ -116,17 +116,31 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       header: 'Patient Name',
       accessor: 'name',
       render: (row) => (
-        <div className='w-48'>
+        <div className="w-48">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">{row.first_name?.charAt(0)?.toUpperCase()}</span>
+
+            <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">
+                {row.first_name?.charAt(0)?.toUpperCase()}
+              </span>
             </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
+
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900 break-words">
+                {row?.first_name} {row?.last_name}
+              </div>
+
               <div className="text-sm text-gray-500">
-                <Link to={getRoutePath(`/patients/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row?.p_code || '-'}</Link>
+                <Link
+                  to={getRoutePath(`/patients/view/${row.id}`)}
+                  className="text-primary hover:text-primary-700 break-words"
+                  target="_blank"
+                >
+                  {row?.p_code || "-"}
+                </Link>
               </div>
             </div>
+
           </div>
         </div>
       ),

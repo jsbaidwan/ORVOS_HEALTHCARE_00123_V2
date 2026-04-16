@@ -1785,7 +1785,9 @@ textarea {
   color: #0d3b66 !important;
 }
 
-input.input-field:read-only,
+input.input-field[type="text"]:read-only,
+input.input-field[type="email"]:read-only,
+input.input-field[type="number"]:read-only,
 textarea.input-field:read-only {
   background-color: #f5f5f5 !important;
   cursor: not-allowed;

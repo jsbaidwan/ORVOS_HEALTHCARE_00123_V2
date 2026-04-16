@@ -14,6 +14,7 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const ClinicsList = ({ archived = false }) => {
   const {
@@ -127,17 +128,44 @@ const ClinicsList = ({ archived = false }) => {
       header: 'Clinic',
       accessor: 'name',
       render: (row) => (
-        <div className='w-48'>
+        <div className="w-48">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">{row.name?.charAt(0)?.toUpperCase()}</span>
+
+            <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
+              {row?.display_image?.status === 200 ? (
+                <div className="w-full h-full object-cover">
+                  <PreviewImage
+                    preview={row.display_image.src}
+                    hasCustomClass="h-10 w-10 object-contain"
+                    hasRemoveButton={false}
+                    hasViewButton={false}
+                    index={0}
+                    key={0}
+                  />
+                </div>
+              ) : (
+                <span className="text-gray-500 text-sm">
+                  {row.name?.charAt(0)?.toUpperCase()}
+                </span>
+              )}
             </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">{row?.name}</div>
+
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900 break-words">
+                {row?.name}
+              </div>
+
               <div className="text-sm">
-                <Link to={getRoutePath(`/clinics/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
+                <Link
+                  to={getRoutePath(`/clinics/view/${row.id}`)}
+                  className="text-primary hover:text-primary-700"
+                  target="_blank"
+                >
+                  {row.code || "-"}
+                </Link>
               </div>
             </div>
+
           </div>
         </div>
       ),

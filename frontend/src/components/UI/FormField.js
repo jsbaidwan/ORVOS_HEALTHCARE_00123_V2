@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { EyeIcon, EyeSlashIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { Save } from 'lucide-react';
 
 const FormField = ({
   label,
@@ -165,7 +166,7 @@ const FormField = ({
                 tabIndex={-1}
               >
                 {isEditable ? (
-                  <CheckIcon className="w-5 h-5 text-green-600" />
+                  <Save className="w-5 h-5 text-green-600" />
                 ) : (
                   <PencilSquareIcon className="w-5 h-5" />
                 )}

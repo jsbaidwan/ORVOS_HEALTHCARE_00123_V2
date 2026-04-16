@@ -14,6 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 import { ArchiveBoxIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const UsersList = ({ archived = false }) => {
   const {
@@ -160,13 +161,40 @@ const UsersList = ({ archived = false }) => {
       render: (row) => (
         <div className="w-48">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">{row.first_name?.charAt(0)?.toUpperCase()}</span>
+
+            <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
+              {row?.display_avatar?.status === 200 ? (
+                <div className="w-full h-full object-cover">
+                  <PreviewImage
+                    preview={row.display_avatar.src}
+                    hasCustomClass="h-10 w-10 object-cover"
+                    hasRemoveButton={false}
+                    hasViewButton={false}
+                    index={0}
+                    key={0}
+                  />
+                </div>
+              ) : (
+                <span className="text-gray-500 text-sm">
+                  {row.first_name?.charAt(0)?.toUpperCase()}
+                </span>
+              )}
             </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">{row?.first_name} {row?.last_name}</div>
-              <Link to={getRoutePath(`/users/view/${row.id}`)} className='text-primary hover:text-primary-700' target='_blank'>{row.code || '-'}</Link>
+
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900 break-words">
+                {row?.first_name} {row?.last_name}
+              </div>
+
+              <Link
+                to={getRoutePath(`/users/view/${row.id}`)}
+                className="text-primary hover:text-primary-700 break-words"
+                target="_blank"
+              >
+                {row.code || "-"}
+              </Link>
             </div>
+
           </div>
         </div>
       ),
