@@ -38,6 +38,12 @@ return new class extends Migration
 			$table->integer('is_patient_report_email_enabled')->default(0);
 			$table->integer('is_fax_enabled')->default(0);
 			$table->string('fax_number')->nullable();
+			$table->integer('is_stow_enabled')->default(0);
+			$table->string('stow_url')->nullable();
+			$table->string('stow_username')->nullable();
+			$table->string('stow_password')->nullable();
+			$table->string('stow_get')->nullable();
+			$table->string('stow_post')->nullable();
 			$table->boolean('is_archived')->default(0);
             $table->timestamps();
         });

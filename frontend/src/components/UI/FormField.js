@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const FormField = ({
   label,
@@ -15,17 +15,20 @@ const FormField = ({
   disabled = false,
   inputClassName = '',
   registration,
+  readOnly = false,
+  toggleableReadOnly = false,
 }) => {
- 
+
   const inputProps = registration
     ? { ...registration }
     : type === 'checkbox'
-    ? { name, checked: value, onChange }
-    : type === 'file'
-    ? { name, onChange }
-    : { name, value, onChange };
+      ? { name, checked: value, onChange }
+      : type === 'file'
+        ? { name, onChange }
+        : { name, value, onChange };
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isEditable, setIsEditable] = useState(!readOnly);
 
   const errorClass = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '';
   const disabledClass = disabled ? 'bg-gray-100 cursor-not-allowed' : '';
@@ -42,6 +45,7 @@ const FormField = ({
               placeholder={placeholder}
               required={required}
               disabled={disabled}
+              readOnly={readOnly}
               className={`input-field pr-10 ${errorClass} ${disabledClass} ${inputClassName}`}
             />
             <button
@@ -68,6 +72,7 @@ const FormField = ({
             rows={rows}
             disabled={disabled}
             className={`input-field resize-none ${errorClass} ${disabledClass} ${inputClassName}`}
+            readOnly={readOnly}
           />
         );
 
@@ -79,13 +84,14 @@ const FormField = ({
             required={required}
             disabled={disabled}
             className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
+            readOnly={readOnly}
           >
             <option value="">Select {label}</option>
             {options.map((option, index) => {
               const optValue = option?.value != null ? option.value : (typeof option !== 'object' ? option : '');
-              
+
               return (
-               
+
                 <option key={index} value={optValue}>
                   {option?.label || optValue || option}
                 </option>
@@ -103,6 +109,7 @@ const FormField = ({
             required={required}
             disabled={disabled}
             multiple={placeholder?.includes('multiple')}
+            readOnly={readOnly}
             className={`input-field file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 ${error ? 'border-red-500' : ''} ${disabledClass} ${inputClassName}`}
           />
         );
@@ -116,6 +123,7 @@ const FormField = ({
             required={required}
             disabled={disabled}
             className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
+            readOnly={readOnly}
           />
         );
 
@@ -128,6 +136,7 @@ const FormField = ({
               {...inputProps}
               disabled={disabled}
               className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+              readOnly={readOnly}
             />
             <label htmlFor={name} className="ml-3 text-sm font-medium text-gray-700">
               {label}
@@ -136,6 +145,34 @@ const FormField = ({
         );
 
       default:
+        if (toggleableReadOnly) {
+          return (
+            <div className="relative">
+              <input
+                type={type}
+                id={name}
+                {...inputProps}
+                placeholder={placeholder}
+                required={required}
+                disabled={disabled}
+                className={`input-field pr-10 ${errorClass} ${disabledClass} ${inputClassName}`}
+                readOnly={!isEditable}
+              />
+              <button
+                type="button"
+                onClick={() => setIsEditable((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                tabIndex={-1}
+              >
+                {isEditable ? (
+                  <CheckIcon className="w-5 h-5 text-green-600" />
+                ) : (
+                  <PencilSquareIcon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          );
+        }
         return (
           <input
             type={type}
@@ -145,6 +182,7 @@ const FormField = ({
             required={required}
             disabled={disabled}
             className={`input-field ${errorClass} ${disabledClass} ${inputClassName}`}
+            readOnly={readOnly}
           />
         );
     }

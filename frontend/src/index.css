@@ -1784,3 +1784,9 @@ textarea {
 .orvos-doctor-section .input-field {
   color: #0d3b66 !important;
 }
+
+input.input-field:read-only,
+textarea.input-field:read-only {
+  background-color: #f5f5f5 !important;
+  cursor: not-allowed;
+}
