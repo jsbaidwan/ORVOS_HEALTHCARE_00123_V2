@@ -208,7 +208,6 @@ class Patient extends Authenticatable
 	public function getDicomFileStatusDataAttribute()
 	{
 		$value = $this->attributes['is_dicom_file_send'];
-		$faxJson = $this->attributes['fax_json'];
 		$dicomStatus = \Helper::dicomStatusById($value);
 		  			
 		$data = ['status' => $dicomStatus['status']];
