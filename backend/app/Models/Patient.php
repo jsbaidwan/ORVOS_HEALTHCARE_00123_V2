@@ -198,11 +198,13 @@ class Patient extends Authenticatable
 		$value = $this->attributes['fax_status'];
 		$faxJson = $this->attributes['fax_json'];
 		$faxStatusData = \Helper::faxStatusById($value);
-		$faxArr = ($faxStatusData['status'] == 3 && !empty($faxJson))
+		$faxArr = ($value == 3 && !empty($faxJson))
 		? json_decode($faxJson, true)
 		: [];
+		
+		$message = $faxArr['message'] ?? NULL;
 														
-		return  $faxStatusData['status'] == 200 ? [ 'class' => $faxStatusData['faxStatus']['class'],'name' => $faxStatusData['faxStatus']['name']] : ['status' => 'No Status Found','class' => 'text-danger','name' => NULL];
+		return  $faxStatusData['status'] == 200 ? [ 'class' => $faxStatusData['faxStatus']['class'],'name' => $faxStatusData['faxStatus']['name'],'message' => $message] : ['status' => 'No Status Found','class' => 'text-danger','name' => NULL,'message' => $message];
 	}
 	
 	public function getDicomFileStatusDataAttribute()
@@ -210,7 +212,7 @@ class Patient extends Authenticatable
 		$value = $this->attributes['is_dicom_file_send'];
 		$dicomStatus = \Helper::dicomStatusById($value);
 		  			
-		$data = ['status' => $dicomStatus['status']];
+		$data = ['status' => $dicomStatus['status'],'message' => $this->attributes['dicom_file_status']];
 		return  array_merge($data,$dicomStatus['dStatus'] ?? []);
 	}
 	 

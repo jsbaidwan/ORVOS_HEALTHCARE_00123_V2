@@ -156,17 +156,41 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
             {row.report_download_status_data?.name}
           </p>
 
-          {row?.clinic?.is_patient_report_email_enabled === 1 && (
+          {row?.$patient?.clinic?.is_patient_report_email_enabled === 1 && (
             <p className={`${row.report_sent_status?.class} text-sm`}>
               {row.report_sent_status?.status}
             </p>
           )}
 
-          {row?.clinic?.is_fax_enabled === 1 &&
+
+          {row.fax_status !== 0 &&
             <p className={`${row.fax_status_data?.class} text-sm`}>
               {row.fax_status_data?.name}
+              {row.fax_status === 3 && (
+                <>
+                  <br />
+                  <p className={`text-danger text-xs`}>
+                    ({row.fax_status_data?.message})
+                  </p>
+                </>
+              )}
             </p>
           }
+
+          {row.is_dicom_file_send !== 0 &&
+            <p className={`${row.dicom_file_status_data?.class} text-sm`}>
+              {row.dicom_file_status_data?.name}
+              {row.is_dicom_file_send === 3 && (
+                <>
+                  <br />
+                  <p className={`text-danger text-xs`}>
+                    ({row.dicom_file_status_data?.message})
+                  </p>
+                </>
+              )}
+            </p>
+          }
+
         </div>
       ),
     },

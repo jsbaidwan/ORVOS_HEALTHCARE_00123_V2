@@ -1601,6 +1601,14 @@
     color: #ffc107;
   }
 
+  .text-danger {
+    color: #dc3545 !important;
+  }
+
+  .bg-danger {
+    background-color: #dc3545 !important;
+  }
+
   .border-warning {
     border-color: #ffc107;
   }
