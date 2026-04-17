@@ -3125,6 +3125,112 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
+	/*
+	 *-----------------------------------------
+	 * Start: DICOM Status
+	 * -----------------------------------------
+	 */
+	 
+	public static function dicomStatus()
+	{
+		return [
+			0 => ['name' => 'DICOM File Pending','class' => 'text-primary'],
+			1 => ['name' => 'DICOM File Sending','class' => 'text-warning'],
+			2 => ['name' => 'DICOM File Sent','class' => 'text-success'],
+			3 => ['name' => 'DICOM File Failed','class' => 'text-danger'],
+		];
+	}
+	
+	/*
+	 *-----------------------------------------
+	 * End: DICOM Status
+	 * -----------------------------------------
+	 */
+	 
+	/*
+	 *-----------------------------------------
+	 * Start: Get DICOM Status By Id
+	 * -----------------------------------------
+	 */
+	 
+	public static function dicomStatusById($id)
+	{
+		$dStatus = self::dicomStatus();
+		foreach($dStatus as $fKey => $fVal){
+			if($fKey == $id){
+				return ['status' => 200 ,'dStatus' => $fVal];
+			}
+		}
+		
+		return ['status' => 422];
+		
+	}
+	/*
+	 *-----------------------------------------
+	 * End: Get DICOM Status By Id
+	 * -----------------------------------------
+	 */
+	 
+	
+	/*
+	 *-----------------------------------------
+	 * Start: Convert PDF to DICOM file
+	 * -----------------------------------------
+	 */ 
+	
+	public static function convPdfTODicom($input,$output,$patient = null)
+	{ 
+		$script = base_path('plugins/dicom/pdf_to_dicom.js');
+		
+		$cmd = "node \"$script\" \"$input\" \"$output\"";
+
+		if ($patient) {
+			
+			$dicomArr = !empty($patient->dicom_json) ? json_decode($patient->dicom_json,true) : []; 
+			
+			$patientData = json_encode([
+				'first_name'  => $patient->first_name ?? '',
+				'last_name'   => $patient->last_name ?? '',
+				'mr_number'   => $patient->mr_number ?? '',
+				'dob'         => $patient->dob ?? '',
+				'gender'      => $patient->gender ?? '',
+				'study_id'    => $dicomArr['MainDicomTags']['StudyID'] ?? '',
+				'study_instance_uid' => $dicomArr['Tags']['0020,000d']['Value'] ?? '',
+				'series_instance_uid' => '',
+				'p_code'      => $patient->p_code ?? '',
+				'dos'         => $patient->dos ?? '',
+				'phone'       => $patient->phone ?? '',
+				'email'       => $patient->email ?? '',
+				'address'     => $patient->address ?? '',
+				'city'        => $patient->city ?? '',
+				'state_id'    => $patient->state_id ?? '',
+				'zip'         => $patient->zip ?? '', 
+				'referring_physician' => $dicomArr['Tags']['0008,0090']['Value'] ?? '',
+				'note'        => $patient->note ?? '',
+				'study_description' => $dicomArr['Tags']['0008,1030']['Value'] ?? '',
+			
+			]);
+			 
+			$cmd .= " " . base64_encode($patientData);
+		}
+
+		exec($cmd, $response, $status);
+ 
+		return [
+			'status' => $status,
+			'output_log' => $response,
+			'file_path' => $output,
+			'file_exists' => file_exists($output),
+		];
+		 
+	}
+	 
+	/*
+	 *-----------------------------------------
+	 * End: Convert PDF to DICOM file
+	 * -----------------------------------------
+	 */ 
+	 
 }
 
 	

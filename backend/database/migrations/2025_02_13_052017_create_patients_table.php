@@ -69,7 +69,10 @@ return new class extends Migration
 			$table->text('fax_json')->nullable();
 			$table->text('dicom_json')->nullable();
 			$table->string('dos')->nullable();
-            $table->timestamps();
+			$table->integer('is_dicom_file_send')->default(0)->comment('0 => pending,1 => sending , 2 => sent , 3 => failed');
+			$table->dateTime('dicom_file_sent_at')->nullable();
+			$table->text('dicom_file_status')->nullable();
+			$table->timestamps();
         });
     }
 

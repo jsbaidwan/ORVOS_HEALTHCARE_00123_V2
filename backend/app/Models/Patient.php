@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data','dicom_file_status_data'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -23,7 +23,7 @@ class Patient extends Authenticatable
 		'slug','study_id','p_code','user_id', 'dob', 'gender', 'phone', 'clinic_id', 'ehr', 'address', 'city', 'state_id', 'zip', 
 		'p_insurance_name', 'p_insurance_group_no', 'p_insurance_member_no', 's_insurance_name', 's_insurance_group_no', 
 		's_insurance_member_no', 'l_eye', 'r_eye', 'l_eye_images', 'r_eye_images','medical_condition_id','medical_history', 'note','last_name','first_name',
-		'latitude','longitude','diagnosis_status','remark_by','remark_status','remark_result','remark_at', 'email','follow_up','is_pdf_report_downloaded','pdf_report_downloaded_by','dicom_json','is_report_sent','report_sent_by','report_sent_at','fax_status','fax_job_id','fax_sent_by','fax_sent_at','fax_json','dos','created_at'
+		'latitude','longitude','diagnosis_status','remark_by','remark_status','remark_result','remark_at', 'email','follow_up','is_pdf_report_downloaded','pdf_report_downloaded_by','dicom_json','is_report_sent','report_sent_by','report_sent_at','fax_status','fax_job_id','fax_sent_by','fax_sent_at','fax_json','dos','is_dicom_file_send','dicom_file_sent_at','dicom_file_status','created_at'
 	];
 	
 	
@@ -203,6 +203,16 @@ class Patient extends Authenticatable
 		: [];
 														
 		return  $faxStatusData['status'] == 200 ? [ 'class' => $faxStatusData['faxStatus']['class'],'name' => $faxStatusData['faxStatus']['name']] : ['status' => 'No Status Found','class' => 'text-danger','name' => NULL];
+	}
+	
+	public function getDicomFileStatusDataAttribute()
+	{
+		$value = $this->attributes['is_dicom_file_send'];
+		$faxJson = $this->attributes['fax_json'];
+		$dicomStatus = \Helper::dicomStatusById($value);
+		  			
+		$data = ['status' => $dicomStatus['status']];
+		return  array_merge($data,$dicomStatus['dStatus'] ?? []);
 	}
 	 
 	  
