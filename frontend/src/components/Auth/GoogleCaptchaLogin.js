@@ -3,60 +3,26 @@ import Api from '../../utils/api';
 import { useDecode } from '../../hooks/useDecode';
 import ReCAPTCHA from 'react-google-recaptcha';
 import ErrorHandle from '../Common/ErrorHandle';
+// Defensive re-import: the real installation happens in src/index.js as the
+// first thing on app boot; importing here is a no-op (idempotent) but makes
+// this component work even if mounted in isolation (e.g. tests, storybook).
+import '../../utils/suppressRecaptchaErrors';
 
 /**
  * Google reCAPTCHA wrapper.
  *
- * NOTE on "reCAPTCHA Timeout (b)":
- * Google's reCAPTCHA script has an internal timer that fires ~2 minutes
- * after the challenge is solved. If the widget is unmounted (e.g. after a
- * successful login + navigate) or the token is not consumed in time,
- * the script throws an uncaught error like:
- *     Uncaught (in promise) Timeout (b)
- * which React's dev overlay surfaces as a runtime error.
- *
- * We handle this by:
- *   1. Calling `onVerify(null)` on expire/error so the parent state resets.
- *   2. Resetting the widget on unmount so Google's internal timer is cleared.
- *   3. Installing a one-time global handler that swallows this specific
- *      harmless error instead of letting it bubble up to the overlay.
+ * - The harmless "reCAPTCHA Timeout (b)" error from Google's internal
+ *   script is silenced globally by `src/utils/suppressRecaptchaErrors.js`
+ *   (imported first in `src/index.js`).
+ * - We intentionally do NOT call `recaptchaRef.current.reset()` ourselves
+ *   on expire/error/unmount. Every manual `reset()` asks Google for a
+ *   brand-new challenge, which Google's anti-bot heuristics interpret as
+ *   abusive and escalates to harder image puzzles on every attempt.
+ *   Instead we just notify the parent that the token is no longer valid
+ *   (`onVerify(null)`) and let the widget manage its own lifecycle —
+ *   Google will re-show the checkbox on its own and usually auto-pass
+ *   for low-risk users.
  */
-
-// Install the global suppressor only once, at module load time.
-let __recaptchaErrorHandlerInstalled = false;
-const installRecaptchaErrorHandler = () => {
-  if (__recaptchaErrorHandlerInstalled || typeof window === 'undefined') return;
-  __recaptchaErrorHandlerInstalled = true;
-
-  const isRecaptchaTimeout = (msg, source) => {
-    const m = String(msg || '');
-    const s = String(source || '');
-    return (
-      /Timeout\s*\(\w+\)/i.test(m) &&
-      (/recaptcha/i.test(s) || /gstatic\.com/i.test(s) || /google\.com\/recaptcha/i.test(s))
-    );
-  };
-
-  window.addEventListener(
-    'error',
-    (event) => {
-      if (isRecaptchaTimeout(event?.message, event?.filename)) {
-        event.preventDefault();
-        event.stopImmediatePropagation?.();
-        return false;
-      }
-    },
-    true
-  );
-
-  window.addEventListener('unhandledrejection', (event) => {
-    const reason = event?.reason;
-    const msg = reason?.message || reason;
-    if (isRecaptchaTimeout(msg, reason?.stack)) {
-      event.preventDefault();
-    }
-  });
-};
 
 const DEFAULT_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 const DEFAULT_SECRET_KEY = '6LeIxAcTAAAAAMszoGRg-rOQDVj75ubvfngVuKIH';
@@ -69,10 +35,6 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   const recaptchaRef = useRef(null);
 
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
-
-  useEffect(() => {
-    installRecaptchaErrorHandler();
-  }, []);
 
   const getRecaptchaKeys = useCallback(async () => {
     try {
@@ -110,47 +72,28 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     };
   }, [getRecaptchaKeys]);
 
-  // Clear the widget on unmount so Google's internal timers are released
-  // and we never get the stray "Timeout (b)" after navigation.
-  useEffect(() => {
-    // Capture the ref in a local so the cleanup uses the instance that
-    // existed when this effect ran (avoids react-hooks/exhaustive-deps warning).
-    const captchaNode = recaptchaRef;
-    return () => {
-      try {
-        captchaNode.current?.reset();
-      } catch (e) {
-        /* noop */
-      }
-    };
-  }, []);
+  // NOTE: no unmount-reset effect. Manually calling reset() on every
+  // unmount / expire / error causes Google to treat the widget as hostile
+  // and escalate the difficulty (image puzzles instead of auto-checkmark).
+  // The global suppressor in src/utils/suppressRecaptchaErrors.js already
+  // silences the stray "Timeout (b)" that can fire after unmount.
 
   const handleChange = useCallback(
     (token) => {
-      if (!token) {
-        onVerify && onVerify(null);
-        return;
-      }
-      onVerify && onVerify(token);
+      // Google passes `null` here when the token is cleared/expired.
+      onVerify && onVerify(token || null);
     },
     [onVerify]
   );
 
   const handleExpired = useCallback(() => {
-    try {
-      recaptchaRef.current?.reset();
-    } catch (e) {
-      /* noop */
-    }
+    // Just tell the parent the token is no longer valid. Google's widget
+    // will re-prompt on its own when the user clicks the checkbox again.
     onVerify && onVerify(null);
   }, [onVerify]);
 
   const handleErrored = useCallback(() => {
-    try {
-      recaptchaRef.current?.reset();
-    } catch (e) {
-      /* noop */
-    }
+    // Same reasoning — don't force a reset, just mark the parent unverified.
     onVerify && onVerify(null);
   }, [onVerify]);
 
