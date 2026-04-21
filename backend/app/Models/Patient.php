@@ -102,7 +102,7 @@ class Patient extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
-					'name' => $file
+					'name' => $file,
 				];
 			})->values()->toArray(); // reset index (important)
 		}

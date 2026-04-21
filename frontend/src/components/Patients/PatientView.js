@@ -11,6 +11,10 @@ import { useAuth } from '../../context/AuthContext';
 import FormField from '../UI/FormField';
 import PageLoader from '../Common/PageLoader';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
+import Table from '../Common/Table';
+import Swal from 'sweetalert2';
+import { FileText } from 'lucide-react';
+import Api from '../../utils/api';
 
 const InfoItem = ({ label, value, valueNode, valueClass = "text-gray-900", labelClass = "" }) => (
     <div className="flex flex-col sm:flex-row py-3">
@@ -25,7 +29,7 @@ const InfoItem = ({ label, value, valueNode, valueClass = "text-gray-900", label
 const PatientView = () => {
     const { id } = useParams();
     const { getPatientById, getExistingPatient } = usePatient();
-    const { user } = useAuth();
+    const { user, getToken } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState(null);
@@ -169,6 +173,153 @@ const PatientView = () => {
     );
 
 
+    const handlePDFDownload = (id) => {
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to download this patient's report?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, download it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+
+                try {
+                    const api = Api(() => getToken());
+
+                    if (!api) {
+                        return Swal.showValidationMessage('Unable to authenticate. Please try again.');
+                    }
+
+                    const response = await api.call(`patients/pdf/${id}`, 'POST', {}, true);
+
+                    if (response.status === 200) {
+                        const base64 = response.data.pdf;
+
+                        const byteCharacters = atob(base64);
+                        const byteNumbers = new Array(byteCharacters.length);
+
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: "application/pdf" });
+
+                        const blobUrl = URL.createObjectURL(blob);
+
+                        const link = document.createElement("a");
+                        link.href = blobUrl;
+                        link.download = response.data.filename || "report.pdf";
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+                        return true;
+                    } else {
+                        return Swal.showValidationMessage('Failed to generate report. Please try again.');
+                    }
+                } catch (error) {
+                    return Swal.showValidationMessage('Something went wrong. Please try again.');
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.close();
+            }
+        });
+
+    }
+
+    let columns = [
+        {
+            header: 'PDF Download Status',
+            accessor: 'report_download_status_data',
+            render: (row) => {
+                return <>
+                    <button className='inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none' onClick={() => handlePDFDownload(row.id)}>
+                        <FileText className='w-4 h-4 mr-2' /> Download
+                    </button>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className='text-black'>Status:-</p>
+                        <span className={`${row.report_download_status_data?.class} text-sm`}>
+                            {row.report_download_status_data?.name}
+                        </span>
+                    </div>
+                </>
+            }
+        },
+        {
+            header: 'Patient Report Email',
+            accessor: 'patient_report_email_enabled',
+            render: (row) => {
+                return <>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className='text-black'>Status:-</p>
+                        <span className={`${row.report_sent_status?.class} text-sm`}>
+                            {row.report_sent_status?.status}
+                        </span>
+                    </div>
+                </>
+            }
+        },
+        {
+            header: 'Fax Status',
+            accessor: 'fax_status',
+            render: (row) => {
+                return <>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className='text-black'>Status:-</p>
+                        <span className={`${row.fax_status_data?.class} text-sm`}>
+                            {row.fax_status_data?.name}
+                        </span>
+                    </div>
+                </>
+            }
+        },
+        {
+            header: 'DICOM File Status',
+            accessor: 'dicom_file_status',
+            render: (row) => {
+                return <>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className='text-black'>Status:-</p>
+                        <span className={`${row.dicom_file_status_data?.class} text-sm`}>
+                            {row.dicom_file_status_data?.name}
+                        </span>
+                    </div>
+                </>
+            }
+        },
+    ];
+
+    // remove by accessor
+    const removeColumn = (accessor) => {
+        const index = columns.findIndex(col => col.accessor === accessor);
+        if (index !== -1) columns.splice(index, 1);
+    };
+
+
+    // remove columns dynamically
+    if (patient?.clinic?.is_patient_report_email_enabled === 0) {
+        removeColumn('patient_report_email_enabled');
+    }
+
+    if (patient?.clinic?.is_fax_enabled === 0) {
+        removeColumn('fax_status');
+    }
+
+    if (patient?.clinic?.is_stow_enabled === 0) {
+        removeColumn('dicom_file_status');
+    }
+
     return (
         <div className="py-6 mx-auto">
             <Breadcrumb />
@@ -179,7 +330,7 @@ const PatientView = () => {
 
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">Overview</h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm  ">
                         Basic information about the patient.
                     </p>
                 </div>
@@ -492,6 +643,16 @@ const PatientView = () => {
                                         <ArrowPathIcon className="w-4 h-4 mr-2" />
                                         Re diagnosis
                                     </button>
+                                </div>
+
+                                <div className="mt-8 border-t border-gray-100 pt-6">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-4">Chart Status</h3>
+                                    <Table
+                                        columns={columns}
+                                        data={Array(patient)}
+                                        emptyMessage="No chart status found"
+
+                                    />
                                 </div>
                             </>
                         )}

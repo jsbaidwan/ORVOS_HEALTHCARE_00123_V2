@@ -12,6 +12,7 @@ use App\Models\Patient;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Mpdf\Mpdf;
   
 class PatientController extends Controller
 { 
@@ -785,7 +786,7 @@ class PatientController extends Controller
 			$pdfTemplate = $hasPdfTempByCliniId['pdfTemplate'];
 		}
 		 
-		$html = View::make('pdf.patient', [
+		$html = \View::make('pdf.patient', [
 			'patient' => $patient,
 			'hasPdfTempByCliniId' => $hasPdfTempByCliniId['status'],
 			'pdfTemplate' => $pdfTemplate,
@@ -797,6 +798,7 @@ class PatientController extends Controller
 		
 		$mpdf->img_dpi = 96;
 		$mpdf->dpi = 96;
+		$mpdf->curlAllowUnsafeSslRequests = true;
 		
 		if(!empty($request->hasPassword)){
 			// Set PDF Password
@@ -827,14 +829,14 @@ class PatientController extends Controller
 			$patient->update(['is_pdf_report_downloaded' => 2,'pdf_report_downloaded_by' => \Auth::user()->id ?? 0]);
 		}
 		
-		if(!empty($request->return_back)){
-			$pdfContent = $mpdf->Output($filename, 'S'); // Return PDF string
-			return ['pdfContent' => $pdfContent,'fileName' => $filename];
-		}
+		$pdfContent = $mpdf->Output($filename, 'S');
 		
-		return response($mpdf->Output($filename, 'S'))
-			->header('Content-Type', 'application/pdf')
-			->header('Content-Disposition', 'inline; filename="'.$filename.'"');
+		return response()->json([
+			'status'   => 200,
+			'message'  => 'PDF Generated Successfully',
+			'pdf'      => base64_encode($pdfContent),
+			'filename' => $filename
+		]);
 	}
 	 
 	public function sendPdf(Request $request)

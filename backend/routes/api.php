@@ -20,6 +20,12 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	Route::resource('clinics', 'App\Http\Controllers\Api\ClinicController');
 	Route::resource('patients', 'App\Http\Controllers\Api\PatientController');
+	Route::post('patients/pdf/{id}','App\Http\Controllers\Api\PatientController@patientPdf');
+	Route::post('send-pdf','App\Http\Controllers\Api\PatientController@sendPdf');
+	Route::post('send-fax','App\Http\Controllers\Api\PatientController@sendFax');
+	Route::post('send-dicom','App\Http\Controllers\Api\PatientController@sendDicom');
+	Route::post('clone','App\Http\Controllers\Api\PatientController@clone');
+	
 	  
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
@@ -152,7 +158,7 @@ Route::get('/file/{token}', function ($token, Request $request) {
     if (!Storage::disk('public')->exists($data['path'])) {
         abort(404, 'File not found');
     }
-
+ 
     // 5️⃣ Serve the file
     return response()->file(storage_path('app/public/' . $data['path']));
 

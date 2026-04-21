@@ -582,7 +582,7 @@ class Helper{
 	public static function getMedicalHistoryById($ids)
 	{
 		// Ensure $ids is an array; if it's a string, split it into an array
-		$ids = json_decode($ids,true);
+		$ids = is_array($ids) ? $ids : json_decode($ids, true);
  
 		// Convert all IDs to integers for correct comparison
 		$ids = array_map('intval', $ids);
@@ -1418,11 +1418,8 @@ class Helper{
 		if (!$clinic || !$clinic->image) {
 			return ['status' => 422];
 		}
-		$imagePath = asset('uploads/clinic_logos/' . $clinic->id . '/' . $clinic->image);
-		$relativePath = 'uploads/clinic_logos/' . $clinic->id . '/' . $clinic->image;
-
-		 $fullPath = public_path($relativePath);
-		return ['status' => 200,'image' => $imagePath,'name' => $clinic->image, 'path' => $fullPath ];
+		  
+		return ['status' => $clinic['display_image']['status'] ?? 422,'image' => $clinic['display_image']['src'] ?? NULL,'name' => $clinic['display_image']['name'] ?? NULL, 'path' => $clinic['display_image']['src'] ?? NULL ];
 	}
 	
 	 /*
@@ -2204,6 +2201,8 @@ class Helper{
 			'{Clinic:Name}',
 			'{OrvosDoctor:Name}',
 			'{OrvosDoctor:NPINumber}',
+			'{OrvosDoctor:CaqhId}',
+			'{OrvosDoctor:Signature}',
 			'{Patient:FirstName}',
 			'{Patient:LastName}',
 			'{Patient:DOB}',
@@ -2215,6 +2214,8 @@ class Helper{
 			'{Patient:RightEyeStatus}',
 			'{Patient:RightEyeImages}',
 			'{Patient:RemarkBy}',
+			'{Patient:RemarkAt}',
+			'{Patient:DOS}',
 			'{Patient:LeftEyeRemarks}',
 			'{Patient:RightEyeRemarks}',
 			'{Patient:MedicalCondition}',
@@ -2239,16 +2240,16 @@ class Helper{
 		$leftEyes = '<table width="100%" cellpadding="5" cellspacing="0" style="border:0px solid #eee;"><tr>';
 
 		if(!empty($data->l_eye_images)){
-			$leftEyesArr = json_decode($data->l_eye_images, true);
+			$leftEyesArr = $patient->display_left_eye_images;
 			if(count($leftEyesArr) == 1){
 				$leftEyes .= '<td style="border:0;"></td>';
 			}
 			 
-			foreach($leftEyesArr as $key => $image ){
-				$lUrl = public_path('uploads/patients/'.$data->slug.'/'.$image);
+			foreach($leftEyesArr as $key => $file ){
+				$lUrl = $file['src'];
 				$leftEyes .= '<td width="33%" align="center" valign="top" >
 				<img src="'.$lUrl.'" width="100" height="100"><br>
-				<small>Image ' . ($key + 1) . '</small>
+				<small>L ' . ($key + 1) . '</small>
 			  </td>';
 			  
 			}
@@ -2263,22 +2264,21 @@ class Helper{
 		$rightEyes = '<table width="100%" cellpadding="5" cellspacing="0" style="border:0px solid #eee;"><tr>';
 		if(!empty($data->r_eye_images)){
 			 
-			$rightEyesArr = json_decode($data->r_eye_images, true);
+			$rightEyesArr = $patient->display_right_eye_images;
 			if(count($rightEyesArr) == 1){
 				$rightEyes .= '<td style="border:0;"></td>';
 			} 
-			foreach($rightEyesArr as $key => $image ){
-				$rUrl =  public_path('uploads/patients/'.$data->slug.'/'.$image);
+			foreach($rightEyesArr as $key => $file ){
+				$rUrl = $file['src'];
 				$rightEyes .= '<td width="33%" align="center" valign="top">
 					<img src="'.$rUrl.'" width="100" height="100"><br>
-					<small>Image ' . ($key + 1) . '</small>
+					<small>R ' . ($key + 1) . '</small>
 				  </td>';
 			}
 			if(count($rightEyesArr) == 1){
 				$rightEyes .= '<td style="border:0;"></td>';
 			}
-			 
-			 
+			  
 		}
 		
 		$rightEyes .= '</tr></table>';
@@ -2325,7 +2325,13 @@ class Helper{
  
 		$tempBodyTags = self::tempBodyTags();
 		$replacements = [];
-
+		
+		$sigImg = NULL;
+		if(!empty($data->remarkBy->signature)){
+			$url = $data['remarkBy']['display_signature']['src'] ?? '';
+			$sigImg = '<img src="'.$url.'" style="max-height:50px; width:100%;">';
+		}
+		 
 		foreach ($tempBodyTags as $tag) {
 			switch ($tag) {
 				
@@ -2335,6 +2341,10 @@ class Helper{
 				 
 				case '{OrvosDoctor:NPINumber}':
 					$replacements[$tag] = $data->remarkBy->npi_number ?? '';
+					break;
+					
+				case '{OrvosDoctor:Signature}':
+					$replacements[$tag] = $sigImg;
 					break;
 					
 				case '{Clinic:Name}':
@@ -2352,9 +2362,14 @@ class Helper{
 				case '{Patient:DOB}':
 					$replacements[$tag] = \Helper::dateFormat($data->dob)['date'] ?? '';
 					break;
+					
+				case '{Patient:DOS}':
+					$replacements[$tag] = \Helper::dateFormat($data->dos)['date'] ?? '';
+					break;
+					 
 
 				case '{Patient:EHR}':
-					$replacements[$tag] = $data->mr_number ?? '';
+					$replacements[$tag] = $data->ehr ?? '';
 					break;
 					
 				case '{Patient:LeftEyeStatus}':
