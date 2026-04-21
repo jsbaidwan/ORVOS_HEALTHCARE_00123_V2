@@ -40,7 +40,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     try {
       const api = Api(() => null);
       const response = await api.call('get-recaptcha-keys', 'GET', false);
-
+ 
       if (response.status !== 200) {
         setError(response?.error?.message);
         return { siteKey: DEFAULT_SITE_KEY, secretKey: DEFAULT_SECRET_KEY };
