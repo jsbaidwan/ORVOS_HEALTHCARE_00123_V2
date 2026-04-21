@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -56,9 +56,11 @@ const SuperAdminLogin = () => {
 
   const useGoogleCaptcha = watch('useGoogleCaptcha');
 
-  const handleCaptchaVerify = (verified) => {
-    setCaptchaVerified(verified);
-  };
+  // Stable reference so <GoogleCaptchaLogin /> doesn't re-render on every keystroke.
+  // `token` is a string when solved, or null when cleared/expired/errored.
+  const handleCaptchaVerify = useCallback((token) => {
+    setCaptchaVerified(Boolean(token));
+  }, []);
 
   const onSubmit = async (data) => {
     
