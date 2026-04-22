@@ -21,7 +21,7 @@ import InfoItem from '../UI/InfoIteam';
 
 const PatientView = () => {
     const { id } = useParams();
-    const { getPatientById, getExistingPatient, reportDownload, sendReport } = usePatient();
+    const { getPatientById, getExistingPatient, downloadReport, sendReport } = usePatient();
     const { user, getToken } = useAuth();
 
     const [loading, setLoading] = useState(true);
@@ -246,7 +246,7 @@ const PatientView = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const response = await reportDownload(id);
+                    const response = await downloadReport(id);
 
                     if (!response || response.status !== 200) {
                         Swal.showValidationMessage(

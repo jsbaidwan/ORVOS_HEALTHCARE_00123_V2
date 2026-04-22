@@ -211,7 +211,7 @@ export const PatientProvider = ({ children }) => {
     }
   };
 
-  const reportDownload = async (id) => {
+  const downloadReport = async (id) => {
     const api = Api(() => getToken());
     if (!api) return;
 
@@ -260,7 +260,7 @@ export const PatientProvider = ({ children }) => {
     getPendingPatients,
     getCompletedPatients,
     markAsCompleted,
-    reportDownload,
+    downloadReport,
     sendReport,
   };
 
