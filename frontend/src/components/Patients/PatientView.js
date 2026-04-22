@@ -827,7 +827,7 @@ const PatientView = () => {
                                             valueNode={
                                                 patient?.remark_by ? (
                                                     <span className="text-green-600 font-medium">
-                                                        {patient.remark_by.first_name} {patient.remark_by.last_name} (Orvos Doctor)
+                                                        {patient.remark_by.first_name} {patient.remark_by.last_name} ({patient.remark_by?.role?.name})
                                                     </span>
                                                 ) : (
                                                     '-'
