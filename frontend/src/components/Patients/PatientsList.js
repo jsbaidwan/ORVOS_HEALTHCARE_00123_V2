@@ -199,7 +199,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       accessor: 'clinic',
       render: (row) => (
         <div>
-          <p className="text-gray-900 text-sm">{row.clinic?.name || '-'}</p>
+          <p className="text-gray-900 text-sm"><Link to={getRoutePath(`/clinics/view/${row.clinic?.id}`)} target="_blank" className="text-primary hover:text-primary-700">{row.clinic?.name || '-'}</Link></p>
         </div>
       ),
     },
