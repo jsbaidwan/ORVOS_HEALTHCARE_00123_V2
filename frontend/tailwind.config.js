@@ -4,6 +4,15 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
     "./public/index.html"
   ],
+  safelist: [
+    'bg-success',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-red-500',
+    'bg-blue-500',
+    'bg-gray-500',
+    'text-white'
+  ],
   theme: {
     extend: {
       colors: {

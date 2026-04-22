@@ -755,8 +755,8 @@ const PatientView = () => {
                                         <InfoItem
                                             label="Follow Up"
                                             valueNode={
-                                                <span className="inline-flex px-3 py-1 rounded-sm text-xs font-semibold bg-green-500 text-white cursor-pointer hover:bg-green-600">
-                                                    {additionalData?.followUps?.find((item) => item?.id === patient?.follow_up)?.name}
+                                                <span className={`inline-flex px-3 py-1 rounded-sm text-xs font-semibold  ${patient?.follow_up_data?.fStatus?.class} text-white cursor-pointer`}>
+                                                    {patient?.follow_up_data?.status === 200 ? patient?.follow_up_data?.fStatus?.name : '-'}
                                                 </span>
                                             }
                                         />

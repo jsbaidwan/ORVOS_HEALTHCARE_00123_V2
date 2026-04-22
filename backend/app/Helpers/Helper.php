@@ -1988,10 +1988,10 @@ class Helper{
 	public static function followupStatus()
 	{
 		return [
-			['id' => 1,'name' => '6-Mths','class' => 'warning text-white'],
-			['id' => 2,'name' => '12-Mths','class' => 'light'],
-			['id' => 3,'name' => 'Urgent','class' => 'danger'],
-			['id' => 4,'name' => 'Schedule Dr Visit','class' => 'success']
+			['id' => 1,'name' => '6-Mths','class' => 'bg-warning'],
+			['id' => 2,'name' => '12-Mths','class' => 'bg-secondary'],
+			['id' => 3,'name' => 'Urgent','class' => 'bg-danger'],
+			['id' => 4,'name' => 'Schedule Dr Visit','class' => 'bg-success']
 		];
 	}
 

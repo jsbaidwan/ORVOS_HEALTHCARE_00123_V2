@@ -13,6 +13,7 @@
     @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
 
+
   .btn-success {
     @apply px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-green-500;
   }
@@ -1612,6 +1613,15 @@
   .bg-danger {
     background-color: #dc3545 !important;
   }
+
+  .bg-success {
+    background-color: #28a745 !important;
+  }
+
+  .bg-secondary {
+    background-color: #6c757d !important;
+  }
+
 
   .border-warning {
     border-color: #ffc107;
