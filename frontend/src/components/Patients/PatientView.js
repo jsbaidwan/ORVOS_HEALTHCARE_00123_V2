@@ -13,7 +13,7 @@ import PageLoader from '../Common/PageLoader';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 import Table from '../Common/Table';
 import Swal from 'sweetalert2';
-import { FileText, Mail } from 'lucide-react';
+import { Mail, Download } from 'lucide-react';
 import Api from '../../utils/api';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
@@ -369,8 +369,8 @@ const PatientView = () => {
             accessor: 'report_download_status_data',
             render: (row) => {
                 return <>
-                    <button className='inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none' onClick={() => handlePDFDownload(row.id)}>
-                        <FileText className='w-4 h-4 mr-2' /> Download
+                    <button className='flex text-center justify-center btn btn-primary btn-sm rounded w-full' onClick={() => handlePDFDownload(row.id)}>
+                        <Download className='w-4 h-4 mr-2' /> Download
                     </button>
                     <div className="flex items-center gap-2 mt-2">
                         <p className='text-black'>Status:-</p>
@@ -386,7 +386,7 @@ const PatientView = () => {
             accessor: 'patient_report_email_enabled',
             render: (row) => {
                 return <>
-                    <button className='inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-warning hover:bg-warning rounded shadow-sm focus:outline-none' onClick={() => handlePDFSend(row.id)}>
+                    <button className='flex text-center justify-center btn btn-warning btn-sm rounded w-full' onClick={() => handlePDFSend(row.id)}>
                         <Mail className='w-4 h-4 mr-2' /> Send
                     </button>
                     <div className="flex items-center gap-2 mt-2">
@@ -632,17 +632,17 @@ const PatientView = () => {
                                     {/* Actions Container */}
                                     <div className="flex space-x-3 mt-6">
                                         {currentStep > 0 && (
-                                            <button onClick={handlePrevious} className="btn btn-secondary btn-xs cursor-pointer rounded-md">
+                                            <button onClick={handlePrevious} className="btn btn-secondary btn-xs cursor-pointer rounded">
                                                 <span className='text-xs'>Previous</span>
                                             </button>
                                         )}
                                         {currentStep < steps.length - 1 ? (
-                                            <button onClick={handleNext} className="btn btn-primary btn-xs cursor-pointer rounded-md">
+                                            <button onClick={handleNext} className="btn btn-primary btn-xs cursor-pointer rounded">
                                                 <span className='text-xs'>Next</span>
                                             </button>
                                         ) : (
                                             isLoadingSubmit ? (
-                                                <span className="inline-flex items-center gap-1 btn btn-success-50 btn-xs rounded-md cursor-not-allowed">
+                                                <span className="inline-flex items-center gap-1 btn btn-success-50 btn-xs rounded cursor-not-allowed">
                                                     <svg
                                                         className="animate-spin h-4 w-4"
                                                         xmlns="http://www.w3.org/2000/svg"
@@ -666,7 +666,7 @@ const PatientView = () => {
                                                     <span className='text-xs text-muted'> Loading...</span>
                                                 </span>
                                             ) : (
-                                                <button onClick={handleSubmit} className="btn btn-success btn-xs cursor-pointer rounded-md">
+                                                <button onClick={handleSubmit} className="btn btn-success btn-xs cursor-pointer rounded">
                                                     Submit
                                                 </button>
                                             )

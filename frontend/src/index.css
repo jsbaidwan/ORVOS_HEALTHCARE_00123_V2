@@ -1731,6 +1731,7 @@
   .btn-success:hover {
     background-color: #218838 !important;
     border: 1px solid #218838 !important;
+    color: #fff !important;
   }
 
   .btn-success-50 {
@@ -1743,6 +1744,16 @@
   .btn-success-50:hover {
     background-color: #2188385e !important;
     border: 1px solid #2188385e !important;
+  }
+
+  .btn-primary:hover {
+
+    color: #fff !important;
+  }
+
+  .btn-warning:hover {
+
+    color: #fff !important;
   }
 
   .text-default {
