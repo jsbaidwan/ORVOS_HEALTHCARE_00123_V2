@@ -207,7 +207,7 @@ class Helper{
 	
 	public static function getPatients($isAdmin = true,$filters = [])
 	{
-		$query = Patient::with(['remarkBy','user','clinic','remarkBy.user'])->orderBy('id','DESC');
+		$query = Patient::with('remarkBy','user','clinic','remarkBy.role')->orderBy('id','DESC');
 		   
 		$from = null;
 		$to   = null;
@@ -372,11 +372,7 @@ class Helper{
 	
 	public static function getPatientById($id)
 	{
-		$patient = Patient::with([
-			'remarkBy.role',
-			'user',
-			'clinic'
-		])->find($id);
+		$patient = Patient::with('remarkBy','user','clinic','remarkBy.role')->find($id);
 		if(!$patient){
 			return ['patient' => Null];
 		}
