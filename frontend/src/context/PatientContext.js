@@ -211,6 +211,40 @@ export const PatientProvider = ({ children }) => {
     }
   };
 
+  const reportDownload = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`patients/pdf/${id}`, 'POST', {}, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Report downloaded successfully', data: response.data };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
+  const sendReport = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`send-pdf`, 'POST', { patient_id: id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Report sent successfully', data: response.data };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
   const value = {
     patients,
     setPatients,
@@ -226,6 +260,8 @@ export const PatientProvider = ({ children }) => {
     getPendingPatients,
     getCompletedPatients,
     markAsCompleted,
+    reportDownload,
+    sendReport,
   };
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;

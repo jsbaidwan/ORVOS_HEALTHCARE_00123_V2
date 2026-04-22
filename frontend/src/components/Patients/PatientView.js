@@ -17,20 +17,11 @@ import { FileText, Mail } from 'lucide-react';
 import Api from '../../utils/api';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
-
-const InfoItem = ({ label, value, valueNode, valueClass = "text-gray-900", labelClass = "" }) => (
-    <div className="flex flex-col sm:flex-row py-3">
-        <div className={`w-full sm:w-1/2 text-sm font-medium text-gray-700 mb-1 sm:mb-0 pr-4 ${labelClass}`}>{label}</div>
-        <div className={`w-full sm:w-1/2 text-sm ${valueClass} break-words`}>
-            {valueNode !== undefined ? valueNode : (value || '-')}
-        </div>
-    </div>
-);
-
+import InfoItem from '../UI/InfoIteam';
 
 const PatientView = () => {
     const { id } = useParams();
-    const { getPatientById, getExistingPatient } = usePatient();
+    const { getPatientById, getExistingPatient, reportDownload, sendReport } = usePatient();
     const { user, getToken } = useAuth();
 
     const [loading, setLoading] = useState(true);
@@ -254,19 +245,21 @@ const PatientView = () => {
             allowEscapeKey: false,
             showLoaderOnConfirm: true,
             preConfirm: async () => {
-
                 try {
-                    const api = Api(() => getToken());
+                    const response = await reportDownload(id);
 
-                    if (!api) {
-                        return Swal.showValidationMessage('Unable to authenticate. Please try again.');
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to generate report. Please try again.'
+                        );
+                        return false;
                     }
 
-                    const response = await api.call(`patients/pdf/${id}`, 'POST', {}, true);
                     return response;
 
                 } catch (error) {
-                    return Swal.showValidationMessage('Something went wrong. Please try again.');
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
                 }
             }
         }).then((result) => {
@@ -308,6 +301,7 @@ const PatientView = () => {
                         timerProgressBar: true
                     });
                 } else {
+
                     return Swal.showValidationMessage('Failed to generate report. Please try again.');
                 }
 
@@ -330,19 +324,21 @@ const PatientView = () => {
             allowEscapeKey: false,
             showLoaderOnConfirm: true,
             preConfirm: async () => {
-
                 try {
-                    const api = Api(() => getToken());
+                    const response = await sendReport(id);
 
-                    if (!api) {
-                        return Swal.showValidationMessage('Unable to authenticate. Please try again.');
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to generate report. Please try again.'
+                        );
+                        return false;
                     }
 
-                    const response = await api.call(`send-pdf`, 'POST', { 'patient_id': id }, true);
                     return response;
 
                 } catch (error) {
-                    return Swal.showValidationMessage('Something went wrong. Please try again.');
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
                 }
             }
         }).then((result) => {
@@ -500,7 +496,18 @@ const PatientView = () => {
                                         />
                                         <InfoItem label="DOB" value={patient?.dob} />
                                         <InfoItem label="Gender" value={patient?.gender_data?.name} />
-                                        <InfoItem label="Diagnosis Status" value="Pending" valueClass="text-red-500 font-medium" />
+                                        <InfoItem
+                                            label="Diagnosis Status"
+                                            valueNode={
+                                                patient?.diagnosis_status_data ? (
+                                                    <span className={`text-${patient?.diagnosis_status_data?.color || 'green'}-600 font-medium`}>
+                                                        {patient.diagnosis_status_data.name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-green-600 font-medium">{patient?.diagnosis_status || 'Completed'}</span>
+                                                )
+                                            }
+                                        />
                                         <InfoItem label="DOS" value={patient?.dos} />
                                     </div>
                                     {/* Column 3 */}
@@ -813,6 +820,20 @@ const PatientView = () => {
                                         />
                                         <InfoItem label="DOS" value={patient?.dos || patient?.diagnosis?.dos} />
                                         <InfoItem label="Remark At" value={patient?.remark_at || patient?.diagnosis?.remark_at} />
+
+                                        <InfoItem
+                                            label="Remark By"
+                                            valueNode={
+                                                patient?.remark_by ? (
+                                                    <span className="text-green-600 font-medium">
+                                                        {patient.remark_by.first_name} {patient.remark_by.last_name} (Orvos Doctor)
+                                                    </span>
+                                                ) : (
+                                                    '-'
+                                                )
+                                            }
+                                        />
+
                                     </div>
 
                                 </div>
