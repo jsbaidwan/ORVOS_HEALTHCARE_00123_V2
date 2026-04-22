@@ -479,7 +479,7 @@ const PatientView = () => {
                                         <InfoItem label="#EMR" value={patient?.ehr} />
                                         <InfoItem label="Medical History" value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'} />
                                         <InfoItem label="Note" value={patient?.note} />
-                                        <InfoItem label="Doctor's Comments" value="No Yet remark by orvos doctor" valueClass="text-red-500 font-medium" />
+                                        <InfoItem label="Doctor's Comments" valueNode={<span className={`font-medium`}>{patient?.remark_result?.remark || '-'}</span>} />
                                     </div>
                                     {/* Column 2 */}
                                     <div className="space-y-1">
@@ -735,6 +735,7 @@ const PatientView = () => {
                                             value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'}
                                         />
                                         <InfoItem label="Note" value={patient?.note} />
+                                        <InfoItem label="Doctor's Comments" valueNode={<span className={`font-medium`}>{patient?.remark_result?.remark || '-'}</span>} />
 
                                         <InfoItem label="Left Eye Diagnosis Details" value={
                                             patient?.remark_result?.exam_data?.leftEye?.length ? (
