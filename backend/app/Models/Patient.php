@@ -215,7 +215,34 @@ class Patient extends Authenticatable
 		$data = ['status' => $dicomStatus['status'],'message' => $this->attributes['dicom_file_status']];
 		return  array_merge($data,$dicomStatus['dStatus'] ?? []);
 	}
-	 
+	
+	public function getRemarkResultAttribute($value)
+	{
+		if (!is_string($value)) {
+			$remarkResultArr = $value;
+		} else {
+			$decoded = json_decode($value, true);
+			$remarkResultArr = json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+		}
+
+		if (!is_array($remarkResultArr)) {
+			return $remarkResultArr;
+		}
+
+		foreach (['leftEye', 'rightEye'] as $eye) {
+
+			if (!empty($remarkResultArr['exam_data'][$eye])) {
+
+				foreach ($remarkResultArr['exam_data'][$eye] as $index => $item) {
+					
+					// optional example data:
+					$remarkResultArr['exam_data'][$eye][$index]['exam_type_arr'] = \Helper::getExamTypeById($this->attributes['medical_condition_id'],$item['exam_type'],$eye);
+				}
+			}
+		}
+
+		return $remarkResultArr;
+	}
 	  
 	public function getFormatedCreatedAtAttribute()
 	{

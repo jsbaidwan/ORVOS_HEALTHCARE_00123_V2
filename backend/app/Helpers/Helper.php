@@ -208,7 +208,7 @@ class Helper{
 	public static function getPatients($isAdmin = true,$filters = [])
 	{
 		$query = Patient::with('remarkBy','user','clinic')->orderBy('id','DESC');
-		  
+		   
 		$from = null;
 		$to   = null;
 		// If month is set → define base start and end of month

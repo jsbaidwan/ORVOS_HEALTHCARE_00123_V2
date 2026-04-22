@@ -185,7 +185,7 @@
 		<tr style="height: 63px;">
 			<td data-cell-padding="10px" style="padding: 10px; width: 50%; vertical-align: top; border-width: 1px; border-style: solid; text-align: center;" data-cell-width="50%">
 				<strong>Left Eye Diagnosis Details:</strong><br>
-				@php $exam = json_decode($patient->remark_result, true); @endphp
+				@php $exam =  $patient->remark_result @endphp
 				@if(!empty($exam['exam_data']['leftEye']))
 					@foreach($exam['exam_data']['leftEye'] as $e)
 						@php

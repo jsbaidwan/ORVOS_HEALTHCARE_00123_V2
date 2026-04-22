@@ -25,6 +25,7 @@ Route::middleware('auth:api')->group(function () {
 	Route::post('send-fax','App\Http\Controllers\Api\PatientController@sendFax');
 	Route::post('send-dicom','App\Http\Controllers\Api\PatientController@sendDicom');
 	Route::post('clone','App\Http\Controllers\Api\PatientController@clone');
+	Route::post('remark/{id}','App\Http\Controllers\Api\PatientController@remark');
 	
 	  
 	Route::get('get-permissions', function(Request $request){

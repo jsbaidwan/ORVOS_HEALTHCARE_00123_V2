@@ -13,6 +13,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Mpdf\Mpdf;
+use App\Notifications\ClinicPatientReportMail;
+use App\Jobs\SendClinicPatientReportJob;
+use App\Jobs\SendFaxReportToClinicJob;
+use App\Jobs\SendDicomDataJob;
   
 class PatientController extends Controller
 { 
@@ -525,20 +529,21 @@ class PatientController extends Controller
 		$validator = \Validator::make($request->all(), $rules);
  
 		// Custom validation: ensure at least one exam type selected from left or right eye
-		$validator->after(function ($validator) use ($request) {
-			
-			$leftSelected = isset($request->exam_data['leftEye']) &&
-				collect($request->exam_data['leftEye'])->contains(fn($e) => !empty($e['exam_type']));
- 
-			$rightSelected = isset($request->exam_data['rightEye']) &&
-				collect($request->exam_data['rightEye'])->contains(fn($e) => !empty($e['exam_type']));
+		$validator->after(function ($validator) use ($input) {
+			 
+			$leftSelected = isset($input['exam_data']['leftEye']) &&
+				collect($input['exam_data']['leftEye'])->contains(fn($e) => !empty($e['exam_type']));
 
-			if(isset($request->exam_data['leftEye'])){
+			$rightSelected = isset($input['exam_data']['rightEye']) &&
+				collect($input['exam_data']['rightEye'])->contains(fn($e) => !empty($e['exam_type']));
+ 
+			if(isset($input['exam_data']['leftEye'])){
 				if(!$leftSelected){
+					
 					$validator->errors()->add('exam_data', 'Please select at least one exam type for Left eyes.');
 				}
 				
-			}else if(isset($request->exam_data['rightEye'])){
+			}else if(isset($input['exam_data']['rightEye'])){
 				if(!$rightSelected){
 					$validator->errors()->add('exam_data', 'Please select at least one exam type for Right eyes.');
 				}
@@ -548,10 +553,17 @@ class PatientController extends Controller
 			}
 		});
 
+ 
+		if ($validator->fails()) {
+			return response()->json([
+				'message' => 'Validation failed.',
+				'errors' => $validator->errors()
+			], 422);
+		}
+ 
 		// Validate and automatically redirect back if fails
-		$validatedData = $validator->validate();
-		 
-
+		//$validatedData = $validator->validate();
+		  
 		// Find patient
 		$patient = Patient::find($id);
 		if (!$patient) {
@@ -574,13 +586,11 @@ class PatientController extends Controller
 		]);
 
 		$filters['diagnosis_status'] = 0;
-		$patients = \Helper::getPatients($filters)['patients'];
-
+		$patients = \Helper::getPatients(false,$filters)['patients'];
+		  
 		// Get the last patient ID based on 'id'
 		$lastPatientId = $patients->sortByDesc('id')->first()->id ?? null;
-		
-		Toastr::success('Remark and Exam Data saved successfully.', 'Success');
-		
+		 
 		$patient = Patient::find($id);
 		if(!empty($patient->clinic->is_patient_report_email_enabled)){
 			// Dispatch the job to the queue
@@ -590,14 +600,20 @@ class PatientController extends Controller
 			$patient->update(['fax_status' => 1]);
 			SendFaxReportToClinicJob::dispatch($patient)->onQueue('send-fax-report-to-clinic');
 		}
+		
+		if(!empty($patient->clinic->is_stow_enabled)){
+			$patient->update(['is_dicom_file_send' => 1]);
+			SendDicomDataJob::dispatch($patient)->onQueue('send-dicom-data');
+		}
 		 
 		if(\Auth::user() && $lastPatientId){
-			return redirect(\Helper::prefix(\Auth::user()->role->id)['prefix'].'/patients/'.$lastPatientId);
+			$appUrl = !empty($input['app_url']) ?? url('/');
+			return response()->json(['message' => 'Remark and Exam Data saved successfully.','redirect_url' =>  '/patients/view/'.$lastPatientId], 200);
+			 
 		}
- 
-		return redirect()->back()->with('success', 'Remark and Exam Data saved successfully.');
-	 
-
+		
+		return response()->json(['message' => 'Remark and Exam Data saved successfully.'], 200);
+		 
     }
 	
 	 /**
@@ -824,19 +840,26 @@ class PatientController extends Controller
 		/* Remove special characters */
 		$filename = preg_replace('/[^A-Za-z0-9_\-.]/', '', $filename);
 
+		$pdfContent = $mpdf->Output($filename, 'S');
+		if(!empty($request->return_back)){
+			return  [
+				'message'  => 'PDF Generated Successfully',
+				'pdfContent'  => $pdfContent,
+				'fileName' => $filename,
+				 
+			];
+		}
 
 		if($patient->is_pdf_report_downloaded == 1){
 			$patient->update(['is_pdf_report_downloaded' => 2,'pdf_report_downloaded_by' => \Auth::user()->id ?? 0]);
 		}
-		
-		$pdfContent = $mpdf->Output($filename, 'S');
-		
+		 
 		return response()->json([
-			'status'   => 200,
-			'message'  => 'PDF Generated Successfully',
+			'message'  =>  'PDf Downloaded',
 			'pdf'      => base64_encode($pdfContent),
-			'filename' => $filename
-		]);
+			'report_download_status_data' => $patient['report_download_status_data'] ?? [],
+			'fileName' => $filename
+		], 200);
 	}
 	 
 	public function sendPdf(Request $request)
@@ -845,17 +868,18 @@ class PatientController extends Controller
 		   
 		$patient = Patient::find($input['patient_id']);
 		if(!$patient){
-			return ['status' => 'PDF Failed','class' => 'text-danger']; 
+			return response()->json(['message' => 'PDF Failed','class' => 'text-danger'], 422);
 		} 
 		// Dispatch the job to the queue
 		$patient->clinic->email = $patient->clinic->poc_email ?? NULL; 
-		//$patient->clinic->email = 'sandeep.intnxt@gmail.com'; 
+		$patient->clinic->email = 'sandeep.intnxt@gmail.com'; 
 		$patient->clinic->notify(new ClinicPatientReportMail($patient));
   
 		$patient = Patient::find($input['patient_id']);
 		$status = $patient->is_report_sent ? 'PDF Sent':'PDF Failed';
 		$class = $patient->is_report_sent ? 'text-success':'text-danger';
-		return ['status' => $status,'class' => $class]; 
+		return response()->json(['message' => $status,'class' => $class,'report_sent_status' => $patient['report_sent_status'] ?? []], 200);
+	 
 	}
 	
 	public function sendFax(Request $request)

@@ -13,8 +13,10 @@ import PageLoader from '../Common/PageLoader';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 import Table from '../Common/Table';
 import Swal from 'sweetalert2';
-import { FileText } from 'lucide-react';
+import { FileText, Mail } from 'lucide-react';
 import Api from '../../utils/api';
+import { useRoutePath } from '../../hooks/useRoutePath';
+import { useNavigate } from 'react-router-dom';
 
 const InfoItem = ({ label, value, valueNode, valueClass = "text-gray-900", labelClass = "" }) => (
     <div className="flex flex-col sm:flex-row py-3">
@@ -34,14 +36,19 @@ const PatientView = () => {
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState(null);
     const [patient, setPatient] = useState(null);
+    const getRoutePath = useRoutePath();
+    const navigate = useNavigate();
+    const [reportDownloadStatusData, setReportDownloadStatusData] = useState([]);
+    const [reportSentStatusData, setReportSentStatusData] = useState([]);
+    const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
 
     // Stepper state for diagnosis formatting
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({
         rightEyeSelections: [],
         leftEyeSelections: [],
-        doctorComments: '',
-        followUp: ''
+        remark: '',
+        follow_up: ''
     });
     const [formErrors, setFormErrors] = useState({});
 
@@ -58,6 +65,13 @@ const PatientView = () => {
     useEffect(() => {
         setPageTitle('Patient Details');
     }, [setPageTitle]);
+
+    useEffect(() => {
+        setReportDownloadStatusData(patient?.report_download_status_data || []);
+        setReportSentStatusData(patient?.report_sent_status || []);
+
+    }, [patient]);
+
 
     useEffect(() => {
         const loadDetails = async () => {
@@ -128,12 +142,64 @@ const PatientView = () => {
         setCurrentStep(prev => prev - 1);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.follow_up && currentStepName === 'COMMENTS') {
             setFormErrors({ follow_up: 'Please choose a follow up.' });
             return;
         }
         setFormErrors({});
+        const data = new FormData();
+
+        data.append('remark', formData.remark);
+
+        // Left Eye
+        formData.leftEyeSelections.forEach((item, index) => {
+            data.append(`exam_data[leftEye][${index}][exam_type]`, item);
+        });
+        // Right Eye
+
+        formData.rightEyeSelections.forEach((item, index) => {
+            data.append(`exam_data[rightEye][${index}][exam_type]`, item);
+        });
+
+        data.append('follow_up', formData.follow_up);
+
+        const api = Api(() => getToken());
+        if (!api) {
+            setErrors({ general: 'Unable to load API' });
+            return;
+        }
+        setIsLoadingSubmit(true)
+        const response = await api.call(`remark/${id}`, 'POST', data, true);
+        if (response?.status === 200) {
+            setIsLoadingSubmit(false)
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: response?.message,
+            });
+            if (response?.data?.redirect_url) {
+                navigate(getRoutePath(response?.data?.redirect_url));
+                setFormData({
+                    rightEyeSelections: [],
+                    leftEyeSelections: [],
+                    remark: '',
+                    follow_up: ''
+                });
+                setCurrentStep(0);
+            } else {
+                navigate(getRoutePath('/patients/pending'));
+            }
+
+        } else {
+            setIsLoadingSubmit(false)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response?.message,
+            });
+        }
+
         // Submit implementation goes here...
     };
 
@@ -197,45 +263,108 @@ const PatientView = () => {
                     }
 
                     const response = await api.call(`patients/pdf/${id}`, 'POST', {}, true);
+                    return response;
 
-                    if (response.status === 200) {
-                        const base64 = response.data.pdf;
-
-                        const byteCharacters = atob(base64);
-                        const byteNumbers = new Array(byteCharacters.length);
-
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], { type: "application/pdf" });
-
-                        const blobUrl = URL.createObjectURL(blob);
-
-                        const link = document.createElement("a");
-                        link.href = blobUrl;
-                        link.download = response.data.filename || "report.pdf";
-                        document.body.appendChild(link);
-                        link.click();
-                        link.remove();
-
-                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-
-                        return true;
-                    } else {
-                        return Swal.showValidationMessage('Failed to generate report. Please try again.');
-                    }
                 } catch (error) {
                     return Swal.showValidationMessage('Something went wrong. Please try again.');
                 }
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.close();
+                const response = result.value;
+                if (response.status === 200) {
+                    const base64 = response.data.pdf;
+
+                    const byteCharacters = atob(base64);
+                    const byteNumbers = new Array(byteCharacters.length);
+
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: "application/pdf" });
+
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const link = document.createElement("a");
+                    link.href = blobUrl;
+                    link.download = response.data.fileName || "report.pdf";
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+
+                    setReportDownloadStatusData(response?.data?.report_download_status_data || []);
+
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+                    Swal.fire({
+                        title: "Report Downloaded",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    return Swal.showValidationMessage('Failed to generate report. Please try again.');
+                }
+
             }
         });
 
+    }
+
+    const handlePDFSend = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to send this patient's report?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, send it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+
+                try {
+                    const api = Api(() => getToken());
+
+                    if (!api) {
+                        return Swal.showValidationMessage('Unable to authenticate. Please try again.');
+                    }
+
+                    const response = await api.call(`send-pdf`, 'POST', { 'patient_id': id }, true);
+                    return response;
+
+                } catch (error) {
+                    return Swal.showValidationMessage('Something went wrong. Please try again.');
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const response = result.value;
+                if (response.status === 200) {
+                    Swal.fire({
+                        title: "Report Sent",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    setReportSentStatusData(response?.data?.report_sent_status || []);
+
+                } else {
+                    return Swal.showValidationMessage('Failed to generate report. Please try again.');
+                }
+            }
+        });
     }
 
     let columns = [
@@ -249,8 +378,8 @@ const PatientView = () => {
                     </button>
                     <div className="flex items-center gap-2 mt-2">
                         <p className='text-black'>Status:-</p>
-                        <span className={`${row.report_download_status_data?.class} text-sm`}>
-                            {row.report_download_status_data?.name}
+                        <span className={`${reportDownloadStatusData?.class} text-sm`}>
+                            {reportDownloadStatusData?.name}
                         </span>
                     </div>
                 </>
@@ -261,10 +390,13 @@ const PatientView = () => {
             accessor: 'patient_report_email_enabled',
             render: (row) => {
                 return <>
+                    <button className='inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-warning hover:bg-warning rounded shadow-sm focus:outline-none' onClick={() => handlePDFSend(row.id)}>
+                        <Mail className='w-4 h-4 mr-2' /> Send
+                    </button>
                     <div className="flex items-center gap-2 mt-2">
                         <p className='text-black'>Status:-</p>
-                        <span className={`${row.report_sent_status?.class} text-sm`}>
-                            {row.report_sent_status?.status}
+                        <span className={`${reportSentStatusData?.class} text-sm`}>
+                            {reportSentStatusData?.status}
                         </span>
                     </div>
                 </>
@@ -351,7 +483,6 @@ const PatientView = () => {
                                         <InfoItem label="#EMR" value={patient?.ehr} />
                                         <InfoItem label="Medical History" value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'} />
                                         <InfoItem label="Note" value={patient?.note} />
-                                        <InfoItem label="Remark Status" value="Pending" valueClass="text-red-500 font-medium" />
                                         <InfoItem label="Doctor's Comments" value="No Yet remark by orvos doctor" valueClass="text-red-500 font-medium" />
                                     </div>
                                     {/* Column 2 */}
@@ -377,7 +508,7 @@ const PatientView = () => {
                                         <InfoItem label="Clinic Name" value={patient?.clinic?.name} />
                                         <InfoItem label="Clinic Note" value={patient?.clinic_note || patient?.clinic?.note} />
                                         <InfoItem label="Medical Condition" value={patient?.medical_condition?.name || patient?.medical_condition_data?.name} />
-                                        <InfoItem label="Remarks" value="Not Yet Remarked" valueClass="text-red-500 font-medium" />
+
                                     </div>
                                 </div>
 
@@ -410,9 +541,9 @@ const PatientView = () => {
                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Comments</label>
                                                     <FormField
                                                         type="textarea"
-                                                        name="comment"
-                                                        value={formData.comment}
-                                                        onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                                                        name="remark"
+                                                        value={formData.remark}
+                                                        onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
                                                         placeholder="Enter remark here"
                                                         rows="4"
                                                         className="w-full border border-gray-300 rounded-md p-3 text-sm  focus:ring-primary focus:border-primary shadow-sm"
@@ -503,9 +634,35 @@ const PatientView = () => {
                                                 Next
                                             </button>
                                         ) : (
-                                            <button onClick={handleSubmit} className="px-5 py-2.5 bg-green-500 text-white font-medium rounded-md text-sm hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm">
-                                                Submit
-                                            </button>
+                                            isLoadingSubmit ? (
+                                                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-medium rounded-md text-sm shadow-sm cursor-not-allowed">
+                                                    <svg
+                                                        className="animate-spin h-4 w-4"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <circle
+                                                            className="opacity-25"
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                            stroke="currentColor"
+                                                            strokeWidth="4"
+                                                        ></circle>
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                        ></path>
+                                                    </svg>
+                                                    Loading...
+                                                </span>
+                                            ) : (
+                                                <button onClick={handleSubmit} className="px-5 py-2.5 bg-green-500 text-white font-medium rounded-md text-sm hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm">
+                                                    Submit
+                                                </button>
+                                            )
                                         )}
                                     </div>
                                 </div>
@@ -571,12 +728,22 @@ const PatientView = () => {
                                             value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'}
                                         />
                                         <InfoItem label="Note" value={patient?.note} />
-                                        <InfoItem
-                                            label="Remark Status"
-                                            value={patient?.remark_status || patient?.diagnosis?.remark_status}
-                                            valueClass="text-green-600 font-medium"
-                                        />
-                                        <InfoItem label="Left Eye Diagnosis Details" value={patient?.left_eye_diagnosis_details || patient?.diagnosis?.left_eye_details} />
+
+                                        <InfoItem label="Left Eye Diagnosis Details" value={
+                                            patient?.remark_result?.exam_data?.leftEye?.length ? (
+                                                patient.remark_result.exam_data.leftEye.map((item, index, arr) => (
+                                                    <span key={index}>
+                                                        {item.exam_type_arr?.examType?.name}
+                                                        {index < arr.length - 1 ? ', ' : '.'}
+                                                        <br />
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                patient?.left_eye_diagnosis_details ||
+                                                patient?.diagnosis?.left_eye_details ||
+                                                '-'
+                                            )
+                                        } />
                                         <InfoItem
                                             label="Follow Up"
                                             valueNode={
@@ -606,11 +773,25 @@ const PatientView = () => {
                                             label="Right Eye Diagnosis Details"
                                             valueNode={
                                                 <div className="space-y-2">
-                                                    <div>{patient?.right_eye_diagnosis_details || patient?.diagnosis?.right_eye_details || '-'}</div>
+                                                    <div>{
+                                                        patient?.remark_result?.exam_data?.rightEye?.length ? (
+                                                            patient.remark_result.exam_data.rightEye.map((item, index, arr) => (
+                                                                <span key={index}>
+                                                                    {item.exam_type_arr?.examType?.name}
+                                                                    {index < arr.length - 1 ? ', ' : '.'}
+                                                                    <br />
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            patient?.right_eye_diagnosis_details ||
+                                                            patient?.diagnosis?.right_eye_details ||
+                                                            '-'
+                                                        )
+                                                    }</div>
                                                 </div>
                                             }
                                         />
-                                        <InfoItem label="Remarks" value={patient?.remarks || patient?.diagnosis?.remarks} />
+
                                     </div>
 
                                     {/* Column 3 */}
