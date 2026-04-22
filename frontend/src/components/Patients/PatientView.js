@@ -854,7 +854,7 @@ const PatientView = () => {
                                         columns={columns}
                                         data={Array(patient)}
                                         emptyMessage="No chart status found"
-
+                                        tableClass="min-w-auto"
                                     />
                                 </div>
                             </>

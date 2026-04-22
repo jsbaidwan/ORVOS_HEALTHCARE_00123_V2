@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions, forceLoading = 'not_loading' }) => {
+const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions, forceLoading = 'not_loading', tableClass = "min-w-full" }) => {
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -128,8 +128,8 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   });
 
   return (
-    <div className="overflow-x-auto bg-white shadow-card">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className="overflow-x-auto  shadow-card">
+      <table className={`${tableClass} divide-y divide-gray-200`}>
         <thead className="bg-primary text-white">
           <tr>
             {filteredColumns.map((column, index) => (
@@ -137,7 +137,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
-                  ? 'cursor-pointer select-none   border-r   hover:bg-primary-600 transition-colors duration-150'
+                  ? 'cursor-pointer select-none   border-r border-b  hover:bg-primary-600 transition-colors duration-150'
                   : ''
                   }`}
               >
@@ -156,7 +156,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
             Array.from({ length: 2 }).map((_, rowIndex) => (
               <tr key={rowIndex} className="divide-x divide-gray-100">
                 {filteredColumns.map((_, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4">
+                  <td key={colIndex} className="px-6 py-4 border-r border-b">
                     <div className="h-10 w-full bg-gray-200 rounded-md"></div>
                   </td>
                 ))}
@@ -165,7 +165,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
           ) : sortedData?.length === 0 ? (
             // ❌ No data
             <tr>
-              <td colSpan={filteredColumns.length} className="px-6 py-8 text-center text-gray-500">
+              <td colSpan={filteredColumns.length} className="px-6 py-8 text-center text-gray-500 border-r border-b">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                     <PlusIcon className="w-8 h-8 text-gray-500" />
@@ -186,7 +186,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                   } transition-colors duration-150`}
               >
                 {filteredColumns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 whitespace-normal text-sm break-words">
+                  <td key={colIndex} className="px-6 py-4 whitespace-normal text-sm break-words border-r border-b">
                     {column.render ? column.render(row) : row[column.accessor]}
                   </td>
                 ))}
