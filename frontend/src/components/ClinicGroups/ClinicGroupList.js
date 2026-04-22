@@ -140,7 +140,7 @@ const ClinicGroupList = ({ archived = false }) => {
       header: 'Name',
       accessor: 'name',
       render: (row) => (
-        <div className='w-48'>
+        <div className='w-auto'>
           <div className="flex items-center">
 
             <div className="h-10 w-10 min-w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center shrink-0">
@@ -149,7 +149,7 @@ const ClinicGroupList = ({ archived = false }) => {
               </span>
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 lg:min-w-full">
               <div className="text-sm font-medium text-gray-900 break-words">
                 {row?.name}
               </div>

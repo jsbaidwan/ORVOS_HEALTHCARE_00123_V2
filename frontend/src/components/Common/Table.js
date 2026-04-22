@@ -156,7 +156,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
             Array.from({ length: 2 }).map((_, rowIndex) => (
               <tr key={rowIndex} className="divide-x divide-gray-100">
                 {filteredColumns.map((_, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 border-r border-b">
+                  <td key={colIndex} className="px-5 py-4 border-r border-b">
                     <div className="h-10 w-full bg-gray-200 rounded-md"></div>
                   </td>
                 ))}
@@ -186,7 +186,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                   } transition-colors duration-150`}
               >
                 {filteredColumns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 whitespace-normal text-sm break-words border-r border-b">
+                  <td key={colIndex} className="px-5 py-4 whitespace-normal text-sm break-words border-r border-b">
                     {column.render ? column.render(row) : row[column.accessor]}
                   </td>
                 ))}
