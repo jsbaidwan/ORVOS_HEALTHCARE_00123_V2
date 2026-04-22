@@ -578,7 +578,7 @@ const PatientView = () => {
                                     <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
                                             <div className="text-sm font-semibold mb-2 text-gray-800">Right Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
                                                 {DIAGNOSIS_OPTIONS?.rightEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
                                                         <input type="checkbox"
@@ -594,7 +594,7 @@ const PatientView = () => {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
+                                                        <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -605,7 +605,7 @@ const PatientView = () => {
                                     <div className={currentStepName === 'LEFT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
                                             <div className="text-sm font-semibold mb-2 text-gray-800">Left Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
                                                 {DIAGNOSIS_OPTIONS?.leftEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
                                                         <input type="checkbox"
@@ -621,7 +621,7 @@ const PatientView = () => {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
+                                                        <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -632,17 +632,17 @@ const PatientView = () => {
                                     {/* Actions Container */}
                                     <div className="flex space-x-3 mt-6">
                                         {currentStep > 0 && (
-                                            <button onClick={handlePrevious} className="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-md text-sm hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-sm">
-                                                Previous
+                                            <button onClick={handlePrevious} className="btn btn-secondary btn-xs cursor-pointer rounded-md">
+                                                <span className='text-xs'>Previous</span>
                                             </button>
                                         )}
                                         {currentStep < steps.length - 1 ? (
-                                            <button onClick={handleNext} className="px-5 py-2.5 bg-[#009efb] text-white font-medium rounded-md text-sm hover:bg-[#0089db] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb] shadow-sm">
-                                                Next
+                                            <button onClick={handleNext} className="btn btn-primary btn-xs cursor-pointer rounded-md">
+                                                <span className='text-xs'>Next</span>
                                             </button>
                                         ) : (
                                             isLoadingSubmit ? (
-                                                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-medium rounded-md text-sm shadow-sm cursor-not-allowed">
+                                                <span className="inline-flex items-center gap-1 btn btn-success-50 btn-xs rounded-md cursor-not-allowed">
                                                     <svg
                                                         className="animate-spin h-4 w-4"
                                                         xmlns="http://www.w3.org/2000/svg"
@@ -663,10 +663,10 @@ const PatientView = () => {
                                                             d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                                                         ></path>
                                                     </svg>
-                                                    Loading...
+                                                    <span className='text-xs text-muted'> Loading...</span>
                                                 </span>
                                             ) : (
-                                                <button onClick={handleSubmit} className="px-5 py-2.5 bg-green-500 text-white font-medium rounded-md text-sm hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm">
+                                                <button onClick={handleSubmit} className="btn btn-success btn-xs cursor-pointer rounded-md">
                                                     Submit
                                                 </button>
                                             )

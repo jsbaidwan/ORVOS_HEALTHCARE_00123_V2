@@ -13,8 +13,12 @@
     @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
 
+  .btn-success {
+    @apply px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-green-500;
+  }
+
   .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2;
+    @apply px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
   }
 
   .btn-warning {
@@ -1708,7 +1712,34 @@
     border: 1px solid #e6e7e9 !important;
   }
 
+  .btn-success {
+    background-color: #28a745 !important;
+    border: 1px solid #28a745 !important;
+    border-radius: 10px;
+  }
+
+  .btn-success:hover {
+    background-color: #218838 !important;
+    border: 1px solid #218838 !important;
+  }
+
+  .btn-success-50 {
+    padding: 5px 10px !important;
+    background-color: #28a7455e !important;
+    border: 1px solid #28a7455e !important;
+    border-radius: 10px;
+  }
+
+  .btn-success-50:hover {
+    background-color: #2188385e !important;
+    border: 1px solid #2188385e !important;
+  }
+
   .text-default {
+    color: #e6e7e95e;
+  }
+
+  .text-muted {
     color: #e6e7e95e;
   }
 

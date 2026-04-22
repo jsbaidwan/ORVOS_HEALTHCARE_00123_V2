@@ -6,15 +6,15 @@ const InfoItem = ({
     labelClass = ""
 }) => {
     return (
-        <div className="flex flex-col sm:flex-row py-3">
+        <div className="flex flex-col sm:flex-row py-[0.2rem]">
             <div
-                className={`w-full sm:w-1/2 text-sm font-medium text-gray-700 mb-1 sm:mb-0 pr-4 ${labelClass}`}
+                className={`w-full sm:w-1/2 text-xs font-medium text-gray-700 mb-1 sm:mb-0 pr-4 ${labelClass}`}
             >
                 {label}
             </div>
 
             <div
-                className={`w-full sm:w-1/2 text-sm ${valueClass} break-words`}
+                className={`w-full sm:w-1/2 text-xs ${valueClass} break-words`}
             >
                 {valueNode !== undefined ? valueNode : (value || '-')}
             </div>
