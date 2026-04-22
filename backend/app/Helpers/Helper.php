@@ -2287,7 +2287,7 @@ class Helper{
 		$rightEyeRemarks = NULL;
 		$note = NULL;
 		if(!empty($data->remark_result)){
-			$examTest = json_decode($data->remark_result, true);
+			$examTest = $data->remark_result;
 			
 			if(!empty($examTest['exam_data']['leftEye'])){
 				foreach($examTest['exam_data']['leftEye'] as $eKey => $eData){
