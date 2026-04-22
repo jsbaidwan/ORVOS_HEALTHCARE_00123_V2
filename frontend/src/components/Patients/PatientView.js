@@ -329,7 +329,7 @@ const PatientView = () => {
 
                     if (!response || response.status !== 200) {
                         Swal.showValidationMessage(
-                            response?.data?.message || 'Failed to generate report. Please try again.'
+                            response?.data?.message || 'Failed to send report. Please try again.'
                         );
                         return false;
                     }
