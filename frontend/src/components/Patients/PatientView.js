@@ -525,7 +525,7 @@ const PatientView = () => {
 
                                         <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
                                             <div>
-                                                <div className="text-sm font-medium text-gray-700 mb-2">Right Eye: Yes</div>
+                                                <div className="text-xs font-medium text-gray-700 mb-2">Right Eye: Yes</div>
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                     {rightEyeImages}
 
@@ -535,7 +535,7 @@ const PatientView = () => {
 
                                         <div className={currentStepName === 'LEFT_EYE' ? 'block' : 'hidden'}>
                                             <div>
-                                                <div className="text-sm font-medium text-gray-700 mb-2">Left Eye: Yes</div>
+                                                <div className="text-xs font-medium text-gray-700 mb-2">Left Eye: Yes</div>
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                     {leftEyeImages}
                                                 </div>
@@ -577,7 +577,7 @@ const PatientView = () => {
                                     {/* 3. STEP SPECIFIC BOTTOM SECTIONS (Checkboxes) & BUTTONS */}
                                     <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
-                                            <div className="text-sm font-semibold mb-2 text-gray-800">Right Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
+                                            <div className="text-xs font-semibold mb-2 text-gray-800">Right Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
                                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
                                                 {DIAGNOSIS_OPTIONS?.rightEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
@@ -604,7 +604,7 @@ const PatientView = () => {
 
                                     <div className={currentStepName === 'LEFT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
-                                            <div className="text-sm font-semibold mb-2 text-gray-800">Left Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
+                                            <div className="text-xs font-semibold mb-2 text-gray-800">Left Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
                                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
                                                 {DIAGNOSIS_OPTIONS?.leftEye?.map((opt, i) => (
                                                     <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
