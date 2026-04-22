@@ -357,7 +357,7 @@ const PatientView = () => {
                     setReportSentStatusData(response?.data?.report_sent_status || []);
 
                 } else {
-                    return Swal.showValidationMessage('Failed to generate report. Please try again.');
+                    return Swal.showValidationMessage('Failed to send report. Please try again.');
                 }
             }
         });
