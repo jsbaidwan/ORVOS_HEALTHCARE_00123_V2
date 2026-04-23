@@ -3247,6 +3247,51 @@ class Helper{
 	 * -----------------------------------------
 	 */ 
 	 
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Ghostscript Compress
+	|--------------------------------------------------------------------------
+	*/
+	 
+	public static function ghostScriptPdfCompress($inputFile, $outputFile)
+	{
+		// Detect Laravel environment (BEST WAY)
+		$host = $_SERVER['HTTP_HOST'] ?? '';
+
+		$isLocal = in_array($host, ['localhost', '127.0.0.1']);
+
+		// Choose Ghostscript binary
+		$gs = $isLocal
+			?  'C:\\Program Files\\gs\\gs10.07.0\\bin\\gswin64c.exe' // Windows local
+			: 'gs';                               // Linux live server
+
+		// Build command safely
+		$cmd = '"' . $gs . '" '
+			. '-sDEVICE=pdfwrite '
+			. '-dCompatibilityLevel=1.4 '
+			. '-dPDFSETTINGS=/prepress '
+			. '-dNOPAUSE '
+			. '-dQUIET '
+			. '-dBATCH '
+			. '-sOutputFile=' . escapeshellarg($outputFile) . ' '
+			. escapeshellarg($inputFile);
+
+		// Execute command
+		exec($cmd, $output, $status);
+
+		return [
+			'status' => $status,
+			'success' => $status === 0,
+			'output' => $output,
+		];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| End: Ghostscript Compress
+	|--------------------------------------------------------------------------
+	*/
+	 
 }
 
 	

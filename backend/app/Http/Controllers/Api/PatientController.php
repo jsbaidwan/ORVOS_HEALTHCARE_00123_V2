@@ -853,10 +853,70 @@ class PatientController extends Controller
 		if($patient->is_pdf_report_downloaded == 1){
 			$patient->update(['is_pdf_report_downloaded' => 2,'pdf_report_downloaded_by' => \Auth::user()->id ?? 0]);
 		}
+		
+		$tempDir = storage_path('app/pdf-temp');
+
+		if (!file_exists($tempDir)) {
+			mkdir($tempDir, 0777, true);
+		}
+
+		/*
+		|--------------------------------------------------------------------------
+		| Same base filename for input/output
+		|--------------------------------------------------------------------------
+		*/
+
+		$baseName   = pathinfo($filename, PATHINFO_FILENAME);
+
+		$inputFile  = $tempDir . '/' . $baseName . '.pdf';
+		$outputFile = $tempDir . '/' . $baseName . '_compressed.pdf';
+
+		/*
+		|--------------------------------------------------------------------------
+		| Save mPDF binary string as input file
+		|--------------------------------------------------------------------------
+		*/
+
+		file_put_contents($inputFile, $pdfContent);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Ghostscript Compress
+		|--------------------------------------------------------------------------
+		*/
+
+		\Helper::ghostScriptPdfCompress($inputFile,$outputFile);
+		
+		/*
+		|--------------------------------------------------------------------------
+		| Use compressed if success else original
+		|--------------------------------------------------------------------------
+		*/
+
+		$finalFile = (file_exists($outputFile) && filesize($outputFile) > 0)
+			? $outputFile
+			: $inputFile;
+
+		$finalPdf = file_get_contents($finalFile);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Delete temp files
+		|--------------------------------------------------------------------------
+		*/
+
+		@unlink($inputFile);
+		@unlink($outputFile);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Return PDF
+		|--------------------------------------------------------------------------
+		*/
 		 
 		return response()->json([
 			'message'  =>  'PDf Downloaded',
-			'pdf'      => base64_encode($pdfContent),
+			'pdf'      => base64_encode($finalPdf),
 			'report_download_status_data' => $patient['report_download_status_data'] ?? [],
 			'fileName' => $filename
 		], 200);
