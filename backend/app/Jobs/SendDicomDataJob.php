@@ -8,7 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
-use App\Http\Controllers\SuperAdmin\PatientController as SPatientController;
+use App\Http\Controllers\Api\PatientController as ApiPatientController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
  
@@ -34,7 +34,7 @@ class SendDicomDataJob implements ShouldQueue
 		$newRqst = new Request($input);
 		$newRqst->replace($input);
 
-		$pController = new SPatientController;
+		$pController = new ApiPatientController;
 		$pdfData = $pController->patientPdf($newRqst, $patient->id);
 
 		$pdfContent = $pdfData['pdfContent'];
@@ -57,13 +57,13 @@ class SendDicomDataJob implements ShouldQueue
 
 		// Convert
 		$convPdfToDicom = \Helper::convPdfTODicom($filePath, $outputPath,$patient);
-
+		 
 		$status = 1;
 		$msg = "DICOM transmission pending: file is awaiting processing.";
 		
 		// Debug safety
 		if (!$convPdfToDicom['file_exists']) {
-			
+			 
 			$status = 3;
 			$msg = 'DICOM conversion failed: source file not found.';
 			$patient->update(['is_dicom_file_send' => $status,'dicom_file_status' => $msg]);
@@ -72,7 +72,7 @@ class SendDicomDataJob implements ShouldQueue
 			}
 			return ['status' => $status,'msg' => $msg]; 
 		}
-		 
+		  
 		$clinic = $patient->clinic;
 		// create service with clinic connection
 		 

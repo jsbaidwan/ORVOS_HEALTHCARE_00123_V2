@@ -918,8 +918,25 @@ class PatientController extends Controller
 			$faxArr = json_decode($patient->fax_json,true);
 			$errorMsg = $faxArr['message'] ?? NULL;
 		}
-		return ['status' => $status,'class' => $class,'status_code' => $response['fax_status'],'err_msg' => $errorMsg]; 
+		return ['status_code' => $response['fax_status'],'err_msg' => $errorMsg,'fax_status_data' => $patient['fax_status_data']]; 
 		
+	}
+	
+	public function sendDicom(Request $request)
+	{
+		$input = $request->all();
+		
+		$patient = Patient::find($input['patient_id']);
+		if(!$patient){
+			return response()->json(['message' => 'This Patient not exist in your records.'], 422);  
+		}
+		
+		$sendDicom = new SendDicomDataJob($patient);
+		$response = $sendDicom->handle();
+		 
+		$response['dicom_file_status_data'] = $patient['dicom_file_status_data']; 
+		return json_encode($response);
+		 
 	}
 	
 	public function clone(Request $request)

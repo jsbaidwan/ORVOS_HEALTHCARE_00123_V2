@@ -3195,7 +3195,7 @@ class Helper{
 	
 	public static function convPdfTODicom($input,$output,$patient = null)
 	{ 
-		$script = base_path('plugins/dicom/pdf_to_dicom.js');
+		$script = base_path('plugins/dicom/pdf_to_dicom.cjs');
 		
 		$cmd = "node \"$script\" \"$input\" \"$output\"";
 
@@ -3223,6 +3223,7 @@ class Helper{
 				'referring_physician' => $dicomArr['Tags']['0008,0090']['Value'] ?? '',
 				'note'        => $patient->note ?? '',
 				'study_description' => $dicomArr['Tags']['0008,1030']['Value'] ?? '',
+				'accession_number' => $dicomArr['Tags']['0008,0050']['Value'] ?? '',
 			
 			]);
 			 

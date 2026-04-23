@@ -183,9 +183,9 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
               {row.is_dicom_file_send === 3 && (
                 <>
                   <br />
-                  <p className={`text-danger text-xs`}>
+                  <em className={`text-danger text-xs`}>
                     ({row.dicom_file_status_data?.message})
-                  </p>
+                  </em>
                 </>
               )}
             </p>

@@ -13,7 +13,7 @@ import PageLoader from '../Common/PageLoader';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 import Table from '../Common/Table';
 import Swal from 'sweetalert2';
-import { Mail, Download } from 'lucide-react';
+import { Mail, Download, Printer, Upload } from 'lucide-react';
 import Api from '../../utils/api';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,7 @@ import InfoItem from '../UI/InfoIteam';
 
 const PatientView = () => {
     const { id } = useParams();
-    const { getPatientById, getExistingPatient, downloadReport, sendReport } = usePatient();
+    const { getPatientById, getExistingPatient, downloadReport, sendReport, sendFax, sendDicomFile } = usePatient();
     const { user, getToken } = useAuth();
 
     const [loading, setLoading] = useState(true);
@@ -31,6 +31,8 @@ const PatientView = () => {
     const navigate = useNavigate();
     const [reportDownloadStatusData, setReportDownloadStatusData] = useState([]);
     const [reportSentStatusData, setReportSentStatusData] = useState([]);
+    const [faxStatusData, setFaxStatusData] = useState([]);
+    const [dicomStatusData, setDicomStatusData] = useState([]);
     const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
 
     // Stepper state for diagnosis formatting
@@ -60,6 +62,8 @@ const PatientView = () => {
     useEffect(() => {
         setReportDownloadStatusData(patient?.report_download_status_data || []);
         setReportSentStatusData(patient?.report_sent_status || []);
+        setFaxStatusData(patient?.fax_status_data || []);
+        setDicomStatusData(patient?.dicom_file_status_data || []);
 
     }, [patient]);
 
@@ -287,8 +291,6 @@ const PatientView = () => {
                     link.click();
                     link.remove();
 
-                    setReportDownloadStatusData(response?.data?.report_download_status_data || []);
-
                     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 
                     Swal.fire({
@@ -302,8 +304,18 @@ const PatientView = () => {
                     });
                 } else {
 
-                    return Swal.showValidationMessage('Failed to generate report. Please try again.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.message,
+                    });
+
+                    Swal.showValidationMessage('Failed to generate report. Please try again.');
                 }
+
+                setReportDownloadStatusData(response?.data?.report_download_status_data || []);
+
+                return false;
 
             }
         });
@@ -354,78 +366,254 @@ const PatientView = () => {
                         timer: 2000,
                         timerProgressBar: true
                     });
-                    setReportSentStatusData(response?.data?.report_sent_status || []);
 
                 } else {
-                    return Swal.showValidationMessage('Failed to send report. Please try again.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.message,
+                    });
+                    Swal.showValidationMessage('Failed to send report. Please try again.');
                 }
+                setReportSentStatusData(response?.data?.report_sent_status || []);
+                return false;
+            }
+        });
+    }
+
+    const handleFaxSend = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to send this patient's fax?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, send it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await sendFax(id);
+
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to send fax. Please try again.'
+                        );
+                        return false;
+                    }
+
+                    return response;
+
+                } catch (error) {
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const response = result.value;
+                if (response.status_code === 2) {
+                    Swal.fire({
+                        title: "Fax Sent",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.err_msg,
+                    });
+                    Swal.showValidationMessage('Failed to send fax. Please try again.');
+                }
+
+                setFaxStatusData(response?.data?.fax_status_data || []);
+                return false;
+            }
+        });
+    }
+
+    const handleDicomSend = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to send this patient's DICOM file?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, send it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await sendDicomFile(id);
+
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to send DICOM file. Please try again.'
+                        );
+                        return false;
+                    }
+
+                    return response;
+
+                } catch (error) {
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const response = result.value;
+                if (response.status === 2) {
+                    Swal.fire({
+                        title: "DICOM File Sent",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.dicom_file_status_data?.message,
+                    });
+                    Swal.showValidationMessage('Failed to send DICOM file. Please try again.');
+                }
+
+                setDicomStatusData(response?.data?.dicom_file_status_data || []);
+                return false;
             }
         });
     }
 
     let columns = [
         {
-            header: 'PDF Download Status',
+            header: 'PDF Download',
             accessor: 'report_download_status_data',
-            render: (row) => {
-                return <>
-                    <button className='flex text-center justify-center btn btn-primary btn-sm rounded w-full' onClick={() => handlePDFDownload(row.id)}>
-                        <Download className='w-4 h-4 mr-2' /> Download
+            render: (row) => (
+                <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
+
+                    <button
+                        onClick={() => handlePDFDownload(row.id)}
+                        className="w-full h-11 rounded btn-primary text-white text-sm font-medium flex items-center justify-center gap-2 transition"
+                    >
+                        <Download className="w-4 h-4" />
+                        Download PDF
                     </button>
-                    <div className="flex items-center gap-2 mt-2">
-                        <p className='text-black'>Status:-</p>
-                        <span className={`${reportDownloadStatusData?.class} text-sm`}>
+
+                    <div className='text-xs'>
+                        <p className="text-gray-500 uppercase tracking-wide">Status</p>
+                        <p className={`font-medium mt-1 break-words ${reportDownloadStatusData?.class}`}>
                             {reportDownloadStatusData?.name}
-                        </span>
+                        </p>
                     </div>
-                </>
-            }
+                </div>
+            )
         },
+
         {
-            header: 'Patient Report Email',
+            header: 'Email Report',
             accessor: 'patient_report_email_enabled',
-            render: (row) => {
-                return <>
-                    <button className='flex text-center justify-center btn btn-warning btn-sm rounded w-full' onClick={() => handlePDFSend(row.id)}>
-                        <Mail className='w-4 h-4 mr-2' /> Send
+            render: (row) => (
+                <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
+
+                    <button
+                        onClick={() => handlePDFSend(row.id)}
+                        className="w-full h-11 rounded btn-warning text-white text-sm font-medium flex items-center justify-center gap-2 transition"
+                    >
+                        <Mail className="w-4 h-4" />
+                        Send Email
                     </button>
-                    <div className="flex items-center gap-2 mt-2">
-                        <p className='text-black'>Status:-</p>
-                        <span className={`${reportSentStatusData?.class} text-sm`}>
+
+
+                    <div className='text-xs'>
+                        <p className="text-gray-500 uppercase tracking-wide">Status</p>
+                        <p className={`font-medium mt-1 break-words ${reportSentStatusData?.class}`}>
                             {reportSentStatusData?.status}
-                        </span>
+                        </p>
                     </div>
-                </>
-            }
+                </div>
+            )
         },
+
         {
-            header: 'Fax Status',
+            header: 'Fax',
             accessor: 'fax_status',
-            render: (row) => {
-                return <>
-                    <div className="flex items-center gap-2 mt-2">
-                        <p className='text-black'>Status:-</p>
-                        <span className={`${row.fax_status_data?.class} text-sm`}>
-                            {row.fax_status_data?.name}
-                        </span>
+            render: (row) => (
+                <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
+
+                    <button
+                        onClick={() => handleFaxSend(row.id)}
+                        className="w-full h-11 rounded btn-info text-white text-sm font-medium flex items-center justify-center gap-2 transition"
+                    >
+                        <Printer className="w-4 h-4" />
+                        Send Fax
+                    </button>
+
+                    <div className='text-xs'>
+                        <p className="text-gray-500 uppercase tracking-wide">Status</p>
+
+                        <p className={`font-medium mt-1 break-words ${faxStatusData?.class}`}>
+                            {faxStatusData?.name}
+                        </p>
+
+                        {faxStatusData?.message && (
+                            <p className={`mt-1 italic break-words ${faxStatusData?.class}`}>
+                                {faxStatusData?.message}
+                            </p>
+                        )}
                     </div>
-                </>
-            }
+                </div>
+            )
         },
+
         {
-            header: 'DICOM File Status',
+            header: 'DICOM',
             accessor: 'dicom_file_status',
-            render: (row) => {
-                return <>
-                    <div className="flex items-center gap-2 mt-2">
-                        <p className='text-black'>Status:-</p>
-                        <span className={`${row.dicom_file_status_data?.class} text-sm`}>
-                            {row.dicom_file_status_data?.name}
-                        </span>
+            render: (row) => (
+                <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
+
+                    <button
+                        onClick={() => handleDicomSend(row.id)}
+                        className="w-full h-11 rounded btn-teal text-white text-sm font-medium flex items-center justify-center gap-2 transition"
+                    >
+                        <Upload className="w-4 h-4" />
+                        Send DICOM
+                    </button>
+
+                    <div className='text-xs'>
+                        <p className="text-gray-500 uppercase tracking-wide">Status</p>
+
+                        <p className={`font-medium mt-1 break-words ${dicomStatusData?.class}`}>
+                            {dicomStatusData?.name}
+                        </p>
+
+                        {dicomStatusData?.message && (
+                            <p className={`mt-1 italic break-words ${dicomStatusData?.class}`}>
+                                {dicomStatusData?.message}
+                            </p>
+                        )}
                     </div>
-                </>
-            }
-        },
+                </div>
+            )
+        }
     ];
 
     // remove by accessor

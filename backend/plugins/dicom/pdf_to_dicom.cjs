@@ -150,8 +150,8 @@ function buildPatientMeta(pdfPath, jsonData) {
 	// SeriesDescription from note
 	const seriesDescription = String(d.note || '');
 
-    // AccessionNumber from p_code or id
-    const accessionNumber = String(d.p_code || d.id || "");
+    // AccessionNumber from accession_number
+    const accessionNumber = String(d.accession_number || "");
 
     // StudyDate + StudyTime from dos (date of service)
     const studyDate = toDicomDate(d.dos);
