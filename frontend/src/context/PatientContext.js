@@ -279,6 +279,23 @@ export const PatientProvider = ({ children }) => {
     }
   }
 
+  const reDiagnosis = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`clone`, 'POST', { patient_id: id }, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Re-diagnosis successfully', data: response.data };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
   const value = {
     patients,
     setPatients,
@@ -298,6 +315,7 @@ export const PatientProvider = ({ children }) => {
     sendReport,
     sendFax,
     sendDicomFile,
+    reDiagnosis,
   };
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;

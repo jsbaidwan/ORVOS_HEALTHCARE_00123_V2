@@ -925,6 +925,9 @@ class PatientController extends Controller
 	public function sendPdf(Request $request)
 	{
 		$input = $request->all();
+		if(empty($input['patient_id'])){
+			return response()->json(['message' => 'This Patient id is required.'], 422); 
+		}
 		   
 		$patient = Patient::find($input['patient_id']);
 		if(!$patient){
@@ -945,6 +948,10 @@ class PatientController extends Controller
 	public function sendFax(Request $request)
 	{
 		$input = $request->all();
+		
+		if(empty($input['patient_id'])){
+			return response()->json(['message' => 'This Patient id is required.'], 422); 
+		}
 		
 		$patient = Patient::find($input['patient_id']);
 		if(!$patient){
@@ -985,6 +992,9 @@ class PatientController extends Controller
 	public function sendDicom(Request $request)
 	{
 		$input = $request->all();
+		if(empty($input['patient_id'])){
+			return response()->json(['message' => 'This Patient id is required.'], 422); 
+		}
 		
 		$patient = Patient::find($input['patient_id']);
 		if(!$patient){
@@ -1003,25 +1013,24 @@ class PatientController extends Controller
 	{
 		$input = $request->all();
 		if(empty($input['patient_id'])){
-			Toastr::error('This Patient does not exist our record.', 'Error');
-			return redirect()->back();
+			return response()->json(['message' => 'This Patient id is required.'], 422); 
 		}
+		
 		$patientId = $input['patient_id'];
 		$patient = \Helper::getPatientById($patientId)['patient'];
 		if(!$patient){
-			Toastr::error('This Patient does not exist our record.', 'Error');
-			return redirect()->back();
+			return response()->json(['message' => 'This Patient not exist in your records.'], 422); 
 		}
 		 
 		/* clone patient */
 		$newPatient = $patient->replicate();
 
 		/* generate new slug */
-		$providerId = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7);
+		$randId = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7);
 
 		$newPatient->p_code =\Helper::genPatientCode()['code'];
-		$newPatient->provider_id = $providerId;
-		$newPatient->slug = \Helper::genSlug($providerId)['slug'];
+		 
+		$newPatient->slug = \Helper::genSlug($randId)['slug'];
 		
 
 		/* reset required fields */
@@ -1050,22 +1059,23 @@ class PatientController extends Controller
 		$newPatient->study_id = null;
 		$newPatient->dicom_json = null;
 		 
-		$newDestinationPath = public_path('uploads/patients/' . $newPatient->slug);
+		$newDestinationPath = storage_path('app/public/uploads/patients/' . $newPatient->slug);
+
 		if (!file_exists($newDestinationPath)) {
 			mkdir($newDestinationPath, 0755, true);
 		}
-		
-		if(!empty($patient->slug)){
-			$destinationPath = public_path('uploads/patients/' . $patient->slug);
-			if(file_exists($destinationPath)){
-				\File::copyDirectory($destinationPath, $newDestinationPath); 
-			}	
+
+		if (!empty($patient->slug)) {
+			$destinationPath = storage_path('app/public/uploads/patients/' . $patient->slug);
+
+			if (file_exists($destinationPath)) {
+				\File::copyDirectory($destinationPath, $newDestinationPath);
+			}
 		}
 		 
 		/* save as new record */
 		$newPatient->save();
-		Toastr::success('Patient record cloned successfully.', 'Success');  
-		return redirect()->back();
+		return response()->json(['message' => 'Patient record cloned successfully.'], 200);
 	}
 	
 }

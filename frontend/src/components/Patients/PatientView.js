@@ -21,7 +21,7 @@ import InfoItem from '../UI/InfoIteam';
 
 const PatientView = () => {
     const { id } = useParams();
-    const { getPatientById, getExistingPatient, downloadReport, sendReport, sendFax, sendDicomFile } = usePatient();
+    const { getPatientById, getExistingPatient, downloadReport, sendReport, sendFax, sendDicomFile, reDiagnosis } = usePatient();
     const { user, getToken } = useAuth();
 
     const [loading, setLoading] = useState(true);
@@ -498,6 +498,67 @@ const PatientView = () => {
                 }
 
                 setDicomStatusData(response?.data?.dicom_file_status_data || []);
+                return false;
+            }
+        });
+    }
+
+    const handleReDiagnosis = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to re-diagnosis this patient?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, re-diagnosis it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await reDiagnosis(id);
+
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to re-diagnosis. Please try again.'
+                        );
+                        return false;
+                    }
+
+                    return response;
+
+                } catch (error) {
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const response = result.value;
+                if (response.status === 200) {
+                    Swal.fire({
+                        title: "Re-Diagnosis",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.message,
+                    });
+                    Swal.showValidationMessage('Failed to re-diagnosis. Please try again.');
+                }
+
+
                 return false;
             }
         });
@@ -1030,7 +1091,7 @@ const PatientView = () => {
                                 {/* Bottom Actions */}
                                 <div className="mt-8 border-t border-gray-100 pt-6">
                                     <h3 className="text-sm font-medium text-gray-700 mb-4">Clone and Re-diagnosis the Patient</h3>
-                                    <button className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none">
+                                    <button className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none" onClick={() => handleReDiagnosis(patient.id)}>
                                         <ArrowPathIcon className="w-4 h-4 mr-2" />
                                         Re diagnosis
                                     </button>
