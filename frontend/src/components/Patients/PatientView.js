@@ -743,7 +743,7 @@ const PatientView = () => {
                                                 </div>
                                             }
                                         />
-                                        <InfoItem label="DOB" value={patient?.dob} />
+                                        <InfoItem label="DOB" value={patient?.date_of_birth} />
                                         <InfoItem label="Gender" value={patient?.gender_data?.name} />
                                         <InfoItem
                                             label="Diagnosis Status"
@@ -1024,7 +1024,7 @@ const PatientView = () => {
                                                 </div>
                                             }
                                         />
-                                        <InfoItem label="DOB" value={patient?.dob} />
+                                        <InfoItem label="DOB" value={patient?.date_of_birth} />
                                         <InfoItem label="Gender" value={patient?.gender_data?.name} />
                                         <InfoItem
                                             label="Right Eye Diagnosis Details"
@@ -1069,7 +1069,7 @@ const PatientView = () => {
                                             }
                                         />
                                         <InfoItem label="DOS" value={patient?.dos || patient?.diagnosis?.dos} />
-                                        <InfoItem label="Remark At" value={patient?.remark_at || patient?.diagnosis?.remark_at} />
+                                        <InfoItem label="Remark At" value={patient?.display_remark_at || patient?.diagnosis?.display_remark_at} />
 
                                         <InfoItem
                                             label="Remark By"

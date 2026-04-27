@@ -72,7 +72,7 @@ const Dashboard = () => {
                 <Link
                   to={getRoutePath(`/clinics/view/${row.id}`)}
                   className="text-primary hover:text-primary-700 break-words"
-                  target="_blank"
+
                 >
                   {row?.code || "-"}
                 </Link>
@@ -214,7 +214,7 @@ const Dashboard = () => {
               <Link
                 to={getRoutePath(`/users/view/${row.id}`)}
                 className="text-primary hover:text-primary-700 break-words"
-                target="_blank"
+
               >
                 {row.code || "-"}
               </Link>
@@ -268,7 +268,7 @@ const Dashboard = () => {
               <div
                 key={patient.id}
                 className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors duration-200 cursor-pointer"
-                onClick={() => navigate(`/patients/view/${patient.id}`)}
+                onClick={() => navigate(getRoutePath(`/patients/view/${patient.id}`))}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
@@ -300,7 +300,7 @@ const Dashboard = () => {
           </div>
 
           <button
-            onClick={() => navigate('/patients/pending')}
+            onClick={() => navigate(getRoutePath('/patients/pending'))}
             className="w-full btn-primary"
           >
             View All Pending
@@ -322,7 +322,7 @@ const Dashboard = () => {
               < div
                 key={patient.id}
                 className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
-                onClick={() => navigate(`/patients/view/${patient.id}`)}
+                onClick={() => navigate(getRoutePath(`/patients/view/${patient.id}`))}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
@@ -355,7 +355,7 @@ const Dashboard = () => {
           </div>
 
           <button
-            onClick={() => navigate('/patients/completed')}
+            onClick={() => navigate(getRoutePath('/patients/completed'))}
             className="w-full btn-primary"
           >
             View All Completed
@@ -370,7 +370,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Clinics</h2>
             <button
-              onClick={() => navigate('/clinics')}
+              onClick={() => navigate(getRoutePath('/clinics'))}
               className="btn-primary text-sm px-4 py-1.5"
             >
               View all
@@ -382,7 +382,7 @@ const Dashboard = () => {
               data={topClinics}
               emptyMessage="No clinics available"
               isDataLoaded={true}
-              onRowClick={(row) => navigate(`/clinics/view/${row.id}`)}
+              onRowClick={(row) => navigate(getRoutePath(`/clinics/view/${row.id}`))}
               permissions={{ read: true, write: true }}
             />
           </div>
@@ -393,7 +393,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Orvos Doctors</h2>
             <button
-              onClick={() => navigate('/users')}
+              onClick={() => navigate(getRoutePath('/users'))}
               className="btn-primary text-sm px-4 py-1.5"
             >
               View all
@@ -406,7 +406,7 @@ const Dashboard = () => {
               data={topOrvosDoctors}
               emptyMessage="No doctors available"
               isDataLoaded={true}
-              onRowClick={(row) => navigate(`/users/view/${row.id}`)}
+              onRowClick={(row) => navigate(getRoutePath(`/users/view/${row.id}`))}
               permissions={{ read: true, write: true }}
             />
 
