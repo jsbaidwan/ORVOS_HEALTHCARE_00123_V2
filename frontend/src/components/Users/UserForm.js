@@ -14,7 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon,PhotoIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
@@ -72,24 +72,24 @@ const createUserSchema = (isEdit) =>
 
     password: isEdit
       ? yup
-          .string()
-          .transform((v) => (v === '' ? undefined : v))
-          .notRequired()
-          .test('len', 'Password must be at least 8 characters', (v) => !v || v.length >= 8)
+        .string()
+        .transform((v) => (v === '' ? undefined : v))
+        .notRequired()
+        .test('len', 'Password must be at least 8 characters', (v) => !v || v.length >= 8)
       : yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
     confirm_password: isEdit
       ? yup
-          .string()
-          .transform((v) => (v === '' ? undefined : v))
-          .test('match', 'Passwords must match', function (v) {
-            const p = this.parent.password;
-            if (!p && !v) return true;
-            return v === p;
-          })
+        .string()
+        .transform((v) => (v === '' ? undefined : v))
+        .test('match', 'Passwords must match', function (v) {
+          const p = this.parent.password;
+          if (!p && !v) return true;
+          return v === p;
+        })
       : yup
-          .string()
-          .required('Please confirm password')
-          .oneOf([yup.ref('password')], 'Passwords must match'),
+        .string()
+        .required('Please confirm password')
+        .oneOf([yup.ref('password')], 'Passwords must match'),
   });
 
 const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
@@ -146,10 +146,10 @@ const buildDefaults = (data, insuranceCarriersList) => ({
   clinic_ids: Array.isArray(data?.clinic_ids) && data.clinic_ids.length
     ? data.clinic_ids.map((id) => String(id))
     : Array.isArray(data?.clinic_users) && data.clinic_users.length
-    ? data.clinic_users.map((cu) => String(cu.clinic_id))
-    : data?.clinic_id != null
-    ? [String(data.clinic_id)]
-    : [],
+      ? data.clinic_users.map((cu) => String(cu.clinic_id))
+      : data?.clinic_id != null
+        ? [String(data.clinic_id)]
+        : [],
   address: data?.address || '',
   bio: data?.bio || '',
   status: data?.status ?? true,
@@ -158,15 +158,15 @@ const buildDefaults = (data, insuranceCarriersList) => ({
   provider_id: data?.provider_id || '',
   licences: Array.isArray(data?.licenses) && data.licenses.length
     ? data.licenses.map((l) => ({
-        id: l.id || null,
-        licence_number: l.licence_number || '',
-        l_state_id: l.l_state_id != null ? String(l.l_state_id) : '',
-        expiry_date: l.expiry_date ? new Date(l.expiry_date) : null,
-        insurance_carriers: buildInsuranceDefaults(
-          l.insurance_carriers_ids ? (typeof l.insurance_carriers_ids === 'string' ? JSON.parse(l.insurance_carriers_ids) : l.insurance_carriers_ids) : null,
-          insuranceCarriersList
-        ),
-      }))
+      id: l.id || null,
+      licence_number: l.licence_number || '',
+      l_state_id: l.l_state_id != null ? String(l.l_state_id) : '',
+      expiry_date: l.expiry_date ? new Date(l.expiry_date) : null,
+      insurance_carriers: buildInsuranceDefaults(
+        l.insurance_carriers_ids ? (typeof l.insurance_carriers_ids === 'string' ? JSON.parse(l.insurance_carriers_ids) : l.insurance_carriers_ids) : null,
+        insuranceCarriersList
+      ),
+    }))
     : [{ id: null, licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null, insuranceCarriersList) }],
   password: '',
   confirm_password: '',
@@ -179,7 +179,7 @@ const UserForm = ({ user: userProp, onClose }) => {
   const { addUser, updateUser, getUserById, getExistingUser } = useUser();
   const { clinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
-  const {additionalData} = useAdditionalData();
+  const { additionalData } = useAdditionalData();
 
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
@@ -211,9 +211,9 @@ const UserForm = ({ user: userProp, onClose }) => {
   } = useForm({
     resolver: yupResolver(userSchema),
     defaultValues: buildDefaults(userProp || {}, []),
-    
+
   });
-  
+
   const { fields: licenceFields, append: appendLicence, remove: removeLicence } = useFieldArray({
     control,
     name: 'licences',
@@ -230,29 +230,29 @@ const UserForm = ({ user: userProp, onClose }) => {
 
   const fetched = useRef(false);
   const uId = userProp?.id || id || null;
-  
-     
+
+
   const loadData = useCallback(async () => {
     try {
-      
+
       const promises = [
         getClinics(1, {}, false),
-        
+
       ];
-      
+
       if (uId) {
         promises.push(getUserById(uId));
       }
-      
+
       setStates(additionalData?.states || []);
       setRoles(additionalData?.roles || []);
       setInsuranceCarriers(additionalData?.insuranceCarriers || []);
-      
+
       const results = await Promise.all(promises);
       const fresh = results[1];
-      if(fresh?.status){
-        if(fresh?.status !== 200){
-          errorsFormatted({errors: {general: fresh?.errors}}, setError);
+      if (fresh?.status) {
+        if (fresh?.status !== 200) {
+          errorsFormatted({ errors: { general: fresh?.errors } }, setError);
           return;
         }
       }
@@ -264,27 +264,27 @@ const UserForm = ({ user: userProp, onClose }) => {
     } finally {
       hideLoader();
     }
-  }, [uId, getClinics, additionalData, getUserById, hideLoader, reset,setError]);
+  }, [uId, getClinics, additionalData, getUserById, hideLoader, reset, setError]);
 
   useEffect(() => {
     const existingUser = getExistingUser(id);
-    
+
     if (existingUser && !userData) {
-       
-        setUserData(existingUser);
-        setExistingDocs(existingUser.display_documents || []);
-       
-        setTimeout(() => {
-          reset(buildDefaults(existingUser, additionalData?.insuranceCarriers));
-        }, 10);
-        
+
+      setUserData(existingUser);
+      setExistingDocs(existingUser.display_documents || []);
+
+      setTimeout(() => {
+        reset(buildDefaults(existingUser, additionalData?.insuranceCarriers));
+      }, 10);
+
     }
-   
+
     if (fetched.current === false) {
       loadData();
       fetched.current = true;
     }
-  }, [loadData, id, getExistingUser, reset, additionalData,userData]);
+  }, [loadData, id, getExistingUser, reset, additionalData, userData]);
 
   const clinicOptions =
     clinics?.map((c) => ({
@@ -292,13 +292,13 @@ const UserForm = ({ user: userProp, onClose }) => {
       label: c.name || '',
     })) || [];
 
-    
+
   const handleRemoveNewDoc = (index) => {
     setNewDocs((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data) => {
-    
+
     if (isOrvosDoctor) {
       const hasExistingSignature = userData?.display_signature?.status === 200 && !signatureRemoved;
       const hasNewSignature = data.signature?.length > 0;
@@ -382,14 +382,14 @@ const UserForm = ({ user: userProp, onClose }) => {
       const result = userData?.id
         ? await updateUser(userData.id, formData)
         : await addUser(formData);
-      
+
       if (result && (result.status === 200 || result.success)) {
         toast.success(result?.message || (userData?.id ? 'User updated successfully' : 'User created successfully'));
         navigate(getRoutePath('/users'));
       } else {
- 
+
         errorsFormatted(result, setError);
-         
+
       }
     } catch (error) {
       errorsFormatted(error, setError);
@@ -422,7 +422,7 @@ const UserForm = ({ user: userProp, onClose }) => {
         <div className="bg-white px-5 p-4">
           <div className="mt-3">
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 mt-4">
-             
+
               <ErrorHandle errors={errors} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -520,7 +520,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                   />
                 )}
               </div>
- 
+
               {/* ======= ORVOS DOCTOR FIELDS (role_id === 2) ======= */}
               {isOrvosDoctor && (
                 <>
@@ -557,12 +557,12 @@ const UserForm = ({ user: userProp, onClose }) => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Licence Details <span className="text-red-500 ml-1">*</span>
                     </h3>
-                   
+
                     <div className="space-y-3">
                       {licenceFields.map((field, index) => (
                         <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                           
+
                             <FormField
                               label="Licence Number"
                               name={`licences.${index}.licence_number`}
@@ -587,7 +587,7 @@ const UserForm = ({ user: userProp, onClose }) => {
                                 errors?.l_state_id?.[index]?.message ??
                                 errors?.l_state_id?.message
                               }
-                             
+
                             />
                             <Controller
                               name={`licences.${index}.expiry_date`}
@@ -616,10 +616,10 @@ const UserForm = ({ user: userProp, onClose }) => {
                           <div className="mt-4 pt-3 border-t border-gray-200">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                             
+
                               {insuranceCarriers?.map((carrier) => {
                                 const key = String(carrier.id);
-                               
+
                                 const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
                                 const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
 
@@ -874,35 +874,38 @@ const UserForm = ({ user: userProp, onClose }) => {
 
 
               {/* Password Section */}
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    label="Password"
-                    name="password"
-                    type="password"
-                    registration={register('password')}
-                    placeholder="••••••••••••••••"
-                    required={!userData?.id}
-                    error={errors.password?.message}
-                  />
-                  <FormField
-                    label="Confirm Password"
-                    name="confirm_password"
-                    type="password"
-                    registration={register('confirm_password')}
-                    placeholder="••••••••••••••••"
-                    required={!userData?.id}
-                    error={errors.confirm_password?.message}
-                  />
+
+              {!isEditMode &&
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      label="Password"
+                      name="password"
+                      type="password"
+                      registration={register('password')}
+                      placeholder="••••••••••••••••"
+                      required={!userData?.id}
+                      error={errors.password?.message}
+                    />
+                    <FormField
+                      label="Confirm Password"
+                      name="confirm_password"
+                      type="password"
+                      registration={register('confirm_password')}
+                      placeholder="••••••••••••••••"
+                      required={!userData?.id}
+                      error={errors.confirm_password?.message}
+                    />
+                  </div>
                 </div>
-              </div>
+              }
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                
+
                 <button type="submit" className="btn-primary flex items-center justify-center" disabled={isSubmitting}>
                   {isSubmitting ? (
                     'Processing...'

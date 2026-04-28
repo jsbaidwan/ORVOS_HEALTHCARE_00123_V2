@@ -1,54 +1,75 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { toast } from 'sonner';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import FormField from '../UI/FormField';
+import ErrorHandle from '../Common/ErrorHandle';
+import { errorsFormatted } from '../../utils/errorHandler';
+import { useLoader } from '../../context/LoaderContext';
+import { useChangePassword } from '../../context/ChangePasswordContext';
+
+const passwordSchema = yup.object({
+  current_password: yup
+    .string()
+    .required('Current password is required'),
+  new_password: yup
+    .string()
+    .required('New password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .matches(
+      /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,}$/,
+      'The password must contain at least one capital letter, one number, and one special character.'
+    ),
+  confirm_password: yup
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('new_password')], 'Passwords do not match'),
+});
+
+const buildDefaults = () => ({
+  current_password: '',
+  new_password: '',
+  confirm_password: '',
+});
 
 const ChangePassword = () => {
-  const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+  const { changePassword } = useChangePassword();
+  const { showLoader, hideLoader } = useLoader();
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: yupResolver(passwordSchema),
+    defaultValues: buildDefaults(),
   });
-  const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setErrors({ ...errors, [name]: '' });
-  };
+  const onSubmit = async (data) => {
+    const payload = {
+      current_password: data.current_password,
+      new_password: data.new_password,
+      confirm_password: data.confirm_password,
+    };
 
-  const validate = () => {
-    const newErrors = {};
+    try {
+      showLoader();
+      const result = await changePassword(payload);
 
-    if (!formData.currentPassword) {
-      newErrors.currentPassword = 'Current password is required';
-    }
-
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required';
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (validate()) {
-      // Handle password change logic
-      console.log('Password change:', formData);
-      setSuccess(true);
-      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      
-      setTimeout(() => setSuccess(false), 3000);
+      if (result && (result.status === 200 || result.success)) {
+        toast.success(result?.message);
+        reset(buildDefaults());
+      } else {
+        errorsFormatted(result, setError);
+      }
+    } catch (error) {
+      errorsFormatted(error, setError);
+    } finally {
+      hideLoader();
     }
   };
 
@@ -57,44 +78,37 @@ const ChangePassword = () => {
       <h2 className="text-xl font-bold text-gray-900 mb-4">Change Password</h2>
       <p className="text-gray-600 mb-6">Update your password to keep your account secure</p>
 
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-600 text-sm font-medium">✓ Password changed successfully!</p>
-        </div>
-      )}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <ErrorHandle errors={errors} />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
           label="Current Password"
-          name="currentPassword"
+          name="current_password"
           type="password"
-          value={formData.currentPassword}
-          onChange={handleChange}
+          registration={register('current_password')}
           placeholder="Enter current password"
-          error={errors.currentPassword}
           required
+          error={errors.current_password?.message}
         />
 
         <FormField
           label="New Password"
-          name="newPassword"
+          name="new_password"
           type="password"
-          value={formData.newPassword}
-          onChange={handleChange}
+          registration={register('new_password')}
           placeholder="Enter new password (min. 8 characters)"
-          error={errors.newPassword}
           required
+          error={errors.new_password?.message}
         />
 
         <FormField
           label="Confirm New Password"
-          name="confirmPassword"
+          name="confirm_password"
           type="password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
+          registration={register('confirm_password')}
           placeholder="Confirm new password"
-          error={errors.confirmPassword}
           required
+          error={errors.confirm_password?.message}
         />
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
@@ -107,9 +121,20 @@ const ChangePassword = () => {
           </ul>
         </div>
 
-        <div className="pt-4">
-          <button type="submit" className="btn-primary">
-            Update Password
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <button
+            type="submit"
+            className="btn-primary flex items-center justify-center"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              'Processing...'
+            ) : (
+              <>
+                <PencilSquareIcon className="w-4 h-4 mr-2" />
+                Update Password
+              </>
+            )}
           </button>
         </div>
       </form>
@@ -118,5 +143,3 @@ const ChangePassword = () => {
 };
 
 export default ChangePassword;
-
-

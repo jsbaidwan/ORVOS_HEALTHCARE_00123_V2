@@ -6,6 +6,7 @@ import { ClinicGroupProvider } from './context/ClinicGroupContext';
 import { PatientProvider } from './context/PatientContext';
 import { ReportProvider } from './context/ReportContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { ChangePasswordProvider } from './context/ChangePasswordContext';
 import { UserProvider } from './context/UserContext';
 import { ForgotPasswordProvider } from './context/ForgotPasswordContext';
 import { PermissionsProvider, usePermissions } from './context/PermissionsContext';
@@ -414,9 +415,11 @@ function App() {
                   <PatientProvider>
                     <ReportProvider>
                       <SettingsProvider>
-                        <UserProvider>
-                          <AppContent />
-                        </UserProvider>
+                        <ChangePasswordProvider>
+                          <UserProvider>
+                            <AppContent />
+                          </UserProvider>
+                        </ChangePasswordProvider>
                       </SettingsProvider>
                     </ReportProvider>
                   </PatientProvider>
