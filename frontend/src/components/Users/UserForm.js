@@ -143,6 +143,7 @@ const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
 };
 
 const buildDefaults = (data, insuranceCarriersList) => ({
+
   first_name: data?.first_name || '',
   last_name: data?.last_name || '',
   email: data?.email || '',
@@ -189,7 +190,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
 
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
-  const isSuperAdminProfile = isProfile && (authUser?.role_id === 1 || authUser?.role?.id === 1);
+  const [isSuperAdminProfile, setIsSuperAdminProfile] = useState(isProfile && (authUser?.role_id === 1));
 
   const [userData, setUserData] = useState(userProp || null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -223,6 +224,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
     defaultValues: buildDefaults(userProp || {}, []),
 
   });
+
 
   const { fields: licenceFields, append: appendLicence, remove: removeLicence } = useFieldArray({
     control,
@@ -269,6 +271,9 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
       if (fresh?.user) {
         setUserData(fresh.user);
         setExistingDocs(fresh.user.display_documents || []);
+        if (fresh?.user?.role_id === 1) {
+          setIsSuperAdminProfile(true);
+        }
         reset(buildDefaults(fresh.user, additionalData?.insuranceCarriers));
       }
     } finally {
@@ -283,6 +288,9 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
 
       setUserData(existingUser);
       setExistingDocs(existingUser.display_documents || []);
+      if (existingUser?.role_id === 1) {
+        setIsSuperAdminProfile(true);
+      }
 
       setTimeout(() => {
         reset(buildDefaults(existingUser, additionalData?.insuranceCarriers));
