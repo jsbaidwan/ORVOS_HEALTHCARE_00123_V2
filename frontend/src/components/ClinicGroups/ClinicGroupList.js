@@ -84,7 +84,7 @@ const ClinicGroupList = ({ archived = false }) => {
 
       const seq = ++requestSeqRef.current;
       try {
-        setIsDataLoaded(true);
+
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
 
@@ -95,6 +95,7 @@ const ClinicGroupList = ({ archived = false }) => {
           setErrors({ general: response?.message });
 
         }
+        setIsDataLoaded(true);
 
         // hideLoader();
       } catch (error) {

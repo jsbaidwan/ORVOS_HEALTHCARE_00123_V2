@@ -383,7 +383,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
                   <ArchiveBoxIcon className="w-4 h-4 mr-2" />
                   Archived Users
                 </button>
- 
+
               </>
             ) : (
               <button
@@ -438,6 +438,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
           emptyMessage="No users found"
           isDataLoaded={isDataLoaded}
           permissions={{ read: permission(3, 'read'), write: permission(3, 'write') }}
+
         />
       </div>
 

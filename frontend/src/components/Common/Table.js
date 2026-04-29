@@ -164,16 +164,37 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
             ))
           ) : sortedData?.length === 0 ? (
             // ❌ No data
-            <tr>
-              <td colSpan={filteredColumns.length} className="px-6 py-8 text-center text-gray-500 border-r border-b">
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                    <PlusIcon className="w-8 h-8 text-gray-500" />
+
+            isDataLoaded ?
+              <tr>
+
+                <td colSpan={filteredColumns.length} className="px-6 py-8 text-center text-gray-500 border-r border-b">
+
+
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                      <PlusIcon className="w-8 h-8 text-gray-500" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">{emptyMessage}</h3>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">{emptyMessage}</h3>
-                </div>
-              </td>
-            </tr>
+
+
+                </td>
+              </tr>
+              : (
+
+                Array.from({ length: 2 }).map((_, rowIndex) => (
+                  <tr key={rowIndex} className="divide-x divide-gray-100 blur-sm animate-pulse">
+                    {filteredColumns.map((_, colIndex) => (
+                      <td key={colIndex} className="px-5 py-4 border-r border-b">
+                        <div className="h-10 w-full bg-gray-200 rounded-md"></div>
+                      </td>
+                    ))}
+                  </tr>
+                ))
+
+              )
+
           ) : (
             // ✅ Actual table data
             sortedData?.map((row, rowIndex) => (
