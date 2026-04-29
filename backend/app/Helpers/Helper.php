@@ -1286,11 +1286,13 @@ class Helper{
 			$query->where('active',$filters['active']);
 		}
 		
-		if(!empty($filters['q'])){
-			 
-			$query->where(function ($q) use ($filters) {
-				$q->where('name', 'LIKE', '%' . $filters['q'] . '%');
-				 
+		if (!empty($filters['q'])) {
+
+			$search = trim($filters['q']);
+
+			$query->where(function ($q) use ($search) {
+				$q->where('name', 'LIKE', "%{$search}%")
+				  ->orWhere('code', 'LIKE', "%{$search}%");
 			});
 		}
 		
