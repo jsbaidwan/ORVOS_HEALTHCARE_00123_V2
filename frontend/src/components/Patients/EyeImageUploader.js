@@ -23,7 +23,7 @@ export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor,
 
   return (
     <>
-      <div className={`relative group overflow-hidden rounded-lg border-2 border-${eyeColor}-200`}>
+      <div className={`relative group overflow-hidden rounded-lg border-${eyeColor ? 2 : 1} border-${eyeColor}-200`}>
         {/* Dark overlay on hover */}
         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-200 z-10 pointer-events-none"></div>
 

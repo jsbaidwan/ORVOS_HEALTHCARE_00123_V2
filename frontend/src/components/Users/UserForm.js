@@ -20,20 +20,25 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
 import Select from 'react-select';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
+import { useAuth } from '../../context/AuthContext';
 import BlobFileItem from '../UI/BlobFileItem';
 
-const createUserSchema = (isEdit) =>
+const createUserSchema = (isEdit, skipRoleAndClinic = false) =>
   yup.object({
     first_name: yup.string().required('First name is required').trim(),
     last_name: yup.string().required('Last name is required').trim(),
     email: yup.string().email('Invalid email').required('Email is required').trim(),
     phone_number: yup.string(),
-    role_id: yup.string().required('User type is required'),
-    clinic_ids: yup.array().of(yup.string()).when('role_id', {
-      is: (val) => val && val !== '2',
-      then: (schema) => schema.min(1, 'At least one clinic is required'),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    role_id: skipRoleAndClinic
+      ? yup.string().notRequired()
+      : yup.string().required('User type is required'),
+    clinic_ids: skipRoleAndClinic
+      ? yup.array().of(yup.string()).notRequired()
+      : yup.array().of(yup.string()).when('role_id', {
+        is: (val) => val && val !== '2',
+        then: (schema) => schema.min(1, 'At least one clinic is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
     address: yup.string().required('Address is required').trim(),
     bio: yup.string().trim(),
     status: yup.boolean().required('Status is required'),
@@ -172,7 +177,7 @@ const buildDefaults = (data, insuranceCarriersList) => ({
   confirm_password: '',
 });
 
-const UserForm = ({ user: userProp, onClose }) => {
+const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
   const { id: idParam } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
@@ -180,9 +185,11 @@ const UserForm = ({ user: userProp, onClose }) => {
   const { clinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
   const { additionalData } = useAdditionalData();
+  const { user: authUser, updateUser: setAuthUser } = useAuth();
 
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
+  const isSuperAdminProfile = isProfile && (authUser?.role_id === 1 || authUser?.role?.id === 1);
 
   const [userData, setUserData] = useState(userProp || null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -197,7 +204,10 @@ const UserForm = ({ user: userProp, onClose }) => {
   const [signatureRemoved, setSignatureRemoved] = useState(false);
   const { id } = useParams();
 
-  const userSchema = useMemo(() => createUserSchema(isEditMode), [isEditMode]);
+  const userSchema = useMemo(
+    () => createUserSchema(isEditMode, isSuperAdminProfile),
+    [isEditMode, isSuperAdminProfile]
+  );
 
   const {
     register,
@@ -384,8 +394,24 @@ const UserForm = ({ user: userProp, onClose }) => {
         : await addUser(formData);
 
       if (result && (result.status === 200 || result.success)) {
+        if (userData?.id && authUser?.id === userData.id) {
+          try {
+            const fresh = await getUserById(userData.id);
+            if (fresh?.status === 200 && fresh?.user) {
+              setAuthUser(fresh.user);
+            }
+          } catch (e) {
+            // ignore: header will refresh on next auth load
+          }
+        }
+
         toast.success(result?.message || (userData?.id ? 'User updated successfully' : 'User created successfully'));
-        navigate(getRoutePath('/users'));
+
+        if (isProfile) {
+          navigate(getRoutePath('/profile'));
+        } else {
+          navigate(getRoutePath('/users'));
+        }
       } else {
 
         errorsFormatted(result, setError);
@@ -409,15 +435,20 @@ const UserForm = ({ user: userProp, onClose }) => {
 
   return (
     <div className="py-6">
-      <Breadcrumb />
+
+      {!isProfile &&
+        <Breadcrumb />
+      }
 
       <div className="mb-3">
-        <div className="bg-white px-6 py-4 border-b rounded-t-lg shadow-sm border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            {userData?.id ? 'Edit User' : 'Add User'}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">Basic information about the user.</p>
-        </div>
+
+        {!isProfile &&
+          <div className="bg-white px-6 py-4 border-b rounded-t-lg shadow-sm border-gray-200">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              {userData?.id ? 'Edit User' : 'Add User'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">Basic information about the user.</p>
+          </div>}
 
         <div className="bg-white px-5 p-4">
           <div className="mt-3">
@@ -470,17 +501,19 @@ const UserForm = ({ user: userProp, onClose }) => {
                 />
               </div>
 
-              <div className={`grid grid-cols-1 ${showClinics ? 'md:grid-cols-2' : ''} gap-4`}>
-                <FormField
-                  label="User Type"
-                  name="role_id"
-                  type="select"
-                  registration={register('role_id')}
-                  options={roles?.map((r) => ({ value: r.id, label: r.name }))}
-                  required
-                  error={errors.role_id?.message}
-                />
-                {showClinics && (
+              <div className={`grid grid-cols-1 ${showClinics && !isSuperAdminProfile ? 'md:grid-cols-2' : ''} gap-4`}>
+                {!isSuperAdminProfile && (
+                  <FormField
+                    label="User Type"
+                    name="role_id"
+                    type="select"
+                    registration={register('role_id')}
+                    options={roles?.map((r) => ({ value: r.id, label: r.name }))}
+                    required
+                    error={errors.role_id?.message}
+                  />
+                )}
+                {showClinics && !isSuperAdminProfile && (
                   <Controller
                     name="clinic_ids"
                     control={control}
@@ -875,7 +908,7 @@ const UserForm = ({ user: userProp, onClose }) => {
 
               {/* Password Section */}
 
-              {!isEditMode &&
+              {(!isEditMode) &&
                 <div className="border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}

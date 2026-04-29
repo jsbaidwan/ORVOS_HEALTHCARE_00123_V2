@@ -122,8 +122,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         setOpenParentId(prev => (prev === item.basePath ? null : item.basePath))
                       }
                       className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path) || openParentId === item.basePath
-                          ? 'bg-white text-primary'
-                          : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
+                        ? 'bg-white text-primary'
+                        : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
                         }`}
                     >
                       <span className="flex items-center space-x-3">
@@ -144,8 +144,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <Link
                               to={subItem.path}
                               className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${location.pathname === subItem.path
-                                  ? 'bg-primary-100 text-primary border'
-                                  : 'hover:bg-primary-50 hover:text-primary'
+                                ? 'bg-primary-100 text-primary border'
+                                : 'hover:bg-primary-50 hover:text-primary'
                                 }`}
                             >
                               {subItem.icon && (
@@ -162,8 +162,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <Link
                     to={item.path}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
-                        ? 'bg-white text-primary'
-                        : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
+                      ? 'bg-white text-primary'
+                      : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'
                       }`}
                   >
                     <span className="flex items-center space-x-3">
