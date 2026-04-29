@@ -119,8 +119,8 @@ class ForgotPasswordController extends Controller
 				->toArray();
 		}
 		 
-		return array_merge($request->only('email'), ['active' => 1,'role_id' => $roleIds]);
-		//return array_merge($request->only('email'), ['active' => 1,'role_id' => [2]]);
+		return array_merge($request->only('email'), ['status' => 1,'role_id' => $roleIds]);
+		//return array_merge($request->only('email'), ['status' => 1,'role_id' => [2]]);
        // return $request->only('email');
     }
 
