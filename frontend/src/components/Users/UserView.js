@@ -11,11 +11,12 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import BlobFileItem from '../UI/BlobFileItem';
 import PageLoader from '../Common/PageLoader';
 
-const UserView = () => {
+const UserView = ({ roleSlug = null }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
   const { getUserById, getExistingUser } = useUser();
+  const backPath = roleSlug ? `/users/${roleSlug}` : '/users';
 
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState(null);
@@ -83,7 +84,7 @@ const UserView = () => {
 
         <button
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-white btn-primary rounded-lg shadow"
-          onClick={() => navigate(getRoutePath('/users'))}
+          onClick={() => navigate(getRoutePath(backPath))}
         >
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
           Back

@@ -178,7 +178,7 @@ const buildDefaults = (data, insuranceCarriersList) => ({
   confirm_password: '',
 });
 
-const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
+const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null }) => {
   const { id: idParam } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
@@ -187,6 +187,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
   const { showLoader, hideLoader } = useLoader();
   const { additionalData } = useAdditionalData();
   const { user: authUser, updateUser: setAuthUser } = useAuth();
+  const usersListPath = roleSlug ? `/users/${roleSlug}` : '/users';
 
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
@@ -418,7 +419,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false }) => {
         if (isProfile) {
           navigate(getRoutePath('/profile'));
         } else {
-          navigate(getRoutePath('/users'));
+          navigate(getRoutePath(usersListPath));
         }
       } else {
 

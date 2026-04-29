@@ -52,6 +52,17 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const listBasePath = roleSlug ? `/users/${roleSlug}` : '/users';
   const archivedBasePath = roleSlug ? `/users/${roleSlug}/archived` : '/users/archived';
 
+  const getUserSlug = (rid) =>
+    userRoleSlugs.find((r) => r.roleId === Number(rid))?.slug || null;
+  const buildEditPath = (row) => {
+    const slug = getUserSlug(row?.role_id);
+    return slug ? `/users/${slug}/${row.id}/edit` : `/users/${row.id}/edit`;
+  };
+  const buildViewPath = (row) => {
+    const slug = getUserSlug(row?.role_id);
+    return slug ? `/users/${slug}/view/${row.id}` : `/users/view/${row.id}`;
+  };
+
   useEffect(() => {
     const base = roleTitle ? `${roleTitle}s` : 'Users';
     setPageTitle(archived ? `Archived ${base}` : base);
@@ -237,7 +248,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
               </div>
 
               <Link
-                to={getRoutePath(`/users/view/${row.id}`)}
+                to={getRoutePath(buildViewPath(row))}
                 className="text-primary hover:text-primary-700 break-words"
                 target="_blank"
               >
@@ -303,13 +314,13 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       sortable: false,
       render: (row) => (
         <div className="flex items-center space-x-2">
-          <Link to={getRoutePath(`/users/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+          <Link to={getRoutePath(buildEditPath(row))} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </Link>
 
-          <Link to={getRoutePath(`/users/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
+          <Link to={getRoutePath(buildViewPath(row))} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
             <EyeIcon className="w-5 h-5" />
           </Link>
 

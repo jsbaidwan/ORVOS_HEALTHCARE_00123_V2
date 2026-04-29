@@ -251,6 +251,22 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
               </ProtectedRoute>
             }
           />
+          <Route
+            path={`${basePath}/users/${slug}/:id/edit`}
+            element={
+              <ProtectedRoute permission={permission(3, 'write')} requiredRole={roleId}>
+                <MainLayout><UserForm roleSlug={slug} /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={`${basePath}/users/${slug}/view/:id`}
+            element={
+              <ProtectedRoute permission={permission(3, 'read')} requiredRole={roleId}>
+                <MainLayout><UserView roleSlug={slug} /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
         </React.Fragment>
       ))}
       <Route

@@ -3,7 +3,7 @@ import { useAdditionalData } from '../context/AdditionalDataContext';
 
 // Role ids that should NOT appear as Users sidebar sub-items / slug routes.
 // 1 = Super Admin, 7 = Patient.
-const EXCLUDED_ROLE_IDS = [1, 7];
+const EXCLUDED_ROLE_IDS = [1];
 
 /**
  * Returns the list of user roles (from additionalData) shaped for the
