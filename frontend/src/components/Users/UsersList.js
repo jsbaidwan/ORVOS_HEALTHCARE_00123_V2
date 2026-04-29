@@ -41,6 +41,8 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const prevTab = useRef(tab);
   const location = useLocation();
   const userRoleSlugs = useUserRoleSlugs();
+  const searchDebounceRef = useRef(null);
+  const requestSeqRef = useRef(0);
 
   const roleEntry = roleIdProp
     ? userRoleSlugs.find((r) => r.roleId === roleIdProp)
@@ -56,9 +58,20 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   }, [setPageTitle, archived, roleTitle]);
 
   useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
 
     if (tab !== prevTab.current) {
       setUsers([])
+    }
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
     }
 
     const loadData = async () => {
@@ -75,8 +88,11 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       filters.active = tab;
       filters.is_archived = archived;
 
+      const seq = ++requestSeqRef.current;
       try {
         const response = await getUsers(page, filters, true);
+
+        if (seq !== requestSeqRef.current) return;
 
         if (response?.status && response?.status !== 200) {
           setUsers([]);
@@ -84,6 +100,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
         }
         setIsDataLoaded(true);
       } catch (error) {
+        if (seq !== requestSeqRef.current) return;
         setIsDataLoaded(true);
         setErrors({ general: error });
       }
@@ -141,7 +158,19 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     }
   };
 
-  const filtersData = async (key, value) => {
+  const runFilterRequest = async (filters) => {
+    const seq = ++requestSeqRef.current;
+    const response = await getUsers(1, filters, true);
+
+    if (seq !== requestSeqRef.current) return;
+
+    if (response?.status && response?.status !== 200) {
+      setUsers([]);
+      setErrors({ general: response?.message });
+    }
+  };
+
+  const filtersData = (key, value) => {
     if (key === 'q') setSearchTerm(value);
 
     const newUrl = new URL(window.location);
@@ -163,12 +192,16 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
-    const response = await getUsers(1, filters, true);
 
-    if (response?.status && response?.status !== 200) {
-      setUsers([]);
-      setErrors({ general: response?.message });
+    if (key === 'q') {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = setTimeout(() => {
+        runFilterRequest(filters);
+      }, 400);
+      return;
     }
+
+    runFilterRequest(filters);
   };
 
   const columns = [

@@ -103,6 +103,21 @@ class Helper{
 			$query->where('expiry_reminder', $filters['expiry_reminder']);
 		}
 		
+		if(!empty($filters['q'])){
+			$search = $filters['q'];
+			$query->where(function ($q) use ($search) {
+				$q->where('first_name', 'LIKE', "%$search%")
+				  ->orWhere('last_name', 'LIKE', "%$search%")
+			      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+				  ->orWhere('email', 'LIKE', "%$search%")
+				  ->orWhere('phone_number', 'LIKE', "%$search%")
+				  ->orWhere('code', 'LIKE', "%$search%")
+				   ->orWhereHas('role', function ($q2) use ($search) {
+					  $q2->where('name', 'LIKE', "%$search%");
+				});
+			}); 
+		}
+		
 		if(!empty(\Auth::user()) ){
 			if(\Auth::user()->role_id != 1){
 				 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePatient } from '../../context/PatientContext';
 import Table from '../Common/Table';
 import Pagination from '../Common/Pagination';
@@ -35,6 +35,14 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const { setPageTitle } = useTitle();
   const { permission } = usePermissions();
+  const searchDebounceRef = useRef(null);
+  const requestSeqRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
 
   const getTitle = useCallback(() => {
 
@@ -49,6 +57,11 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   }, [setPageTitle, status, archived, getTitle]);
 
   useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
@@ -65,14 +78,18 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         filters.status = status;
       }
 
+      const seq = ++requestSeqRef.current;
       try {
         const response = await getPatients(page, filters, true);
+
+        if (seq !== requestSeqRef.current) return;
 
         if (response?.status && response?.status !== 200) {
           setErrors({ general: response?.message });
         }
         setIsDataLoaded(true);
       } catch (error) {
+        if (seq !== requestSeqRef.current) return;
         setIsDataLoaded(true);
         setErrors({ general: error });
       }
@@ -82,7 +99,18 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location, status, archived]);
 
-  const filtersData = async (key, value) => {
+  const runFilterRequest = async (filters) => {
+    const seq = ++requestSeqRef.current;
+    const response = await getPatients(1, filters, true);
+
+    if (seq !== requestSeqRef.current) return;
+
+    if (response?.status && response?.status !== 200) {
+      setErrors({ general: response?.message });
+    }
+  };
+
+  const filtersData = (key, value) => {
     if (key === 'q') setSearchTerm(value);
 
     const newUrl = new URL(window.location);
@@ -104,11 +132,16 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
 
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
-    const response = await getPatients(1, filters, true);
 
-    if (response?.status && response?.status !== 200) {
-      setErrors({ general: response?.message });
+    if (key === 'q') {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = setTimeout(() => {
+        runFilterRequest(filters);
+      }, 400);
+      return;
     }
+
+    runFilterRequest(filters);
   };
 
   let columns = [

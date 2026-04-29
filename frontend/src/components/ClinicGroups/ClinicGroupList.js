@@ -41,16 +41,29 @@ const ClinicGroupList = ({ archived = false }) => {
   const { permission } = usePermissions();
   const [tab, setTab] = useState(1);
   const prevTab = useRef(tab);
+  const searchDebounceRef = useRef(null);
+  const requestSeqRef = useRef(0);
 
   useEffect(() => {
     setPageTitle('Clinic Groups');
   }, [setPageTitle]);
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
 
 
   useEffect(() => {
 
     if (tab !== prevTab.current) {
       setClinicGroups([])
+    }
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
     }
 
     const loadData = async () => {
@@ -68,10 +81,14 @@ const ClinicGroupList = ({ archived = false }) => {
       if (active && active !== 'all') filters.active = active;
       filters.is_archived = archived;
       filters.active = tab;
+
+      const seq = ++requestSeqRef.current;
       try {
         setIsDataLoaded(true);
         // showLoader();
         const response = await getClinicGroups(page, filters, true);
+
+        if (seq !== requestSeqRef.current) return;
 
         if (response?.status && response?.status !== 200) {
           setClinicGroups([])
@@ -81,6 +98,7 @@ const ClinicGroupList = ({ archived = false }) => {
 
         // hideLoader();
       } catch (error) {
+        if (seq !== requestSeqRef.current) return;
         // hideLoader();
         setIsDataLoaded(true);
         setErrors({ general: error });
@@ -91,7 +109,19 @@ const ClinicGroupList = ({ archived = false }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useLocation(), tab]);
 
-  const filtersData = async (key, value) => {
+  const runFilterRequest = async (filters) => {
+    const seq = ++requestSeqRef.current;
+    const response = await getClinicGroups(1, filters, true);
+
+    if (seq !== requestSeqRef.current) return;
+
+    if (response?.status && response?.status !== 200) {
+      setClinicGroups([])
+      setErrors({ general: response?.message });
+    }
+  };
+
+  const filtersData = (key, value) => {
     // Update the state first
     if (key === 'q') {
       setSearchTerm(value);
@@ -125,14 +155,16 @@ const ClinicGroupList = ({ archived = false }) => {
 
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
-    const response = await getClinicGroups(1, filters, true);
 
-    if (response?.status && response?.status !== 200) {
-
-      setClinicGroups([])
-      setErrors({ general: response?.message });
-
+    if (key === 'q') {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = setTimeout(() => {
+        runFilterRequest(filters);
+      }, 400);
+      return;
     }
+
+    runFilterRequest(filters);
   };
 
   const columns = [
