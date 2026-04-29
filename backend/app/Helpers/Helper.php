@@ -104,7 +104,7 @@ class Helper{
 		}
 		
 		if(!empty($filters['q'])){
-			$search = $filters['q'];
+			$search = trim($filters['q']);
 			$query->where(function ($q) use ($search) {
 				$q->where('first_name', 'LIKE', "%$search%")
 				  ->orWhere('last_name', 'LIKE', "%$search%")
@@ -255,7 +255,7 @@ class Helper{
 		}
 		
 		if(!empty($filters['q'])){
-			$search = $filters['q'];
+			$search = trim($filters['q']);
 			$query->where(function ($q) use ($search) {
 				$q->where('first_name', 'LIKE', "%$search%")
 				  ->orWhere('last_name', 'LIKE', "%$search%")
@@ -1377,11 +1377,14 @@ class Helper{
 		}
 		
 		if(!empty($filters['q'])){
-			 
-			$query->where(function ($q) use ($filters) {
-				$q->where('name', 'LIKE', '%' . $filters['q'] . '%');
-				 
-			});
+			$search = trim($filters['q']);
+			$query->where(function ($q) use ($search) {
+				$q->where('name', 'LIKE', "%$search%")
+			      ->orWhere('poc_email', 'LIKE', "%$search%")
+				  ->orWhere('phone', 'LIKE', "%$search%")
+				  ->orWhere('code', 'LIKE', "%$search%");
+				   
+			}); 
 		}
 		
 		if(\Auth::user()->role_id != 1){
