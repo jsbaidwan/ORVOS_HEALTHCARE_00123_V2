@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
 import { usePermissions } from '../../context/PermissionsContext';
+import { useUserRoleSlugs } from '../../constants/userRoles';
 import {
   HomeIcon,
   BuildingStorefrontIcon,
@@ -20,6 +21,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   const getRoutePath = useRoutePath();
   const { permission } = usePermissions();
+  const userRoleSlugs = useUserRoleSlugs();
   const menuItems = [
     { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" />, module_id: true }, // No module for dashboard
     { title: 'Clinic Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" />, module_id: 8 },
@@ -36,7 +38,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ],
     },
     { title: 'Reports', basePath: '/reports', icon: <DocumentChartBarIcon className="w-5 h-5" />, module_id: 6 },
-    { title: 'Users', basePath: '/users', icon: <UserGroupIcon className="w-5 h-5" />, module_id: 3 },
+    {
+      title: 'Users',
+      basePath: '/users',
+      icon: <UserGroupIcon className="w-5 h-5" />,
+      module_id: 3,
+      subItems: [
+        ...userRoleSlugs.map((r) => ({
+          title: r.title,
+          basePath: `/users/${r.slug}`,
+          module_id: 3,
+        })),
+        { title: 'Add User', basePath: '/users/create', icon: <PlusIcon className="w-4 h-4" />, module_id: 3 },
+      ],
+    },
     { title: 'Settings', basePath: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, module_id: true },
     { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
   ];

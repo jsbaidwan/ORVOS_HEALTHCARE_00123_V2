@@ -5,7 +5,7 @@ import Pagination from '../Common/Pagination';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon, EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -15,8 +15,9 @@ import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 import { ArchiveBoxIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 import { PreviewImage } from '../Patients/EyeImageUploader';
+import { useUserRoleSlugs } from '../../constants/userRoles';
 
-const UsersList = ({ archived = false }) => {
+const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const {
     users,
     setUsers,
@@ -38,10 +39,21 @@ const UsersList = ({ archived = false }) => {
   const { permission } = usePermissions();
   const [tab, setTab] = useState(1);
   const prevTab = useRef(tab);
+  const location = useLocation();
+  const userRoleSlugs = useUserRoleSlugs();
+
+  const roleEntry = roleIdProp
+    ? userRoleSlugs.find((r) => r.roleId === roleIdProp)
+    : null;
+  const roleSlug = roleEntry?.slug || null;
+  const roleTitle = roleEntry?.title || null;
+  const listBasePath = roleSlug ? `/users/${roleSlug}` : '/users';
+  const archivedBasePath = roleSlug ? `/users/${roleSlug}/archived` : '/users/archived';
 
   useEffect(() => {
-    setPageTitle(archived ? 'Archived Users' : 'Users');
-  }, [setPageTitle, archived]);
+    const base = roleTitle ? `${roleTitle}s` : 'Users';
+    setPageTitle(archived ? `Archived ${base}` : base);
+  }, [setPageTitle, archived, roleTitle]);
 
   useEffect(() => {
 
@@ -53,11 +65,13 @@ const UsersList = ({ archived = false }) => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
       const q = params.get('q') || '';
+      const roleId = roleIdProp ?? params.get('role_id') ?? '';
 
       setSearchTerm(q);
 
       const filters = {};
       if (q) filters.q = q;
+      if (roleId) filters.role_id = roleId;
       filters.active = tab;
       filters.is_archived = archived;
 
@@ -77,7 +91,7 @@ const UsersList = ({ archived = false }) => {
 
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [useLocation(), tab]);
+  }, [location.pathname, location.search, tab, roleIdProp]);
 
 
   const handleArchive = (user) => {
@@ -94,7 +108,7 @@ const UsersList = ({ archived = false }) => {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
           setUserToArchive(null);
-          navigate(getRoutePath('/users'));
+          navigate(getRoutePath(listBasePath));
         } else {
           toast.error(result?.message);
         }
@@ -115,7 +129,7 @@ const UsersList = ({ archived = false }) => {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
           setUserToArchive(null);
-          navigate(getRoutePath('/users'));
+          navigate(getRoutePath(listBasePath));
         } else {
           toast.error(result?.message);
         }
@@ -134,6 +148,9 @@ const UsersList = ({ archived = false }) => {
     let filters = {};
     filters.active = tab;
     filters.is_archived = archived;
+
+    const roleId = roleIdProp ?? newUrl.searchParams.get('role_id');
+    if (roleId) filters.role_id = roleId;
 
     if (key === 'q') {
       filters.q = value;
@@ -283,6 +300,10 @@ const UsersList = ({ archived = false }) => {
     filters.is_archived = archived;
     if (searchTerm) filters.q = searchTerm;
 
+    const params = new URLSearchParams(window.location.search);
+    const roleId = roleIdProp ?? params.get('role_id');
+    if (roleId) filters.role_id = roleId;
+
     await getUsers(page, filters, true);
 
     const newUrl = new URL(window.location);
@@ -306,27 +327,23 @@ const UsersList = ({ archived = false }) => {
 
       <div className="mb-3">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{roleTitle ? `${roleTitle}s` : 'Users'}</h1>
 
           <div className="flex flex-wrap justify-end items-center gap-3 w-full">
             {!archived ? (
               <>
                 <button
-                  onClick={() => navigate(getRoutePath('/users/archived'))}
+                  onClick={() => navigate(getRoutePath(archivedBasePath))}
                   className="inline-flex items-center justify-center px-4 py-2 btn-warning w-full sm:w-auto text-sm sm:text-base"
                 >
                   <ArchiveBoxIcon className="w-4 h-4 mr-2" />
                   Archived Users
                 </button>
-
-                <Link to={getRoutePath('/users/create')} className="inline-flex items-center justify-center px-4 py-2.5 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-[0.775rem] xs:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]">
-                  <PlusIcon className="w-3 h-3 mr-1" />
-                  Add New User
-                </Link>
+ 
               </>
             ) : (
               <button
-                onClick={() => navigate(getRoutePath('/users'))}
+                onClick={() => navigate(getRoutePath(listBasePath))}
                 className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
               >
                 <ArrowLeftIcon className="w-4 h-4 mr-2" />
@@ -364,7 +381,7 @@ const UsersList = ({ archived = false }) => {
 
       <div className="bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm">
         <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Users</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">{roleTitle ? `${roleTitle}s` : 'Users'}</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
             User information and details.
           </p>

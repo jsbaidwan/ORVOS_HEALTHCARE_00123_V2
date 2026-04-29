@@ -1,9 +1,9 @@
 import UsersList from "./UsersList"
 
-const ArchiveUsers = () => {
+const ArchiveUsers = ({ roleId = null }) => {
     return (
         <div>
-            <UsersList archived={true} />
+            <UsersList archived={true} roleId={roleId} />
         </div>
     )
 }

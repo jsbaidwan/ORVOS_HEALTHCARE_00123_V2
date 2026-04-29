@@ -51,6 +51,7 @@ import NotFound from './components/Common/Errors/NotFound';
 // Hooks
 import useAutoLogoutOnIdle from './hooks/useAutoLogoutOnIdle';
 import { AdditionalDataProvider } from './context/AdditionalDataContext';
+import { useUserRoleSlugs } from './constants/userRoles';
 
 // Get route prefixes from environment
 const ADMIN_PREFIX = process.env.REACT_APP_ADMIN_ROUTE_PREFIX || 'admin';
@@ -115,7 +116,7 @@ const MainLayout = ({ children }) => {
 };
 
 // Create protected route wrapper for both user and admin
-const createProtectedRoutes = (prefix, roleId, permission) => {
+const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) => {
   const basePath = prefix ? `/${prefix}` : '';
 
   return (
@@ -232,6 +233,26 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
           </ProtectedRoute>
         }
       />
+      {userRoleSlugs.map(({ slug, roleId: filterRoleId }) => (
+        <React.Fragment key={`users-${slug}`}>
+          <Route
+            path={`${basePath}/users/${slug}`}
+            element={
+              <ProtectedRoute permission={permission(3, 'read')} requiredRole={roleId}>
+                <MainLayout><UsersList roleId={filterRoleId} /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={`${basePath}/users/${slug}/archived`}
+            element={
+              <ProtectedRoute permission={permission(3, 'read')} requiredRole={roleId}>
+                <MainLayout><ArchiveUsers roleId={filterRoleId} /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+        </React.Fragment>
+      ))}
       <Route
         path={`${basePath}/users/create`}
         element={
@@ -325,6 +346,7 @@ const createProtectedRoutes = (prefix, roleId, permission) => {
 const AppContent = () => {
   const { isAuthenticated, loading, user } = useAuth();
   const { permission } = usePermissions();
+  const userRoleSlugs = useUserRoleSlugs();
   useAutoLogoutOnIdle();
   if (loading) {
     return <Loader />;
@@ -375,10 +397,10 @@ const AppContent = () => {
       />
 
       {/* Admin Protected Routes (with admin prefix) */}
-      {createProtectedRoutes(ADMIN_PREFIX, 1, permission)}
+      {createProtectedRoutes(ADMIN_PREFIX, 1, permission, userRoleSlugs)}
 
       {/* User Protected Routes (with user prefix or no prefix) */}
-      {createProtectedRoutes(USER_PREFIX, user?.role_id !== 1 ? user?.role_id : 2, permission)}
+      {createProtectedRoutes(USER_PREFIX, user?.role_id !== 1 ? user?.role_id : 2, permission, userRoleSlugs)}
 
       {/* Default redirects */}
       <Route
