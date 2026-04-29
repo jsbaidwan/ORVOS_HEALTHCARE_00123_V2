@@ -9,7 +9,7 @@ import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUser } from '../../context/UserContext';
 
 const Header = ({ toggleSidebar }) => {
-  const { user, logout, isAuthenticated, updateUser: setAuthUser } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const getRoutePath = useRoutePath();
   const dropdownRef = useRef(null);

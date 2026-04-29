@@ -1004,7 +1004,7 @@ const PatientView = () => {
                                         <InfoItem
                                             label="Follow Up"
                                             valueNode={
-                                                <span className={`inline-flex px-3 py-1 rounded-sm text-xs font-semibold  ${patient?.follow_up_data?.fStatus?.class} text-white cursor-pointer`}>
+                                                <span style={{ backgroundColor: patient?.follow_up_data?.fStatus?.color }} className={`inline-flex px-3 py-1 rounded-sm text-xs font-semibold text-white cursor-pointer`}>
                                                     {patient?.follow_up_data?.status === 200 ? patient?.follow_up_data?.fStatus?.name : '-'}
                                                 </span>
                                             }
