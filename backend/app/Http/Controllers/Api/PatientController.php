@@ -17,6 +17,7 @@ use App\Notifications\ClinicPatientReportMail;
 use App\Jobs\SendClinicPatientReportJob;
 use App\Jobs\SendFaxReportToClinicJob;
 use App\Jobs\SendDicomDataJob;
+use App\Exports\PatientsExport;
   
 class PatientController extends Controller
 { 
@@ -29,6 +30,9 @@ class PatientController extends Controller
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 		$patients = \Helper::getPatients(true,$input)['patients']; 
+		if(!empty($input['export_excel'])){
+            return ['patients' => $patients];
+        }
 		return response()->json(['patients' => $patients], 200);
 		 
 	}
@@ -730,13 +734,35 @@ class PatientController extends Controller
           
         // Check if there are any patients to export
         if ($patients->isEmpty()) {
-            return redirect()->back()->with('error', 'No data available for export.');
+            return response()->json([
+				'message' => 'No data available for export.'
+			], 422);
         }
+		
+		if(!isset($input['diagnosis_status'])){
+			return response()->json([
+				'message' => 'The diagnosis is required.'
+			], 422);
+		}
     
         // Export the data using the PatientsExport class
 		$pStatus = \Helper::getPatientDiagnosisStatusById($input['diagnosis_status'])['pStatus']['name'] ?? '';
 
-        return Excel::download(new PatientsExport($patients), 'patients_'.$pStatus.'.xlsx');
+		$fileName = 'patients_' . ($pStatus ?: 'all') . '.xlsx';
+
+		// Generate Excel file here
+		$path = 'excels/patients/' . $fileName;
+
+		\Excel::store(
+			new PatientsExport($patients),
+			$path,
+			'public'
+		);
+		return response()->json([
+			'status' => true,
+			'file_name' => $fileName,
+			'download_url' => asset('storage/' . $path)
+		]);
     }
 	 
 
