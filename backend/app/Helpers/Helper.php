@@ -286,7 +286,7 @@ class Helper{
 		
 		if(!empty($filters['ehr'])){
 			 
-			$query->where('mr_number',$filters['ehr']);
+			$query->where('ehr',$filters['ehr']);
 		}
         
 		if (!empty($filters['orvos_doctors']) || !empty($filters['choose_state'])) {
@@ -3226,7 +3226,7 @@ class Helper{
 			$patientData = json_encode([
 				'first_name'  => $patient->first_name ?? '',
 				'last_name'   => $patient->last_name ?? '',
-				'mr_number'   => $patient->mr_number ?? '',
+				'mr_number'   => $patient->ehr ?? '',
 				'dob'         => $patient->dob ?? '',
 				'gender'      => $patient->gender ?? '',
 				'study_id'    => $dicomArr['MainDicomTags']['StudyID'] ?? '',

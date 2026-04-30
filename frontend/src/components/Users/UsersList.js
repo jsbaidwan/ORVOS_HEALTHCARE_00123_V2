@@ -359,7 +359,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const filterConfig = [
     {
       key: 'q',
-      type: 'text',
+      type: 'search',
       placeholder: 'Search users...',
       value: searchTerm,
     },

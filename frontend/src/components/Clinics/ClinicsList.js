@@ -363,7 +363,7 @@ const ClinicsList = ({ archived = false }) => {
   const filterConfig = [
     {
       key: 'q',
-      type: 'text',
+      type: 'search',
       placeholder: 'Search clinics...',
       value: searchTerm,
     },

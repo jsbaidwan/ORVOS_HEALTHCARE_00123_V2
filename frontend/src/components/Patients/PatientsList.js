@@ -13,6 +13,8 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
+import Swal from 'sweetalert2';
+import { PlaneIcon } from 'lucide-react';
 
 const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'all' }) => {
   const {
@@ -22,11 +24,22 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     archivePatient,
     unarchivePatient,
     markAsCompleted,
+    downloadReport
   } = usePatient();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const initialFilters = {
+    q: '',
+    first_name: '',
+    last_name: '',
+    ehr: '',
+    from_date: '',
+    to_date: '',
+  };
+  const [filterValues, setFilterValues] = useState(initialFilters);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [patientToArchive, setPatientToArchive] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkAction, setBulkAction] = useState('');
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
@@ -37,6 +50,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   const { permission } = usePermissions();
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
+  const [reportDownloadStatusData, setReportDownloadStatusData] = useState({});
 
   useEffect(() => {
     return () => {
@@ -57,6 +71,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   }, [setPageTitle, status, archived, getTitle]);
 
   useEffect(() => {
+    setReportDownloadStatusData({});
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
       searchDebounceRef.current = null;
@@ -65,12 +80,18 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
-      const q = params.get('q') || '';
 
-      setSearchTerm(q);
+      const loadedFilters = Object.keys(initialFilters).reduce((acc, key) => {
+        acc[key] = params.get(key) || '';
+        return acc;
+      }, {});
 
-      const filters = {};
-      if (q) filters.q = q;
+      setFilterValues(loadedFilters);
+
+      const filters = { ...loadedFilters };
+      Object.keys(filters).forEach((k) => {
+        if (!filters[k]) delete filters[k];
+      });
       filters.is_archived = archived;
       filters.diagnosis_status = diagnosis_status;
 
@@ -111,40 +132,246 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   };
 
   const filtersData = (key, value) => {
-    if (key === 'q') setSearchTerm(value);
+    if (!(key in initialFilters)) return;
+
+    const nextValues = { ...filterValues, [key]: value };
+    setFilterValues(nextValues);
+
+    if (key !== 'q') return;
 
     const newUrl = new URL(window.location);
-    let filters = {};
-    filters.is_archived = archived;
-    filters.diagnosis_status = diagnosis_status;
-    if (status && status !== 'all') {
-      filters.status = status;
+    if (value) {
+      newUrl.searchParams.set('q', value);
+    } else {
+      newUrl.searchParams.delete('q');
     }
-
-    if (key === 'q') {
-      filters.q = value;
-      if (value) {
-        newUrl.searchParams.set('q', value);
-      } else {
-        newUrl.searchParams.delete('q');
-      }
-    }
-
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
 
-    if (key === 'q') {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        runFilterRequest(filters);
-      }, 400);
-      return;
+    const filters = { is_archived: archived, diagnosis_status };
+    if (status && status !== 'all') filters.status = status;
+    Object.entries(nextValues).forEach(([k, v]) => {
+      if (v) filters[k] = v;
+    });
+
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      runFilterRequest(filters);
+    }, 400);
+  };
+
+  const applyFilters = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
     }
 
+    const newUrl = new URL(window.location);
+    Object.entries(filterValues).forEach(([k, v]) => {
+      if (v) {
+        newUrl.searchParams.set(k, v);
+      } else {
+        newUrl.searchParams.delete(k);
+      }
+    });
+    newUrl.searchParams.delete('page');
+    window.history.pushState({}, '', newUrl);
+
+    runFilterRequest(buildActiveFilters());
+  };
+
+  const resetFilters = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+
+    setFilterValues(initialFilters);
+
+    const newUrl = new URL(window.location);
+    Object.keys(initialFilters).forEach((k) => newUrl.searchParams.delete(k));
+    newUrl.searchParams.delete('page');
+    window.history.pushState({}, '', newUrl);
+
+    const filters = { is_archived: archived, diagnosis_status };
+    if (status && status !== 'all') filters.status = status;
     runFilterRequest(filters);
   };
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [patients]);
+
+  const checkAll = (checked) => {
+    if (checked) {
+      setSelectedIds((patients || []).map((p) => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const checkedSingle = (checked, id) => {
+    setSelectedIds((prev) => {
+      if (checked) {
+        if (prev.includes(id)) return prev;
+        return [...prev, id];
+      }
+      return prev.filter((item) => item !== id);
+    });
+  };
+
+  const isAllChecked =
+    (patients?.length || 0) > 0 && selectedIds.length === patients.length;
+
+  const triggerPdfDownload = (base64, fileName) => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+    const blobUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'report.pdf';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+  };
+
+  const handleBulkDownloadPdf = async (ids) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `You want to download ${ids.length} patient report(s)?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, download all!',
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true,
+      confirmButtonColor: '#009efb',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        const succeeded = [];
+        const failed = [];
+
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i];
+          Swal.getHtmlContainer && Swal.update({
+            text: `Downloading ${i + 1} of ${ids.length}...`,
+          });
+
+          try {
+            const response = await downloadReport(id);
+
+            if (response && response.status === 200 && response.data?.pdf) {
+              triggerPdfDownload(
+                response.data.pdf,
+                response.data.fileName || `report-${id}.pdf`
+              );
+              succeeded.push(id);
+
+              if (response.data?.report_download_status_data) {
+                setReportDownloadStatusData((prev) => ({
+                  ...prev,
+                  [id]: response.data.report_download_status_data,
+                }));
+              }
+            } else {
+              failed.push({ id, message: response?.data?.message || 'Failed' });
+            }
+          } catch (err) {
+            failed.push({ id, message: 'Something went wrong' });
+          }
+        }
+
+        if (succeeded.length === 0) {
+          Swal.showValidationMessage(
+            failed[0]?.message || 'Failed to generate reports. Please try again.'
+          );
+          return false;
+        }
+
+        return { succeeded, failed };
+      },
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      const { succeeded, failed } = result.value;
+
+      if (failed.length === 0) {
+        Swal.fire({
+          title: 'Reports Downloaded',
+          text: `${succeeded.length} report(s) downloaded successfully.`,
+          icon: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#009efb',
+          timer: 2000,
+          timerProgressBar: true,
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Partially Downloaded',
+          html: `Downloaded: <b>${succeeded.length}</b><br/>Failed: <b>${failed.length}</b>`,
+          confirmButtonColor: '#009efb',
+        });
+      }
+
+
+
+      setSelectedIds([]);
+      setBulkAction('');
+    });
+  };
+
+  const handleBulkSubmit = () => {
+    if (!bulkAction) {
+      toast.error('Please select a bulk action');
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error('Please select at least one patient');
+      return;
+    }
+
+    if (bulkAction === 'download_pdf') {
+      handleBulkDownloadPdf(selectedIds);
+    }
+  };
+
+
   let columns = [
+    {
+      header: (
+        <input
+          type="checkbox"
+          className="w-4 h-4"
+          checked={isAllChecked}
+          onChange={(e) => checkAll(e.target.checked)}
+        />
+      ),
+      accessor: '#',
+      sortable: false,
+      render: (row) => (
+        <div>
+          <input
+            type="checkbox"
+            className="w-4 h-4"
+            checked={selectedIds.includes(row.id)}
+            onChange={(e) => checkedSingle(e.target.checked, row.id)}
+          />
+        </div>
+      ),
+    },
     {
       header: 'Patient Name',
       accessor: 'name',
@@ -185,8 +412,8 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       render: (row) => (
         <div className="space-y-1">
 
-          <p className={`${row.report_download_status_data?.class} text-sm`}>
-            {row.report_download_status_data?.name}
+          <p className={`font-medium mt-1 break-words ${reportDownloadStatusData[row.id]?.class || row?.report_download_status_data?.class}`}>
+            {reportDownloadStatusData[row.id]?.name || row?.report_download_status_data?.name}
           </p>
 
           {row?.clinic?.is_patient_report_email_enabled === 1 && (
@@ -349,21 +576,29 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     },
   ];
 
-  if (diagnosis_status === 0 || diagnosis_status === '0') {
-    columns = columns.filter(c => c.accessor !== 'chart_code');
+  const isPendingDiagnosis = diagnosis_status === 0 || diagnosis_status === '0';
+
+  if (isPendingDiagnosis) {
+    columns = columns.filter(c => c.accessor !== 'chart_code' && c.accessor !== '#');
   }
 
+  const buildActiveFilters = () => {
+    const filters = { is_archived: archived, diagnosis_status };
+    if (status && status !== 'all') filters.status = status;
+
+    Object.entries(filterValues).forEach(([k, v]) => {
+      if (v) filters[k] = v;
+    });
+
+    return filters;
+  };
+
+  const refreshList = () => {
+    runFilterRequest(buildActiveFilters());
+  };
+
   const handlePageChange = async (page) => {
-    let filters = {};
-    filters.is_archived = archived;
-    filters.diagnosis_status = diagnosis_status;
-    if (status && status !== 'all') {
-      filters.status = status;
-    }
-
-    if (searchTerm) filters.q = searchTerm;
-
-    await getPatients(page, filters, true);
+    await getPatients(page, buildActiveFilters(), true);
 
     const newUrl = new URL(window.location);
     newUrl.searchParams.set('page', page);
@@ -384,8 +619,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           toast.success(result?.message);
           setShowArchiveConfirm(false);
           setPatientToArchive(null);
-          // Refresh data
-          filtersData('q', searchTerm);
+          refreshList();
         } else {
           toast.error(result?.message);
         }
@@ -406,8 +640,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           toast.success(result?.message);
           setShowArchiveConfirm(false);
           setPatientToArchive(null);
-          // Refresh data
-          filtersData('q', searchTerm);
+          refreshList();
         } else {
           toast.error(result?.message);
         }
@@ -425,7 +658,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       const result = await markAsCompleted(id);
       if (result && result.status === 200) {
         toast.success(result?.message);
-        filtersData('q', searchTerm);
+        refreshList();
       } else {
         toast.error(result?.message);
       }
@@ -437,11 +670,47 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   };
 
   const filterConfig = [
+    // {
+    //   key: 'q',
+    //   type: 'search',
+    //   placeholder: 'Search patients...',
+    //   value: filterValues.q,
+    // },
     {
-      key: 'q',
+      key: 'first_name',
       type: 'text',
-      placeholder: 'Search patients...',
-      value: searchTerm,
+      label: 'First Name',
+      placeholder: 'First Name',
+      value: filterValues.first_name,
+    },
+    {
+      key: 'last_name',
+      type: 'text',
+      label: 'Last Name',
+      placeholder: 'Last Name',
+      value: filterValues.last_name,
+    },
+    {
+      key: 'ehr',
+      type: 'text',
+      label: 'EHR',
+      placeholder: 'EHR',
+      value: filterValues.ehr,
+    },
+    {
+      key: 'from_date',
+      type: 'date',
+      label: 'From Date',
+      placeholder: 'MM-DD-YYYY',
+      value: filterValues.from_date,
+    },
+    {
+      key: 'to_date',
+      type: 'date',
+      label: 'To Date',
+      placeholder: 'MM-DD-YYYY',
+      value: filterValues.to_date,
+      minDate: filterValues.from_date ? new Date(filterValues.from_date.replace(/-/g, '/')) : undefined,
     },
   ];
 
@@ -475,14 +744,44 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       </div>
 
       <ErrorHandle errors={errors} />
-      <Filters filters={filterConfig} onFilterChange={filtersData} />
+      <Filters
+        filters={filterConfig}
+        onFilterChange={filtersData}
+        onApply={applyFilters}
+        onReset={resetFilters}
+      />
+
 
       <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6'>
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Patients</h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Patient records and details.
-          </p>
+        <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Patients</h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              Patient records and details.
+            </p>
+          </div>
+
+          {!isPendingDiagnosis && (
+            <div className="flex items-center gap-2">
+              <select
+                value={bulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+                className="block w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#009efb] focus:border-[#009efb]"
+              >
+                <option value="">Bulk Action</option>
+                <option value="download_pdf">Download as PDF</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleBulkSubmit}
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={selectedIds.length === 0 || !bulkAction}
+              >
+                <PlaneIcon className="w-3 h-3 mr-1" />
+                Submit
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

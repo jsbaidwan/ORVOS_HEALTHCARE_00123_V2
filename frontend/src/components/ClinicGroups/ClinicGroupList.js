@@ -361,7 +361,7 @@ const ClinicGroupList = ({ archived = false }) => {
   const filterConfig = [
     {
       key: 'q',
-      type: 'text',
+      type: 'search',
       placeholder: 'Search clinic groups...',
       value: searchTerm,
     },
