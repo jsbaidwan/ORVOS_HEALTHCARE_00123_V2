@@ -155,7 +155,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 key={index}
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
-                  ? 'cursor-pointer select-none   border-r border-b  hover:bg-primary-600 transition-colors duration-150'
+                  ? 'cursor-pointer select-none   border-r border-b  hover:bg-primary-600'
                   : 'border-r border-b'
                   }`}
               >
