@@ -27,12 +27,15 @@ import '../../utils/suppressRecaptchaErrors';
 const DEFAULT_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 const DEFAULT_SECRET_KEY = '6LeIxAcTAAAAAMszoGRg-rOQDVj75ubvfngVuKIH';
 
+const LOAD_TIMEOUT_MS = 10000;
+
 const GoogleCaptchaLogin = ({ onVerify }) => {
   const [rawSiteKey, setRawSiteKey] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const loadDataRef = useRef(false);
   const recaptchaRef = useRef(null);
+  const cancelLoadRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
 
@@ -40,9 +43,9 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     try {
       const api = Api(() => null);
       const response = await api.call('get-recaptcha-keys', 'GET', false);
- 
+
       if (response.status !== 200) {
-        setError(response?.error?.message);
+        setError(response?.error?.message || 'Failed to fetch reCAPTCHA keys');
         return { siteKey: DEFAULT_SITE_KEY, secretKey: DEFAULT_SECRET_KEY };
       }
       return {
@@ -55,22 +58,47 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (loadDataRef.current) return;
-    loadDataRef.current = true;
+  const loadKeys = useCallback(async () => {
+    if (cancelLoadRef.current) cancelLoadRef.current.cancelled = true;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    let cancelled = false;
-    (async () => {
-      const { siteKey: fetched } = await getRecaptchaKeys();
-      if (cancelled) return;
-      setRawSiteKey(fetched);
+    const ticket = { cancelled: false };
+    cancelLoadRef.current = ticket;
+
+    setIsLoading(true);
+    setError(null);
+    setRawSiteKey(null);
+
+    timeoutRef.current = setTimeout(() => {
+      if (ticket.cancelled) return;
+      ticket.cancelled = true;
+      setError('reCAPTCHA request timed out. Please try again.');
       setIsLoading(false);
-    })();
+    }, LOAD_TIMEOUT_MS);
+
+    const { siteKey: fetched } = await getRecaptchaKeys();
+    if (ticket.cancelled) return;
+
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+
+    setRawSiteKey(fetched);
+    setIsLoading(false);
+  }, [getRecaptchaKeys]);
+
+  const handleReload = useCallback(() => {
+    onVerify && onVerify(null);
+    loadKeys();
+  }, [loadKeys, onVerify]);
+
+  useEffect(() => {
+    loadKeys();
 
     return () => {
-      cancelled = true;
+      if (cancelLoadRef.current) cancelLoadRef.current.cancelled = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [getRecaptchaKeys]);
+  }, [loadKeys]);
 
   // NOTE: no unmount-reset effect. Manually calling reset() on every
   // unmount / expire / error causes Google to treat the widget as hostile
@@ -108,7 +136,35 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     );
   }
 
-  if (error) return <ErrorHandle errors={error} title="ERROR:- reCAPTCHA Loading Failed" />;
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <ErrorHandle errors={error} title="ERROR:- reCAPTCHA Loading Failed" />
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleReload}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Reload reCAPTCHA
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!siteKey) return null;
 
