@@ -2,6 +2,10 @@ import React from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
+import {
+  FunnelIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline';
 
 const multiSelectStyles = (hasError) => ({
   control: (base, state) => ({
@@ -193,8 +197,9 @@ const Filters = ({
             <button
               type="button"
               onClick={onApply}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
+              className="inline-flex items-center justify-center px-4 py-2 btn-success btn-sm rounded"
             >
+              <FunnelIcon className='w-3 h-3 mr-2' />
               {applyLabel}
             </button>
           )}
@@ -202,9 +207,9 @@ const Filters = ({
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+              className="inline-flex items-center justify-center px-4 py-2 btn-danger btn-sm rounded"
             >
-              {resetLabel}
+              <ArrowPathIcon className='w-3 h-3 mr-2' /> {resetLabel}
             </button>
           )}
         </div>

@@ -1741,15 +1741,29 @@
   }
 
   .btn-success-50 {
-    padding: 5px 10px !important;
+
     background-color: #28a7455e !important;
     border: 1px solid #28a7455e !important;
     border-radius: 10px;
+    color: #fff !important;
   }
 
   .btn-success-50:hover {
     background-color: #2188385e !important;
     border: 1px solid #2188385e !important;
+  }
+
+  .btn-danger-50 {
+    background-color: #dc35458e !important;
+    border: 1px solid #dc35458e !important;
+    border-radius: 10px;
+    color: #fff !important;
+  }
+
+  .btn-danger-50:hover {
+    background-color: #dc35458e !important;
+    border: 1px solid #dc35458e !important;
+
   }
 
   .btn-info:hover {

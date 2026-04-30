@@ -744,12 +744,23 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       </div>
 
       <ErrorHandle errors={errors} />
-      <Filters
-        filters={filterConfig}
-        onFilterChange={filtersData}
-        onApply={applyFilters}
-        onReset={resetFilters}
-      />
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+
+        <div className='border-b border-gray-200 pb-3 mb-4'>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Filters</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Patient filter options and details.
+          </p>
+        </div>
+        <div className='pb-3 mb-4'>
+          <Filters
+            filters={filterConfig}
+            onFilterChange={filtersData}
+            onApply={applyFilters}
+            onReset={resetFilters}
+          />
+        </div>
+      </div>
 
 
       <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6'>
