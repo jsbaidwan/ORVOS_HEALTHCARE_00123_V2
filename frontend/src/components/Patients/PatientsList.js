@@ -361,7 +361,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           onChange={(e) => checkAll(e.target.checked)}
         />
       ),
-      accessor: 'field',
+      accessor: 'checkbox',
       sortable: false,
       render: (row) => (
         <div className='flex items-center justify-center'>
@@ -595,7 +595,8 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   const isPendingDiagnosis = diagnosis_status === 0 || diagnosis_status === '0';
 
   if (isPendingDiagnosis) {
-    columns = columns.filter(c => c.accessor !== 'chart_code' && c.accessor !== '#');
+    columns = columns.filter(c => !['chart_code', 'checkbox'].includes(c.accessor));
+
   }
 
   const buildActiveFilters = () => {
