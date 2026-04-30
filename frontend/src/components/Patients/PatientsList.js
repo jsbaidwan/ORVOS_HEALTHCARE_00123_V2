@@ -802,7 +802,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
               <button
                 type="button"
                 onClick={handleBulkSubmit}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center btn btn-primary rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={selectedIds.length === 0 || !bulkAction}
               >
                 <PlaneIcon className="w-3 h-3 mr-1" />
