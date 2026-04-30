@@ -349,23 +349,25 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   };
 
 
+  const { currentPage = 1, perPage = 10 } = pagination || {};
+
   let columns = [
     {
       header: (
         <input
           type="checkbox"
-          className="w-4 h-4"
+          className="w-3 h-3 cursor-pointer"
           checked={isAllChecked}
           onChange={(e) => checkAll(e.target.checked)}
         />
       ),
-      accessor: '#',
+      accessor: 'field',
       sortable: false,
       render: (row) => (
-        <div>
+        <div className='flex items-center justify-center'>
           <input
             type="checkbox"
-            className="w-4 h-4"
+            className="w-3 h-3 cursor-pointer"
             checked={selectedIds.includes(row.id)}
             onChange={(e) => checkedSingle(e.target.checked, row.id)}
           />
@@ -373,8 +375,21 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       ),
     },
     {
+      header: '#',
+      accessor: 'sno',
+      render: (row, index) => (
+        <div className='flex items-center justify-center'>
+          <span className="text-gray-500">
+            {((currentPage - 1) * perPage) + index + 1}
+          </span>
+        </div>
+      ),
+    },
+    {
       header: 'Patient Name',
       accessor: 'name',
+      sortValue: (row) =>
+        `${row?.first_name || ''} ${row?.last_name || ''}`.trim().toLowerCase(),
       render: (row) => (
         <div className="w-auto">
           <div className="flex items-center">
@@ -457,6 +472,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     {
       header: 'Clinic',
       accessor: 'clinic',
+      sortValue: (row) => row?.clinic?.name?.toLowerCase() || '',
       render: (row) => (
         <div>
           <p className="text-gray-900 text-sm"><Link to={getRoutePath(`/clinics/view/${row.clinic?.id}`)} target="_blank" className="text-primary hover:text-primary-700">{row.clinic?.name || '-'}</Link></p>

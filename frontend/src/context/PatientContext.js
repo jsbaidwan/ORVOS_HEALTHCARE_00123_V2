@@ -296,6 +296,23 @@ export const PatientProvider = ({ children }) => {
     }
   }
 
+  const exportToExcel = async (filters) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`patients/export`, 'POST', filters, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Exported successfully', data: response.data };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }
+
   const value = {
     patients,
     setPatients,
@@ -316,6 +333,7 @@ export const PatientProvider = ({ children }) => {
     sendFax,
     sendDicomFile,
     reDiagnosis,
+    exportToExcel,
   };
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;

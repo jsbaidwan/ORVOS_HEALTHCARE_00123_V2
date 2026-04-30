@@ -9,18 +9,29 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
 
-    const sorted = [...data].sort((a, b) => {
-      const column = columns.find(col => col.accessor === sortConfig.key);
+    const column = columns.find(col => col.accessor === sortConfig.key);
 
-      // Get values - use sortValue if provided, otherwise accessor
-      let aValue = column?.sortValue ? column.sortValue(a) : a[sortConfig.key];
-      let bValue = column?.sortValue ? column.sortValue(b) : b[sortConfig.key];
+    const indexed = data.map((row, originalIndex) => ({ row, originalIndex }));
 
-      // Handle null/undefined values
-      if (aValue === null || aValue === undefined) aValue = '';
-      if (bValue === null || bValue === undefined) bValue = '';
+    const sorted = indexed.sort((a, b) => {
+      let aValue = column?.sortValue
+        ? column.sortValue(a.row, a.originalIndex)
+        : a.row[sortConfig.key];
+      let bValue = column?.sortValue
+        ? column.sortValue(b.row, b.originalIndex)
+        : b.row[sortConfig.key];
 
-      // Convert to string for comparison if needed
+      // Fallback to original row position when the column has no data (e.g. row-number columns)
+      const aMissing = aValue === null || aValue === undefined || aValue === '';
+      const bMissing = bValue === null || bValue === undefined || bValue === '';
+      if (aMissing && bMissing) {
+        aValue = a.originalIndex;
+        bValue = b.originalIndex;
+      } else {
+        if (aMissing) aValue = '';
+        if (bMissing) bValue = '';
+      }
+
       if (typeof aValue === 'string') aValue = aValue.toLowerCase();
       if (typeof bValue === 'string') bValue = bValue.toLowerCase();
 
@@ -33,8 +44,16 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
       return 0;
     });
 
-    return sorted;
+    return sorted.map(item => item.row);
   }, [data, sortConfig, columns]);
+
+  // Map each row reference back to its index in the original (unsorted) data
+  // so render() can show the original row number even after sorting.
+  const originalIndexMap = useMemo(() => {
+    const map = new Map();
+    data?.forEach((row, i) => map.set(row, i));
+    return map;
+  }, [data]);
 
   const [loading, setLoading] = useState(() => (sortedData.length > 0 ? false : true));
 
@@ -58,7 +77,6 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   // Handle column header click for sorting
   const handleSort = (accessor, sortable) => {
     if (sortable === false) return; // Don't sort if explicitly disabled
-
     let direction = 'asc';
     if (sortConfig.key === accessor && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -138,7 +156,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 onClick={() => handleSort(column.accessor, column.sortable)}
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
                   ? 'cursor-pointer select-none   border-r border-b  hover:bg-primary-600 transition-colors duration-150'
-                  : ''
+                  : 'border-r border-b'
                   }`}
               >
                 <div className="flex items-center">
@@ -206,11 +224,14 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                   : 'odd:bg-white even:bg-gray-50 hover:bg-primary-50'
                   } transition-colors duration-150`}
               >
-                {filteredColumns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-5 py-4 whitespace-normal text-sm break-words border-r border-b">
-                    {column.render ? column.render(row) : row[column.accessor]}
-                  </td>
-                ))}
+                {filteredColumns.map((column, colIndex) => {
+                  const originalIndex = originalIndexMap.get(row) ?? rowIndex;
+                  return (
+                    <td key={colIndex} className="px-5 py-4 whitespace-normal text-sm break-words border-r border-b">
+                      {column.render ? column.render(row, originalIndex) : row[column.accessor]}
+                    </td>
+                  );
+                })}
               </tr>
             ))
           )}
