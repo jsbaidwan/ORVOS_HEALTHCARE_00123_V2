@@ -17,7 +17,7 @@ import { Mail, Download, Printer, Upload } from 'lucide-react';
 import Api from '../../utils/api';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
-import InfoItem from '../UI/InfoIteam';
+import InfoItem from '../UI/InfoItem';
 
 const PatientView = () => {
     const { id } = useParams();
