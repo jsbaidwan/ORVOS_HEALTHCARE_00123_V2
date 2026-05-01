@@ -56,7 +56,7 @@ const ClinicsList = ({ archived = false }) => {
 
 
   useEffect(() => {
-
+    setErrors(null);
     if (tab !== prevTab.current) {
       setClinics([])
     }

@@ -8,15 +8,15 @@ const ErrorHandle = ({
   title = "Error"
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-    
+
   // Reset visibility when errors change
   useEffect(() => {
-    
+
     if (errors) {
       setIsVisible(true);
     }
   }, [errors]);
-  
+
   if (!isVisible) return null;
 
   if (!errors || (typeof errors === 'object' && Object.keys(errors).length === 0)) {
@@ -47,9 +47,9 @@ const ErrorHandle = ({
   };
 
   const renderErrors = () => {
-     
+
     if (React.isValidElement(errors)) return errors;
-   
+
     if (typeof errors === 'string') {
       return (
         <div className="flex items-start">
@@ -58,7 +58,7 @@ const ErrorHandle = ({
         </div>
       );
     }
-   
+
     if (Array.isArray(errors)) {
       const msgs = errors.flatMap(item => extractMessages(item));
       return msgs.map((msg, i) => (
@@ -74,7 +74,7 @@ const ErrorHandle = ({
         const messages = extractMessages(value);
         if (messages.length === 0) return null;
         const filteredMessages = messages.filter(msg => msg !== 'manual');
-        
+
         return (
           <div key={field || i} className="mb-2">
             {field !== 'general' && (

@@ -76,6 +76,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
   useEffect(() => {
 
+    setErrors(null);
     if (tab !== prevTab.current) {
       setUsers([])
     }

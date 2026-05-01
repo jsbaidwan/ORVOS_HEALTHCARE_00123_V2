@@ -72,6 +72,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   }, [setPageTitle, status, archived, getTitle]);
 
   useEffect(() => {
+    setErrors(null);
     setReportDownloadStatusData({});
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
