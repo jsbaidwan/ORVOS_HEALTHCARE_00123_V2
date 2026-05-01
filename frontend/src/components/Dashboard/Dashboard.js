@@ -264,18 +264,12 @@ const Dashboard = () => {
                 Pending Patients
               </h2>
 
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-                {pendingPatients?.length}
-              </span>
             </div>
 
             {/* Right Side */}
-            <button
-              onClick={() => navigate(getRoutePath('/patients/pending'))}
-              className="btn-primary text-sm px-4 py-1.5"
-            >
-              View all
-            </button>
+            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+              {pendingPatients?.length}
+            </span>
 
           </div>
 
@@ -333,18 +327,12 @@ const Dashboard = () => {
                 Completed Patients
               </h2>
 
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-                {completedPatients?.length}
-              </span>
             </div>
 
             {/* Right Side */}
-            <button
-              onClick={() => navigate(getRoutePath('/patients/completed'))}
-              className="btn-primary text-sm px-4 py-1.5"
-            >
-              View all
-            </button>
+            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+              {completedPatients?.length}
+            </span>
 
           </div>
 
