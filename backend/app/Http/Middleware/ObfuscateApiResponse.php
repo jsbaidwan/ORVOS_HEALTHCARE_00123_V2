@@ -12,7 +12,7 @@ class ObfuscateApiResponse
         $response = $next($request);
 
         // Normalize env flag (accept "true"/"1"/true)
-        $enabled = filter_var(env('LARAVEL_OBFUSCATE_CONDITION', false), FILTER_VALIDATE_BOOLEAN);
+        $enabled = \config('app.obfuscate_condition');
  
         if (! $enabled) {
             return $response;

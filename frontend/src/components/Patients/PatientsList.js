@@ -873,7 +873,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
               onClick={exportExcel}
               className="inline-flex items-center justify-center btn-primary-light btn-sm rounded px-4 py-2 whitespace-nowrap"
             >
-              <FileSpreadsheet className="w-3 h-3 mr-1" />
+              <FileSpreadsheet className="w-34 h-4 mr-1" />
               Export to Excel
             </button>
 
@@ -898,7 +898,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
                 disabled={selectedIds.length === 0 || !bulkAction}
                 className="inline-flex items-center justify-center btn btn-primary rounded disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
               >
-                <Send className="w-3 h-3 mr-1" />
+                <Send className="w-4 h-4 mr-1" />
                 Submit
               </button>
 

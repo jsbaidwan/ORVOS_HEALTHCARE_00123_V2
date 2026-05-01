@@ -92,45 +92,58 @@ const Api = (getToken) => {
   /**
    * Main API call
    */
-  const call = async (endpoint, method = 'GET', data = null, useToken = true) => {
-    try {
-      const isFormData = data instanceof FormData;
-      const options = {
-        method: method.toUpperCase(),
-        headers: getHeaders(useToken, isFormData),
-      };
+  let apiQueue = Promise.resolve();
 
-      if (data) {
-        if (isFormData) {
-          data.append('app_url', APP_URL);
-          options.body = data;
-        } else {
-          data.app_url = APP_URL;
-          if (method.toUpperCase() !== 'GET') {
-            options.body = JSON.stringify(data);
+  const call = (endpoint, method = 'GET', data = null, useToken = true) => {
+    const runRequest = async () => {
+      try {
+        const isFormData = data instanceof FormData;
+
+        const options = {
+          method: method.toUpperCase(),
+          headers: getHeaders(useToken, isFormData),
+        };
+
+        if (data) {
+          if (isFormData) {
+            data.append('app_url', APP_URL);
+            options.body = data;
+          } else {
+            data.app_url = APP_URL;
+
+            if (method.toUpperCase() !== 'GET') {
+              options.body = JSON.stringify(data);
+            }
           }
         }
+
+        if (method.toUpperCase() === 'GET') {
+          endpoint = addAppUrl(endpoint, APP_URL);
+        }
+
+        const response = await fetch(`${BASE_URL}/${endpoint}`, options);
+
+        return await handleResponse(response);
+
+      } catch (error) {
+        const status = error?.response?.status || 500;
+
+        let message = error?.message || 'An error occurred';
+
+        if (status === 500) {
+          message =
+            'An unexpected error has occurred. Please try again later or contact support if the issue persists.';
+        }
+
+        return { status, error: new ApiError(status, message) };
       }
+    };
 
-      if (method.toUpperCase() === 'GET') {
-        endpoint = addAppUrl(endpoint, APP_URL);
-      }
+    const request = apiQueue.then(runRequest, runRequest);
 
-      const response = await fetch(`${BASE_URL}/${endpoint}`, {
-        ...options,
-      });
-      return await handleResponse(response);
-    } catch (error) {
+    //apiQueue = request.catch(() => { });
 
-      const status = error?.response?.status || 500;
-
-      let message = error?.message || 'An error occurred';
-      if (status === 500) {
-        message = 'An unexpected error has occurred. Please try again later or contact support if the issue persists.'
-      }
-      const apiError = new ApiError(status, message);
-      return { status, error: apiError };
-    }
+    return request;
   };
 
   return {
