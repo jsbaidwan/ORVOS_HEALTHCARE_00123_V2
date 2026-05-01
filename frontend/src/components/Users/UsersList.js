@@ -64,6 +64,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   };
 
   useEffect(() => {
+
     const base = roleTitle ? `${roleTitle}s` : 'Users';
     setPageTitle(archived ? `Archived ${base}` : base);
   }, [setPageTitle, archived, roleTitle]);
@@ -75,7 +76,6 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   }, []);
 
   useEffect(() => {
-
     setErrors(null);
     if (tab !== prevTab.current) {
       setUsers([])
