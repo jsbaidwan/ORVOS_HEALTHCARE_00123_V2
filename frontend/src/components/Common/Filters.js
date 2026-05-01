@@ -189,29 +189,34 @@ const Filters = ({
   };
 
   return (
-    <div className="mb-3 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+    <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-end">
       {filters.map(renderField)}
+
       {(onApply || onReset) && (
-        <div className="flex items-end gap-2">
+        <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-1 flex flex-col sm:flex-row gap-2 w-full">
+
           {onApply && (
             <button
               type="button"
               onClick={onApply}
-              className="inline-flex items-center justify-center px-4 py-2 btn-success btn-sm rounded"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-success btn-sm rounded"
             >
-              <FunnelIcon className='w-3 h-3 mr-2' />
+              <FunnelIcon className="w-3 h-3 mr-2" />
               {applyLabel}
             </button>
           )}
+
           {onReset && (
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center justify-center px-4 py-2 btn-danger btn-sm rounded"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-danger btn-sm rounded"
             >
-              <ArrowPathIcon className='w-3 h-3 mr-2' /> {resetLabel}
+              <ArrowPathIcon className="w-3 h-3 mr-2" />
+              {resetLabel}
             </button>
           )}
+
         </div>
       )}
     </div>
