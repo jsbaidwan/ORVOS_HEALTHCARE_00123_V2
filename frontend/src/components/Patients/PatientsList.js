@@ -843,12 +843,14 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
             Patient filter options and details.
           </p>
         </div>
-        <div className='pb-3 mb-4'>
+        <div className='pb-3 mb-4 p-2'>
           <Filters
             filters={filterConfig}
             onFilterChange={filtersData}
             onApply={applyFilters}
             onReset={resetFilters}
+            applyLabel="Filter"
+            resetLabel="Reset"
           />
         </div>
       </div>
