@@ -199,7 +199,7 @@ const Filters = ({
             <button
               type="button"
               onClick={onApply}
-              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-success btn-sm rounded"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-success-light btn-sm rounded"
             >
               <FunnelIcon className="w-3 h-3 mr-2" />
               {applyLabel}
@@ -210,7 +210,7 @@ const Filters = ({
             <button
               type="button"
               onClick={onReset}
-              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-danger btn-sm rounded"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 btn-danger-light btn-sm rounded"
             >
               <ArrowPathIcon className="w-3 h-3 mr-2" />
               {resetLabel}
