@@ -720,7 +720,6 @@ class PatientController extends Controller
 			</html>
 		", 200);
 
- 
 	}
 
     public function exportPatients(Request $request)
@@ -741,7 +740,7 @@ class PatientController extends Controller
 		
 		if(!isset($input['diagnosis_status'])){
 			return response()->json([
-				'message' => 'The diagnosis is required.'
+				'message' => 'The diagnosis status is required.'
 			], 422);
 		}
     
@@ -758,11 +757,12 @@ class PatientController extends Controller
 			$path,
 			'public'
 		);
+		
 		return response()->json([
-			'status' => true,
 			'file_name' => $fileName,
-			'download_url' => asset('storage/' . $path)
-		]);
+			'download_url' => asset('storage/' . $path),
+			'message' => 'Patients list exported successfully.'
+		], 200); 
     }
 	 
 

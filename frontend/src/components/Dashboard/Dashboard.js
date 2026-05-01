@@ -257,10 +257,26 @@ const Dashboard = () => {
         {/* Pending Patients Card */}
         <div className="bg-white rounded-xl shadow-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Pending Patients</h2>
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-              {pendingPatients?.length}
-            </span>
+
+            {/* Left Side */}
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-gray-900">
+                Pending Patients
+              </h2>
+
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                {pendingPatients?.length}
+              </span>
+            </div>
+
+            {/* Right Side */}
+            <button
+              onClick={() => navigate(getRoutePath('/patients/pending'))}
+              className="btn-primary text-sm px-4 py-1.5"
+            >
+              View all
+            </button>
+
           </div>
 
           <div className="space-y-3 mb-4">
@@ -310,10 +326,26 @@ const Dashboard = () => {
         {/* Completed Patients Card */}
         <div className="bg-white rounded-xl shadow-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Completed Patients</h2>
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              {completedPatients?.length}
-            </span>
+
+            {/* Left Side */}
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-gray-900">
+                Completed Patients
+              </h2>
+
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                {completedPatients?.length}
+              </span>
+            </div>
+
+            {/* Right Side */}
+            <button
+              onClick={() => navigate(getRoutePath('/patients/completed'))}
+              className="btn-primary text-sm px-4 py-1.5"
+            >
+              View all
+            </button>
+
           </div>
 
           <div className="space-y-3 mb-4">
@@ -393,7 +425,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Orvos Doctors</h2>
             <button
-              onClick={() => navigate(getRoutePath('/users'))}
+              onClick={() => navigate(getRoutePath('/users/orvos-doctor'))}
               className="btn-primary text-sm px-4 py-1.5"
             >
               View all

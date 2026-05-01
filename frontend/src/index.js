@@ -15,16 +15,16 @@ import { TitleProvider } from "./context/TitleContext";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
-    <LoaderProvider>
-      <ToastProvider>
-       <TitleProvider>
-        <Toaster  position="top-right" richColors closeButton animation="zoom" />
+  <LoaderProvider>
+    <ToastProvider>
+      <TitleProvider>
+        <Toaster position="top-right" richColors closeButton animation="zoom" />
         <App />
-       </TitleProvider>
-      </ToastProvider>
-    </LoaderProvider>
+      </TitleProvider>
+    </ToastProvider>
+  </LoaderProvider>
   // </React.StrictMode>
- 
+
 );
 
 

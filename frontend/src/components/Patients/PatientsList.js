@@ -14,7 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 import Swal from 'sweetalert2';
-import { PlaneIcon } from 'lucide-react';
+import { Send, FileSpreadsheet } from 'lucide-react';
 
 const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'all' }) => {
   const {
@@ -24,7 +24,8 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     archivePatient,
     unarchivePatient,
     markAsCompleted,
-    downloadReport
+    downloadReport,
+    exportToExcel,
   } = usePatient();
 
   const initialFilters = {
@@ -444,9 +445,9 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
               {row.fax_status === 3 && (
                 <>
                   <br />
-                  <p className={`text-danger text-xs`}>
+                  <span className={`text-danger text-xs`}>
                     ({row.fax_status_data?.message})
-                  </p>
+                  </span>
                 </>
               )}
             </p>
@@ -686,6 +687,78 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     }
   };
 
+  const exportExcel = async () => {
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to export patient's data?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, export it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+      confirmButtonColor: "#009efb",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          const response = await exportToExcel({ 'diagnosis_status': diagnosis_status });
+
+          if (!response || response.status !== 200) {
+            Swal.showValidationMessage(
+              response?.data?.message || 'Failed to export patients list. Please try again.'
+            );
+            return false;
+          }
+
+          return response;
+
+        } catch (error) {
+          Swal.showValidationMessage('Something went wrong. Please try again.');
+          return false;
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const response = result.value;
+        if (response.status === 200) {
+
+          Swal.fire({
+            title: "Export",
+            text: response?.data?.message || "Patients list exported successfully",
+            icon: "success",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#009efb",
+            timer: 2000,
+            timerProgressBar: true
+          });
+
+          const url = response?.data?.download_url;
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = response?.data?.file_name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: response?.data?.message || 'Failed to export patients list. Please try again.',
+          });
+          Swal.showValidationMessage('Failed to export patients list. Please try again.');
+        }
+
+        return false;
+      }
+    });
+
+
+  }
+
   const filterConfig = [
     // {
     //   key: 'q',
@@ -779,37 +852,56 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         </div>
       </div>
 
+      <div className="bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6">
+        <div className="px-4 py-5 sm:px-6 flex flex-col gap-4">
 
-      <div className='bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6'>
-        <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Patients</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Patient records and details.
-            </p>
+          {/* Top Row: Title Left / Export Right */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Patients</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Patient records and details.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={exportExcel}
+              className="inline-flex items-center justify-center btn-success btn-sm rounded px-4 py-2 whitespace-nowrap"
+            >
+              <FileSpreadsheet className="w-3 h-3 mr-1" />
+              Export to Excel
+            </button>
+
           </div>
 
+          {/* Bottom Row: Bulk Left */}
           {!isPendingDiagnosis && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+
               <select
                 value={bulkAction}
                 onChange={(e) => setBulkAction(e.target.value)}
-                className="block w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#009efb] focus:border-[#009efb]"
+                className="w-full sm:w-44 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#009efb]"
               >
                 <option value="">Bulk Action</option>
                 <option value="download_pdf">Download as PDF</option>
               </select>
+
               <button
                 type="button"
                 onClick={handleBulkSubmit}
-                className="inline-flex items-center justify-center btn btn-primary rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={selectedIds.length === 0 || !bulkAction}
+                className="inline-flex items-center justify-center btn btn-primary rounded disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
               >
-                <PlaneIcon className="w-3 h-3 mr-1" />
+                <Send className="w-3 h-3 mr-1" />
                 Submit
               </button>
+
             </div>
           )}
+
         </div>
       </div>
 
@@ -824,13 +916,15 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         />
       </div>
 
-      {patients?.length > 0 && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          lastPage={pagination.lastPage}
-          onPageChange={handlePageChange}
-        />
-      )}
+      {
+        patients?.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            lastPage={pagination.lastPage}
+            onPageChange={handlePageChange}
+          />
+        )
+      }
 
       {/* Archive Confirmation Modal */}
       <Modal
@@ -863,7 +957,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 };
 
