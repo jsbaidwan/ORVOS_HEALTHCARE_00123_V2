@@ -27,6 +27,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { title: 'Clinic Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" />, module_id: 8 },
     { title: 'Clinics', basePath: '/clinics', icon: <BuildingStorefrontIcon className="w-5 h-5" />, module_id: 1 },
     {
+      title: 'Users',
+      basePath: '/users',
+      icon: <UserGroupIcon className="w-5 h-5" />,
+      module_id: 3,
+      subItems: [
+        ...userRoleSlugs.map((r) => ({
+          title: r.title,
+          basePath: `/users/${r.slug}`,
+          module_id: 3,
+        })),
+        { title: 'Add User', basePath: '/users/create', icon: <PlusIcon className="w-4 h-4" />, module_id: 3 },
+      ],
+    },
+    {
       title: 'Patients',
       basePath: '/patients',
       icon: <UserGroupIcon className="w-5 h-5" />,
@@ -46,20 +60,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { title: 'Clinic Patients', basePath: '/reports/clinic-patients', module_id: 6 },
         { title: 'Orvos Doctor Review', basePath: '/reports/orvos-doctor-review', module_id: 6 },
       ]
-    },
-    {
-      title: 'Users',
-      basePath: '/users',
-      icon: <UserGroupIcon className="w-5 h-5" />,
-      module_id: 3,
-      subItems: [
-        ...userRoleSlugs.map((r) => ({
-          title: r.title,
-          basePath: `/users/${r.slug}`,
-          module_id: 3,
-        })),
-        { title: 'Add User', basePath: '/users/create', icon: <PlusIcon className="w-4 h-4" />, module_id: 3 },
-      ],
     },
     { title: 'Settings', basePath: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, module_id: true },
     { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
