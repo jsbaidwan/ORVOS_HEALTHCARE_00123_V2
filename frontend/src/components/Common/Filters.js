@@ -1,34 +1,22 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import Select from 'react-select';
+import { MultiSelect } from 'react-multi-select-component';
 import {
   FunnelIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
-const multiSelectStyles = (hasError) => ({
-  control: (base, state) => ({
-    ...base,
-    borderColor: hasError
-      ? '#ef4444'
-      : state.isFocused
-        ? '#009efb'
-        : '#d1d5db',
-    boxShadow: state.isFocused ? '0 0 0 2px rgba(0, 158, 251, 0.2)' : base.boxShadow,
-    '&:hover': { borderColor: state.isFocused ? '#009efb' : '#9ca3af' },
-    minHeight: '38px',
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
-  }),
-  multiValue: (base) => ({ ...base, backgroundColor: '#e0f2fe', borderRadius: '0.25rem' }),
-  multiValueLabel: (base) => ({ ...base, color: '#0369a1', fontSize: '0.8rem' }),
-  multiValueRemove: (base) => ({
-    ...base,
-    color: '#0369a1',
-    '&:hover': { backgroundColor: '#bae6fd', color: '#0c4a6e' },
-  }),
-  menu: (base) => ({ ...base, zIndex: 50 }),
+const rmscVars = (hasError) => ({
+  '--rmsc-main': '#009efb',
+  '--rmsc-hover': '#f1f9ff',
+  '--rmsc-selected': '#e0f2fe',
+  '--rmsc-border': hasError ? '#ef4444' : '#d1d5db',
+  '--rmsc-gray': '#6b7280',
+  '--rmsc-bg': '#fff',
+  '--rmsc-p': '8px',
+  '--rmsc-radius': '0.375rem',
+  '--rmsc-h': '38px',
 });
 
 // Convert Date object → "MM-DD-YYYY" string for the parent / API
@@ -152,22 +140,28 @@ const Filters = ({
       );
 
       inputEl = (
-        <Select
-          isMulti
-          options={options}
-          value={selectedOptions}
-          onChange={(selected) =>
-            handleInputChange(
-              filter.key,
-              selected ? selected.map((s) => s.value) : []
-            )
-          }
-          placeholder={filter.placeholder || 'Select...'}
-          classNamePrefix="react-select"
-          isClearable={filter.isClearable !== false}
-          closeMenuOnSelect={false}
-          styles={multiSelectStyles(!!fieldError)}
-        />
+        <div className="rmsc-wrapper" style={rmscVars(!!fieldError)}>
+          <MultiSelect
+            options={options}
+            value={selectedOptions}
+            onChange={(selected) =>
+              handleInputChange(
+                filter.key,
+                selected ? selected.map((s) => s.value) : []
+              )
+            }
+            labelledBy={filter.label || filter.placeholder || 'Select'}
+            hasSelectAll={filter.hasSelectAll !== false}
+            disableSearch={filter.disableSearch === true}
+            overrideStrings={{
+              selectSomeItems: filter.placeholder || 'Select...',
+              allItemsAreSelected: 'All items are selected.',
+              selectAll: 'Select all',
+              search: 'Search...',
+              ...(filter.overrideStrings || {}),
+            }}
+          />
+        </div>
       );
     } else {
       return null;

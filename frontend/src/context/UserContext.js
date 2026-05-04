@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import Api from '../utils/api';
 import { handleApiError } from '../utils/errorHandler';
@@ -23,14 +23,22 @@ export const UserProvider = ({ children }) => {
     total: 0,
   });
 
+  const usersListFetchGenRef = useRef(0);
+
   const getUsers = useCallback(async (page = 1, filters = {}, paginate) => {
     const api = Api(() => getToken());
     if (!api) return;
+
+    const fetchGen = ++usersListFetchGenRef.current;
 
     try {
       const data = { paginate, page, ...filters };
       const endpoint = 'users?data=' + encodeURIComponent(JSON.stringify(data));
       const response = await api.call(endpoint, 'GET', null, true);
+
+      if (fetchGen !== usersListFetchGenRef.current) {
+        return;
+      }
 
       if (response.status === 200) {
         const responseData = response.data.users;
@@ -55,12 +63,36 @@ export const UserProvider = ({ children }) => {
           return responseData;
         }
       } else {
+        if (fetchGen !== usersListFetchGenRef.current) return;
         return handleApiError(response.error, logout);
       }
     } catch (err) {
-      return handleApiError(err, logout);
+      if (fetchGen === usersListFetchGenRef.current) {
+        return handleApiError(err, logout);
+      }
     }
   }, [getToken, logout]);
+
+  const getUsersList = useCallback(async (filters = {}) => {
+    const api = Api(() => getToken());
+    if (!api) return [];
+
+    try {
+      const data = { paginate: false, ...filters };
+      const endpoint = 'users?data=' + encodeURIComponent(JSON.stringify(data));
+      const response = await api.call(endpoint, 'GET', null, true);
+
+      if (response.status === 200) {
+        const responseData = response.data.users;
+        if (Array.isArray(responseData)) return responseData;
+        if (responseData?.data && Array.isArray(responseData.data)) return responseData.data;
+        return [];
+      }
+      return [];
+    } catch (err) {
+      return [];
+    }
+  }, [getToken]);
 
   const getUserById = useCallback(async (id,options = {}) => {
     const api = Api(() => getToken());
@@ -182,6 +214,7 @@ export const UserProvider = ({ children }) => {
     setUsers,
     pagination,
     getUsers,
+    getUsersList,
     getUserById,
     addUser,
     updateUser,

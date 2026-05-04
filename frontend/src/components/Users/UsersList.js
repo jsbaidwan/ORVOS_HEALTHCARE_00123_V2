@@ -23,11 +23,18 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     setUsers,
     pagination,
     getUsers,
+    getUsersList,
     archiveUser,
     unarchiveUser,
   } = useUser();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const initialFilters = {
+    q: '',
+    user_ids: [],
+    emails: [],
+  };
+  const [filterValues, setFilterValues] = useState(initialFilters);
+  const [filterOptionUsers, setFilterOptionUsers] = useState([]);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [userToArchive, setUserToArchive] = useState(null);
   const { showLoader, hideLoader } = useLoader();
@@ -43,6 +50,9 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const userRoleSlugs = useUserRoleSlugs();
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
+
+  const parseListParam = (value) =>
+    !value ? [] : String(value).split(',').map((v) => v.trim()).filter(Boolean);
 
   const roleEntry = roleIdProp
     ? userRoleSlugs.find((r) => r.roleId === roleIdProp)
@@ -89,13 +99,19 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     const loadData = async () => {
       const params = new URLSearchParams(window.location.search);
       const page = parseInt(params.get('page')) || 1;
-      const q = params.get('q') || '';
       const roleId = roleIdProp ?? params.get('role_id') ?? '';
 
-      setSearchTerm(q);
+      const loadedFilters = {
+        q: params.get('q') || '',
+        user_ids: parseListParam(params.get('user_ids')),
+        emails: parseListParam(params.get('emails')),
+      };
+      setFilterValues(loadedFilters);
 
       const filters = {};
-      if (q) filters.q = q;
+      if (loadedFilters.q) filters.q = loadedFilters.q;
+      if (loadedFilters.user_ids.length) filters.user_ids = loadedFilters.user_ids;
+      if (loadedFilters.emails.length) filters.emails = loadedFilters.emails;
       if (roleId) filters.role_id = roleId;
       filters.active = tab;
       filters.is_archived = archived;
@@ -120,7 +136,19 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, location.search, tab, roleIdProp]);
+  }, [location, tab, roleIdProp, archived]);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      const optionFilters = {};
+      if (roleIdProp) optionFilters.role_id = roleIdProp;
+      optionFilters.is_archived = archived;
+      optionFilters.active = tab;
+      const list = await getUsersList(optionFilters);
+      setFilterOptionUsers(Array.isArray(list) ? list : []);
+    };
+    loadOptions();
+  }, [getUsersList, roleIdProp, archived, tab]);
 
 
   const handleArchive = (user) => {
@@ -170,6 +198,22 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     }
   };
 
+  const buildActiveFilters = (values = filterValues) => {
+    const filters = {};
+    filters.active = tab;
+    filters.is_archived = archived;
+
+    const params = new URLSearchParams(window.location.search);
+    const roleId = roleIdProp ?? params.get('role_id');
+    if (roleId) filters.role_id = roleId;
+
+    if (values.q) filters.q = values.q;
+    if (values.user_ids?.length) filters.user_ids = values.user_ids;
+    if (values.emails?.length) filters.emails = values.emails;
+
+    return filters;
+  };
+
   const runFilterRequest = async (filters) => {
     const seq = ++requestSeqRef.current;
     const response = await getUsers(1, filters, true);
@@ -183,40 +227,81 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   };
 
   const filtersData = (key, value) => {
-    if (key === 'q') setSearchTerm(value);
+    if (!(key in initialFilters)) return;
+
+    const nextValues = { ...filterValues, [key]: value };
+    setFilterValues(nextValues);
+
+    if (key !== 'q') return;
 
     const newUrl = new URL(window.location);
-    let filters = {};
-    filters.active = tab;
-    filters.is_archived = archived;
-
-    const roleId = roleIdProp ?? newUrl.searchParams.get('role_id');
-    if (roleId) filters.role_id = roleId;
-
-    if (key === 'q') {
-      filters.q = value;
-      if (value) {
-        newUrl.searchParams.set('q', value);
-      } else {
-        newUrl.searchParams.delete('q');
-      }
+    if (value) {
+      newUrl.searchParams.set('q', value);
+    } else {
+      newUrl.searchParams.delete('q');
     }
-
     newUrl.searchParams.delete('page');
     window.history.pushState({}, '', newUrl);
 
-    if (key === 'q') {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        runFilterRequest(filters);
-      }, 400);
-      return;
-    }
-
-    runFilterRequest(filters);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      runFilterRequest(buildActiveFilters(nextValues));
+    }, 400);
   };
 
+  const applyFilters = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+
+    const newUrl = new URL(window.location);
+    Object.entries(filterValues).forEach(([k, v]) => {
+      const isEmpty = Array.isArray(v) ? v.length === 0 : !v;
+      if (isEmpty) {
+        newUrl.searchParams.delete(k);
+      } else if (Array.isArray(v)) {
+        newUrl.searchParams.set(k, v.join(','));
+      } else {
+        newUrl.searchParams.set(k, v);
+      }
+    });
+    newUrl.searchParams.delete('page');
+    window.history.pushState({}, '', newUrl);
+
+    runFilterRequest(buildActiveFilters());
+  };
+
+  const resetFilters = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+
+    setFilterValues(initialFilters);
+
+    const newUrl = new URL(window.location);
+    Object.keys(initialFilters).forEach((k) => newUrl.searchParams.delete(k));
+    newUrl.searchParams.delete('page');
+    window.history.pushState({}, '', newUrl);
+
+    runFilterRequest(buildActiveFilters(initialFilters));
+  };
+
+  const { currentPage = 1, perPage = 10 } = pagination || {};
+
   const columns = [
+    {
+      header: '#',
+      accessor: 'sno',
+      render: (row, index) => (
+        <div className='flex items-center justify-center'>
+          <span className="text-gray-500">
+            {((currentPage - 1) * perPage) + index + 1}
+          </span>
+        </div>
+      ),
+    },
     {
       header: 'User',
       accessor: 'name',
@@ -340,29 +425,42 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   ];
 
   const handlePageChange = async (page) => {
-    let filters = {};
-    filters.active = tab;
-    filters.is_archived = archived;
-    if (searchTerm) filters.q = searchTerm;
-
-    const params = new URLSearchParams(window.location.search);
-    const roleId = roleIdProp ?? params.get('role_id');
-    if (roleId) filters.role_id = roleId;
-
-    await getUsers(page, filters, true);
+    await getUsers(page, buildActiveFilters(), true);
 
     const newUrl = new URL(window.location);
     newUrl.searchParams.set('page', page);
     window.history.pushState({}, '', newUrl);
   };
 
+  const nameOptions = filterOptionUsers.map((u) => ({
+    value: String(u.id),
+    label: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email || `#${u.id}`,
+  }));
+
+  const emailOptions = Array.from(
+    new Map(
+      filterOptionUsers
+        .filter((u) => !!u.email)
+        .map((u) => [u.email, { value: u.email, label: u.email }])
+    ).values()
+  );
 
   const filterConfig = [
     {
-      key: 'q',
-      type: 'search',
-      placeholder: 'Search users...',
-      value: searchTerm,
+      key: 'user_ids',
+      type: 'multi-select',
+      label: 'Names',
+      placeholder: 'Select names...',
+      value: filterValues.user_ids,
+      options: nameOptions,
+    },
+    {
+      key: 'emails',
+      type: 'multi-select',
+      label: 'Emails',
+      placeholder: 'Select emails...',
+      value: filterValues.emails,
+      options: emailOptions,
     },
   ];
 
@@ -422,9 +520,27 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       </div>
 
       <ErrorHandle errors={errors} />
-      <Filters filters={filterConfig} onFilterChange={filtersData} />
 
-      <div className="bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm">
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className='border-b border-gray-200 pb-3 mb-4'>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Filters</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            User filter options and details.
+          </p>
+        </div>
+        <div className='pb-3 mb-4 p-2'>
+          <Filters
+            filters={filterConfig}
+            onFilterChange={filtersData}
+            onApply={applyFilters}
+            onReset={resetFilters}
+            applyLabel="Filter"
+            resetLabel="Reset"
+          />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">{roleTitle ? `${roleTitle}s` : 'Users'}</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">

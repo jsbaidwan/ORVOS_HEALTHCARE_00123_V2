@@ -117,7 +117,23 @@ class Helper{
 				});
 			}); 
 		}
-		
+
+		if(!empty($filters['user_ids'])){
+			$ids = is_array($filters['user_ids']) ? $filters['user_ids'] : explode(',', $filters['user_ids']);
+			$ids = array_filter(array_map('trim', $ids), function($v){ return $v !== ''; });
+			if(!empty($ids)){
+				$query->whereIn('id', $ids);
+			}
+		}
+
+		if(!empty($filters['emails'])){
+			$emails = is_array($filters['emails']) ? $filters['emails'] : explode(',', $filters['emails']);
+			$emails = array_filter(array_map('trim', $emails), function($v){ return $v !== ''; });
+			if(!empty($emails)){
+				$query->whereIn('email', $emails);
+			}
+		}
+
 		if(!empty(\Auth::user()) ){
 			if(\Auth::user()->role_id != 1){
 				 

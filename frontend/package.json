@@ -19,6 +19,7 @@
     "react-idle-timer": "^5.7.2",
     "react-image-magnify": "^2.7.4",
     "react-inner-image-zoom": "^4.0.1",
+    "react-multi-select-component": "^4.3.4",
     "react-router-dom": "^6.20.0",
     "react-scripts": "5.0.1",
     "react-select": "^5.10.2",

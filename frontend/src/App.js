@@ -41,7 +41,7 @@ import UsersList from './components/Users/UsersList';
 import UserForm from './components/Users/UserForm';
 import UserView from './components/Users/UserView';
 import ArchiveUsers from './components/Users/ArchiveUsers';
-import Profile from './components/Profile/Profile';
+import Profile from './components/Users/Profile';
 // Support Components
 import Support from './components/Support/Support';
 
