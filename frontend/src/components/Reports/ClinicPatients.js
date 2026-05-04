@@ -152,7 +152,7 @@ const ClinicPatients = () => {
 
   return (
     <div className="py-6">
-      <Breadcrumb removeSegemnts={['reports']} />
+      <Breadcrumb removeSegments={['reports']} />
 
       <div className="mb-3">
         <div className="flex justify-between items-center">

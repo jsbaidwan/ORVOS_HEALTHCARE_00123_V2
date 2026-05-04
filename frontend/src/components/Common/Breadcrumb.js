@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline';
 import { useRoutePath } from '../../hooks/useRoutePath';
 
-const Breadcrumb = ({ removeSegemnts = [] }) => {
+const Breadcrumb = ({ removeSegments = [] }) => {
   const location = useLocation();
   const getRoutePath = useRoutePath();
   const routePathParam = ["pending", "completed"].find((s) =>
@@ -31,12 +31,12 @@ const Breadcrumb = ({ removeSegemnts = [] }) => {
     ].includes(prev)) {
       return 'Edit';
     }
-    if (removeSegemnts.includes(segment)) {
+    if (removeSegments.includes(segment)) {
       return null
     }
 
-    const newSegemnts = removeSegemnts.filter((seg) => seg !== segment);
-    switch (newSegemnts) {
+    const newSegments = removeSegments.filter((seg) => seg !== segment);
+    switch (newSegments) {
       case 'dashboard':
         return 'Dashboard';
       case 'patients':
