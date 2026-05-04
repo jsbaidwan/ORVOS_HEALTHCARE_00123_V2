@@ -35,7 +35,8 @@ import ClinicGroupView from './components/ClinicGroups/ClinicGroupView';
 import PatientsList from './components/Patients/PatientsList';
 import PatientForm from './components/Patients/PatientForm';
 import PatientView from './components/Patients/PatientView';
-import Reports from './components/Reports/Reports';
+import ClinicPatientsReport from './components/Reports/ClinicPatients';
+import OrvosDoctorReviewReport from './components/Reports/OrvosDoctorReview';
 import Settings from './components/Settings/Settings';
 import UsersList from './components/Users/UsersList';
 import UserForm from './components/Users/UserForm';
@@ -217,14 +218,24 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
           </ProtectedRoute>
         }
       />
+
       <Route
-        path={`${basePath}/reports`}
+        path={`${basePath}/reports/clinic-patients`}
         element={
           <ProtectedRoute permission={permission(6, 'read')} requiredRole={roleId}>
-            <MainLayout><Reports /></MainLayout>
+            <MainLayout><ClinicPatientsReport /></MainLayout>
           </ProtectedRoute>
         }
       />
+      <Route
+        path={`${basePath}/reports/orvos-doctor-review`}
+        element={
+          <ProtectedRoute permission={permission(6, 'read')} requiredRole={roleId}>
+            <MainLayout><OrvosDoctorReviewReport /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path={`${basePath}/users`}
         element={

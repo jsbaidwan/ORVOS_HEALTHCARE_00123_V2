@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline';
 import { useRoutePath } from '../../hooks/useRoutePath';
 
-const Breadcrumb = () => {
+const Breadcrumb = ({ removeSegemnts = [] }) => {
   const location = useLocation();
   const getRoutePath = useRoutePath();
   const routePathParam = ["pending", "completed"].find((s) =>
@@ -26,13 +26,17 @@ const Breadcrumb = () => {
     const prev = segments[index - 1];
     const isNumeric = !isNaN(Number(segment));
     if (isNumeric && prev && [
-       
+
       'patients', 'clinics', 'users', 'reports', 'settings', 'support', 'emails', 'templates'
     ].includes(prev)) {
       return 'Edit';
     }
+    if (removeSegemnts.includes(segment)) {
+      return null
+    }
 
-    switch (segment) {
+    const newSegemnts = removeSegemnts.filter((seg) => seg !== segment);
+    switch (newSegemnts) {
       case 'dashboard':
         return 'Dashboard';
       case 'patients':
@@ -51,7 +55,7 @@ const Breadcrumb = () => {
         return 'Emails';
       case 'templates':
         return 'Templates';
-      
+
       default:
         if (!isNaN(parseInt(segment, 10)) && index === segments.length - 1) {
           return ''; // ignore last segment if it's a number
@@ -87,7 +91,7 @@ const Breadcrumb = () => {
             <span className="sr-only">Home</span>
           </Link>
         </li>
-        
+
         {visibleItems.map(({ seg, idx: rawIdx, name }, i) => {
           const isLast = i === visibleItems.length - 1;
           const toPath = buildPathThroughIndex(rawIdx);

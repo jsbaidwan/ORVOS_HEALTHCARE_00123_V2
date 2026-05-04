@@ -37,7 +37,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { title: 'Add Patient', basePath: '/patients/create', icon: <PlusIcon className="w-4 h-4" />, module_id: 2 },
       ],
     },
-    { title: 'Reports', basePath: '/reports', icon: <DocumentChartBarIcon className="w-5 h-5" />, module_id: 6 },
+    {
+      title: 'Reports',
+      basePath: '/reports',
+      icon: <DocumentChartBarIcon className="w-5 h-5" />,
+      module_id: 6,
+      subItems: [
+        { title: 'Clinic Patients', basePath: '/reports/clinic-patients', module_id: 6 },
+        { title: 'Orvos Doctor Review', basePath: '/reports/orvos-doctor-review', module_id: 6 },
+      ]
+    },
     {
       title: 'Users',
       basePath: '/users',

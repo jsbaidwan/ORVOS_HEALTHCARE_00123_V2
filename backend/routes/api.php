@@ -28,8 +28,10 @@ Route::middleware('auth:api')->group(function () {
 	Route::post('clone','App\Http\Controllers\Api\PatientController@clone');
 	Route::post('remark/{id}','App\Http\Controllers\Api\PatientController@remark');
 	Route::post('patients/export','App\Http\Controllers\Api\PatientController@exportPatients');
-	
-	  
+	Route::get('reports/clinic-patient','App\Http\Controllers\Api\ReportController@clinicPatient');
+    Route::get('reports/orvos-doctor-review','App\Http\Controllers\Api\ReportController@orvosDoctorReview');
+    Route::post('reports/get-doctor-states','App\Http\Controllers\Api\ReportController@getDoctorStates');
+	 
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
 	});

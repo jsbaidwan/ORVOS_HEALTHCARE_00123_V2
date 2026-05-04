@@ -41,6 +41,26 @@ const parseDateIn = (value) => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+// Convert "MM-YYYY" string → Date object for the month picker
+const parseMonthIn = (value) => {
+  if (!value) return null;
+  const parts = String(value).split('-');
+  if (parts.length !== 2) return null;
+  const [mm, yyyy] = parts;
+  const d = new Date(Number(yyyy), Number(mm) - 1, 1);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+// Convert Date object → "MM-YYYY" string for the parent / API
+const formatMonthOut = (date) => {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}-${yyyy}`;
+};
+
 const Filters = ({
   filters = [],
   onFilterChange,
@@ -114,6 +134,19 @@ const Filters = ({
           dropdownMode="select"
           maxDate={filter.maxDate ?? new Date()}
           minDate={filter.minDate}
+          isClearable={filter.isClearable !== false}
+          wrapperClassName="w-full"
+        />
+      );
+    } else if (filter.type === 'month') {
+      inputEl = (
+        <DatePicker
+          selected={parseMonthIn(filter.value)}
+          onChange={(date) => handleInputChange(filter.key, formatMonthOut(date))}
+          dateFormat="MM-yyyy"
+          showMonthYearPicker
+          placeholderText={filter.placeholder || 'MM-YYYY'}
+          className={`w-full border ${errorBorder} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
           isClearable={filter.isClearable !== false}
           wrapperClassName="w-full"
         />
