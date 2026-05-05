@@ -12,6 +12,8 @@ class ClinicUser extends Authenticatable
     use Notifiable;
 
 	protected $table = 'clinic_users';  
+	
+	protected $appends = ['formated_created_at'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -26,9 +28,9 @@ class ClinicUser extends Authenticatable
 		
 		'user_id'  => 'required',
 		'clinic_id' => 'required',
-         
-		 
+          
     );
+	 
 
     public function clinic() 
     {  
@@ -41,5 +43,18 @@ class ClinicUser extends Authenticatable
         return $this->hasOne('App\Models\User','id','user_id');
 
     }
+	
+	public function getFormatedCreatedAtAttribute()
+	{
+		if (empty($this->created_at)) {
+			return '';
+		}
+		
+		try {
+			return \Carbon\Carbon::parse($this->created_at)->format('D, M d Y');
+		} catch (\Exception $e) {
+			return '';
+		}
+	}
        
 }

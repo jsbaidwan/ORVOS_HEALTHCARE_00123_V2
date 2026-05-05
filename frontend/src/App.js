@@ -10,6 +10,7 @@ import { ChangePasswordProvider } from './context/ChangePasswordContext';
 import { UserProvider } from './context/UserContext';
 import { ForgotPasswordProvider } from './context/ForgotPasswordContext';
 import { PermissionsProvider, usePermissions } from './context/PermissionsContext';
+import { ClinicStaffsProvider } from './context/ClinicStaffsContext';
 
 // Layout Components
 import Header from './components/Common/Header';
@@ -28,6 +29,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import ClinicsList from './components/Clinics/ClinicsList';
 import ClinicForm from './components/Clinics/ClinicForm';
 import ClinicView from './components/Clinics/ClinicView';
+import StaffsList from './components/Clinics/Staffs/StaffsList';
 import ArchiveClinics from './components/Clinics/ArchiveClinics';
 import ClinicGroupList from './components/ClinicGroups/ClinicGroupList';
 import ArchiveClinicGroups from './components/ClinicGroups/ArchiveClinicGroups';
@@ -167,6 +169,15 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
         element={
           <ProtectedRoute permission={permission(1, 'read')} requiredRole={roleId}>
             <MainLayout><ArchiveClinics /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={`${basePath}/clinics/:id/staffs`}
+        element={
+          <ProtectedRoute permission={permission(4, 'read')} requiredRole={roleId}>
+            <MainLayout><StaffsList /></MainLayout>
           </ProtectedRoute>
         }
       />
@@ -471,19 +482,21 @@ function App() {
           <ForgotPasswordProvider>
             <PermissionsProvider>
               <ClinicProvider>
-                <ClinicGroupProvider>
-                  <PatientProvider>
-                    <ReportProvider>
-                      <SettingsProvider>
-                        <ChangePasswordProvider>
-                          <UserProvider>
-                            <AppContent />
-                          </UserProvider>
-                        </ChangePasswordProvider>
-                      </SettingsProvider>
-                    </ReportProvider>
-                  </PatientProvider>
-                </ClinicGroupProvider>
+                <ClinicStaffsProvider>
+                  <ClinicGroupProvider>
+                    <PatientProvider>
+                      <ReportProvider>
+                        <SettingsProvider>
+                          <ChangePasswordProvider>
+                            <UserProvider>
+                              <AppContent />
+                            </UserProvider>
+                          </ChangePasswordProvider>
+                        </SettingsProvider>
+                      </ReportProvider>
+                    </PatientProvider>
+                  </ClinicGroupProvider>
+                </ClinicStaffsProvider>
               </ClinicProvider>
             </PermissionsProvider>
           </ForgotPasswordProvider>

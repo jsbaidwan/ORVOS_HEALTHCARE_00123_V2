@@ -364,5 +364,61 @@ class ClinicController extends Controller
 		 
         return response()->json(['message' => \Helper::alertMsg('delete','Clinic','success')['message']], 200); 
     }
+	
+	 /**
+     * Get staff the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+
+    public function staff(Request $request,$id)
+    {        
+		$haveAccess = \Helper::permission(4,'read');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+		 
+        $clinic = \Helper::getClinicById($id)['clinic'];
+        if(!$clinic){
+           return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+        }
+		
+		$search = trim($input['q'] ?? null);
+		$perPage = env('PAGINATION_PER_PAGE', 15);
+		$page = $filters['page'] ?? 1;
+		$clinicUsers = $clinic->clinicUsers()
+			->with(['user', 'user.role'])
+
+			// 🔍 Search (name + email + role name)
+			->when($search, function ($q) use ($search) {
+				$q->where(function ($main) use ($search) {
+
+					// search in user
+					$main->whereHas('user', function ($q2) use ($search) {
+						$q2->where(function ($q3) use ($search) {
+							$q3->whereRaw(
+								"CONCAT(first_name, ' ', COALESCE(last_name, '')) LIKE ?",
+								["%{$search}%"]
+							)
+							->orWhere('email', 'like', "%{$search}%");
+						});
+					})
+
+					// OR search in role name
+					->orWhereHas('user.role', function ($q2) use ($search) {
+						$q2->where('name', 'like', "%{$search}%");
+					});
+
+				});
+			})
+
+			->paginate($perPage, ['*'], 'page', $page)
+			->appends($request->query());
+			  
+		
+		return json_encode(['clinicUsers' => $clinicUsers,'clinic' => $clinic]);
+      
+    }
   
 }

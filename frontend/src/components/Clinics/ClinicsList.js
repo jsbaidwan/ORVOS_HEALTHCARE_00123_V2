@@ -6,7 +6,7 @@ import Modal from '../Common/Modal';
 import ClinicForm from './ClinicForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon, EyeIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EyeIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -283,6 +283,10 @@ const ClinicsList = ({ archived = false }) => {
           >
             {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
+
+          <Link to={getRoutePath(`/clinics/${row.id}/staffs`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
+            <EllipsisVerticalIcon className="w-5 h-5" />
+          </Link>
         </div>
       ),
     },

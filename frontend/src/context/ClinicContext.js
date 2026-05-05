@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 import Api from '../utils/api';
 import { handleApiError } from '../utils/errorHandler';
 const ClinicContext = createContext();
- 
+
 export const useClinic = () => {
   const context = useContext(ClinicContext);
   if (!context) {
@@ -21,7 +21,7 @@ export const ClinicProvider = ({ children }) => {
     perPage: 10,
     total: 0,
   });
-   
+
   const getClinics = useCallback(async (page = 1, filters = {}, paginate) => {
     const api = Api(() => getToken());
     if (!api) return;
@@ -66,19 +66,19 @@ export const ClinicProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-  const getClinicById = useCallback(async (id,options = {}) => {
+  const getClinicById = useCallback(async (id, options = {}) => {
     const api = Api(() => getToken());
     if (!api) return;
 
     try {
       let url = `clinics/${id}/edit`;
-      if(options?.action && options?.action === 'view'){
-       url = `clinics/${id}`;
+      if (options?.action && options?.action === 'view') {
+        url = `clinics/${id}`;
       }
       const response = await api.call(url, 'GET', null, true);
-      
+
       if (response.status === 200) {
-        return {'status': 200,'clinic': response.data.clinic};
+        return { 'status': 200, 'clinic': response.data.clinic };
       } else {
         return handleApiError(response.error, logout);
       }
@@ -179,7 +179,7 @@ export const ClinicProvider = ({ children }) => {
   };
 
   const getExistingClinic = (id) => {
-     return clinics.find(c => c.id === Number(id)) || null;
+    return clinics.find(c => c.id === Number(id)) || null;
   };
 
   const value = {

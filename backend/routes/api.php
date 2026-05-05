@@ -20,6 +20,7 @@ Route::middleware('auth:api')->group(function () {
 	Route::resource('roles', 'App\Http\Controllers\Api\RoleController');
 	Route::resource('clinic-groups', 'App\Http\Controllers\Api\ClinicGroupController');
 	Route::resource('clinics', 'App\Http\Controllers\Api\ClinicController');
+	Route::get('clinics/staff/{id}', 'App\Http\Controllers\Api\ClinicController@staff');
 	Route::resource('patients', 'App\Http\Controllers\Api\PatientController');
 	Route::post('patients/pdf/{id}','App\Http\Controllers\Api\PatientController@patientPdf');
 	Route::post('send-pdf','App\Http\Controllers\Api\PatientController@sendPdf');
