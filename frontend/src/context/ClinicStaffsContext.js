@@ -39,13 +39,13 @@ export const ClinicStaffsProvider = ({ children }) => {
 
             if (response.status === 200) {
                 const responseData = response?.data;
-                if (typeof responseData === 'object' && responseData.clinicUsers && Array.isArray(responseData.clinicUsers.data)) {
-                    setStaffs(responseData.clinicUsers.data);
+                if (typeof responseData === 'object' && responseData?.clinicUsers?.data && Array.isArray(responseData.clinicUsers?.data)) {
+                    setStaffs(responseData?.clinicUsers?.data);
                     setPagination({
-                        currentPage: responseData.clinicUsers.currentPage || 1,
-                        lastPage: responseData.clinicUsers.lastPage || 1,
-                        perPage: responseData.clinicUsers.perPage || 10,
-                        total: responseData.clinicUsers.total || 0,
+                        currentPage: responseData?.clinicUsers?.current_page || 1,
+                        lastPage: responseData?.clinicUsers?.last_page || 1,
+                        perPage: responseData?.clinicUsers?.per_page || 10,
+                        total: responseData?.clinicUsers?.total || 0,
                     });
                     return responseData;
                 } else if (Array.isArray(responseData)) {
@@ -57,9 +57,6 @@ export const ClinicStaffsProvider = ({ children }) => {
                         total: responseData.length,
                     });
                     return responseData;
-                } else if (typeof responseData === 'object' && responseData.data === undefined && Object.keys(responseData).length > 0) {
-                    // handle case if structure is different
-                    setStaffs([responseData]);
                 }
             } else {
                 return handleApiError(response.error, logout);
