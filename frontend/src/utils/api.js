@@ -5,7 +5,7 @@ const BASE_URL = `${process.env.REACT_APP_API_URL}/${API_NAME}/api`;
 const APP_URL = process.env.REACT_APP_BASE_URL;
 
 /**
- * Custom API Error class for consistent error handling
+ * Custom API Error class
  */
 class ApiError extends Error {
   constructor(status, message, data = null) {
@@ -18,12 +18,36 @@ class ApiError extends Error {
 }
 
 /**
- * Factory function to create API instance
+ * Factory function
  */
 const Api = (getToken) => {
-  /**
-   * Generate headers for the request
-   */
+
+  /* =============================
+     🔹 Concurrency Control (OPTIONAL)
+  ============================== */
+  let activeRequests = 0;
+  const MAX_CONCURRENT = 5; // change if needed
+  const queue = [];
+
+  const next = () => {
+    if (queue.length && activeRequests < MAX_CONCURRENT) {
+      const resolve = queue.shift();
+      resolve();
+    }
+  };
+
+  const enqueue = () =>
+    new Promise((resolve) => {
+      if (activeRequests < MAX_CONCURRENT) {
+        resolve();
+      } else {
+        queue.push(resolve);
+      }
+    });
+
+  /* =============================
+     🔹 Headers
+  ============================== */
   const getHeaders = (useToken = true, isFormData = false) => {
     const headers = {};
 
@@ -37,121 +61,133 @@ const Api = (getToken) => {
     return headers;
   };
 
-  /**
-   * Handle API response and decode if needed
-   */
+  /* =============================
+     🔹 Response Handler
+  ============================== */
   const handleResponse = async (response) => {
-    try {
-      // Read response as text
-      const rawText = await response.text();
+    let rawText = '';
 
-      // Parse JSON (obfuscated or regular)
+    try {
+      rawText = await response.text();
+
       let json = {};
+
       if (response.headers.get('X-Obfuscated')) {
-        // Decode Base64 → JSON string
-        const bytes = Uint8Array.from(atob(rawText.trim()), (c) => c.charCodeAt(0));
-        // Inflate using pako
+        const bytes = Uint8Array.from(
+          atob(rawText.trim()),
+          (c) => c.charCodeAt(0)
+        );
         const decompressed = pako.inflate(bytes, { to: 'string' });
         json = JSON.parse(decompressed || '{}');
       } else {
-        // Regular JSON
         json = rawText ? JSON.parse(rawText) : {};
       }
 
-      // If response is not OK, throw ApiError
       if (!response.ok) {
-        const apiError = new ApiError(
+        throw new ApiError(
           response.status,
           json.message || 'An error occurred',
           json
         );
-        return { status: response.status, data: json, error: apiError };
       }
 
       return { status: response.status, data: json };
-    } catch (err) {
 
+    } catch (err) {
       return {
         status: response.status,
         data: {},
-        error: new ApiError(response.status, err.message, { raw: await response.text() }),
-        raw: await response.text(),
+        error:
+          err instanceof ApiError
+            ? err
+            : new ApiError(response.status, err.message, { raw: rawText }),
+        raw: rawText,
       };
     }
   };
 
-  /**
-   * Append app_url to endpoint if not already present
-   */
-  const addAppUrl = (endpoint, appUrl) => {
+  /* =============================
+     🔹 Add app_url
+  ============================== */
+  const addAppUrl = (endpoint) => {
     if (endpoint.includes('app_url=')) return endpoint;
     const separator = endpoint.includes('?') ? '&' : '?';
-    return `${endpoint}${separator}app_url=${appUrl}`;
+    return `${endpoint}${separator}app_url=${APP_URL}`;
   };
 
-  /**
-   * Main API call
-   */
-  let apiQueue = Promise.resolve();
+  /* =============================
+     🔹 Main Call
+  ============================== */
+  const call = async (endpoint, method = 'GET', data = null, useToken = true) => {
 
-  const call = (endpoint, method = 'GET', data = null, useToken = true) => {
-    const runRequest = async () => {
-      try {
-        const isFormData = data instanceof FormData;
+    await enqueue();
+    activeRequests++;
 
-        const options = {
-          method: method.toUpperCase(),
-          headers: getHeaders(useToken, isFormData),
-        };
+    try {
+      const isFormData = data instanceof FormData;
 
-        if (data) {
-          if (isFormData) {
-            data.append('app_url', APP_URL);
-            options.body = data;
-          } else {
-            data.app_url = APP_URL;
+      const options = {
+        method: method.toUpperCase(),
+        headers: getHeaders(useToken, isFormData),
+      };
 
-            if (method.toUpperCase() !== 'GET') {
-              options.body = JSON.stringify(data);
-            }
+      let finalEndpoint = endpoint;
+
+      if (data) {
+        if (isFormData) {
+          data.append('app_url', APP_URL);
+          options.body = data;
+        } else {
+          data = { ...data, app_url: APP_URL };
+
+          if (method.toUpperCase() !== 'GET') {
+            options.body = JSON.stringify(data);
           }
         }
-
-        if (method.toUpperCase() === 'GET') {
-          endpoint = addAppUrl(endpoint, APP_URL);
-        }
-
-        const response = await fetch(`${BASE_URL}/${endpoint}`, options);
-
-        return await handleResponse(response);
-
-      } catch (error) {
-        const status = error?.response?.status || 500;
-
-        let message = error?.message || 'An error occurred';
-
-        if (status === 500) {
-          message =
-            'An unexpected error has occurred. Please try again later or contact support if the issue persists.';
-        }
-
-        return { status, error: new ApiError(status, message) };
       }
-    };
 
-    const request = apiQueue.then(runRequest, runRequest);
+      if (method.toUpperCase() === 'GET') {
+        finalEndpoint = addAppUrl(endpoint);
+      }
 
-    //apiQueue = request.catch(() => { });
+      const response = await fetch(`${BASE_URL}/${finalEndpoint}`, options);
 
-    return request;
+      return await handleResponse(response);
+
+    } catch (error) {
+      const status = error?.status || 500;
+
+      let message = error?.message || 'An error occurred';
+
+      if (status === 500) {
+        message =
+          'An unexpected error has occurred. Please try again later or contact support.';
+      }
+
+      return { status, error: new ApiError(status, message) };
+
+    } finally {
+      activeRequests--;
+      next();
+    }
   };
 
+  /* =============================
+     🔹 Methods
+  ============================== */
   return {
     call,
-    get: (endpoint, useToken = true) => call(endpoint, 'GET', null, useToken),
-    post: (endpoint, data, useToken = true) => call(endpoint, 'POST', data, useToken),
-    put: (endpoint, data, useToken = true) => call(endpoint, 'PUT', data, useToken),
-    delete: (endpoint, useToken = true) => call(endpoint, 'DELETE', null, useToken),
+    get: (endpoint, useToken = true) =>
+      call(endpoint, 'GET', null, useToken),
+
+    post: (endpoint, data, useToken = true) =>
+      call(endpoint, 'POST', data, useToken),
+
+    put: (endpoint, data, useToken = true) =>
+      call(endpoint, 'PUT', data, useToken),
+
+    delete: (endpoint, useToken = true) =>
+      call(endpoint, 'DELETE', null, useToken),
   };
 };
 
