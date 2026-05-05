@@ -77,7 +77,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
   useEffect(() => {
 
-    const base = roleTitle ? `${roleTitle}s` : 'Users';
+    const base = roleTitle ? `${roleTitle}` : 'Users';
     setPageTitle(archived ? `Archived ${base}` : base);
   }, [setPageTitle, archived, roleTitle]);
 
@@ -485,7 +485,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
 
           <h1 className="text-2xl font-semibold text-gray-900">
-            {roleTitle ? `${roleTitle}s` : 'Users'}
+            {roleTitle ? `${roleTitle}` : 'Users'}
           </h1>
 
           <div className="flex flex-wrap gap-2 sm:justify-end">
@@ -558,7 +558,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
       <div className="bg-white rounded-t-lg p-2 border border-gray-200 shadow-sm mt-6">
         <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">{roleTitle ? `${roleTitle}s` : 'Users'}</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">{roleTitle ? `${roleTitle}` : 'Users'}</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
             User information and details.
           </p>

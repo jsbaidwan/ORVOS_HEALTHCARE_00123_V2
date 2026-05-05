@@ -20,7 +20,7 @@ export const useUserRoleSlugs = () => {
       .map((r) => ({
         slug: r.slug,
         roleId: Number(r.id),
-        title: r.name,
+        title: r.name + 's',
       }));
   }, [additionalData]);
 };
