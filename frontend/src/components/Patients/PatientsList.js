@@ -5,7 +5,7 @@ import Pagination from '../Common/Pagination';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -580,13 +580,6 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
             </>
           )}
 
-          <button
-            onClick={() => handleArchive(row)}
-            className="p-2 hover:bg-warning-50 rounded-lg transition-colors duration-200"
-            title={archived ? 'Unarchive' : 'Archive'}
-          >
-            {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
-          </button>
 
           <EllipsisMenu
             row={row}
@@ -635,10 +628,6 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     window.history.pushState({}, '', newUrl);
   };
 
-  const handleArchive = (patient) => {
-    setShowArchiveConfirm(true);
-    setPatientToArchive(patient);
-  };
 
   const confirmArchive = async () => {
     if (patientToArchive) {

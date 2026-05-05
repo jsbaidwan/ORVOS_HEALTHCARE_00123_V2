@@ -79,6 +79,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       subItems: item.subItems
         ? item.subItems.filter(sub => {
           if (!sub.module_id) return true;
+          if (sub?.basePath?.includes('create')) {
+            return permission(sub.module_id, 'write');
+          }
           return permission(sub.module_id, 'read');
         })
         : null,

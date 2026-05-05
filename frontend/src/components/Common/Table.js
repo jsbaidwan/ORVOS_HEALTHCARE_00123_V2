@@ -129,7 +129,6 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
 
         if (element?.props?.children) {
           // List all title 
-
           const newChildren = React.Children.toArray(element.props.children)
             .filter(child => {
               const title = child?.props?.title?.toLowerCase?.() || '';

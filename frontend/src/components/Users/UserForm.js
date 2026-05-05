@@ -917,33 +917,32 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
 
               {/* Password Section */}
 
-              {(!isEditMode) &&
-                <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      label="Password"
-                      name="password"
-                      type="password"
-                      registration={register('password')}
-                      placeholder="••••••••••••••••"
-                      required={!userData?.id}
-                      error={errors.password?.message}
-                    />
-                    <FormField
-                      label="Confirm Password"
-                      name="confirm_password"
-                      type="password"
-                      registration={register('confirm_password')}
-                      placeholder="••••••••••••••••"
-                      required={!userData?.id}
-                      error={errors.confirm_password?.message}
-                    />
-                  </div>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {userData?.id ? 'Change Password (leave blank to keep current)' : 'Set Password'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    label="Password"
+                    name="password"
+                    type="password"
+                    registration={register('password')}
+                    placeholder="••••••••••••••••"
+                    required={!userData?.id}
+                    error={errors.password?.message}
+                  />
+                  <FormField
+                    label="Confirm Password"
+                    name="confirm_password"
+                    type="password"
+                    registration={register('confirm_password')}
+                    placeholder="••••••••••••••••"
+                    required={!userData?.id}
+                    error={errors.confirm_password?.message}
+                  />
                 </div>
-              }
+              </div>
+
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
