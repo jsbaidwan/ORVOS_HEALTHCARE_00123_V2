@@ -288,7 +288,7 @@ const ClinicPatients = () => {
           </div>
         </>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6 animate-pulse opacity-70">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
             <h3 className="text-lg leading-6 font-medium text-gray-900">Clinic Patients Summary</h3>
           </div>
