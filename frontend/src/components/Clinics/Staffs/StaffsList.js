@@ -33,6 +33,7 @@ const StaffsList = () => {
     const prevTab = useRef(tab);
     const searchDebounceRef = useRef(null);
     const requestSeqRef = useRef(0);
+    const [clinic, setClinic] = useState(null);
 
     useEffect(() => {
         setPageTitle('Clinic Staffs');
@@ -74,7 +75,7 @@ const StaffsList = () => {
             const seq = ++requestSeqRef.current;
             try {
                 const response = await getStaffs(clinicId, page, filters, true);
-
+                setClinic(response?.clinic || null)
                 if (seq !== requestSeqRef.current) return;
 
                 if (response?.status && response?.status !== 200) {
@@ -277,19 +278,23 @@ const StaffsList = () => {
             <Breadcrumb />
 
             <div className="mb-3">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-semibold text-gray-900">Clinic Staffs</h1>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
 
-                    <div className="flex flex-wrap justify-end items-center gap-3 w-full">
-                        <button
-                            onClick={() => navigate(getRoutePath('/clinics'))}
-                            className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
-                        >
-                            <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                            Back to Clinics
-                        </button>
-                    </div>
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                        Clinic Staffs
+                    </h1>
+
+                    <button
+                        onClick={() => navigate(getRoutePath('/clinics'))}
+                        className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto btn-primary text-sm sm:text-base"
+                    >
+                        <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                        Back to Clinics
+                    </button>
+
                 </div>
+
+                <p>Clinic - {clinic?.name || '-'}</p>
             </div>
 
             {/* Tabs */}

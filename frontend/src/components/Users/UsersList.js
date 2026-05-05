@@ -482,10 +482,13 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       <Breadcrumb />
 
       <div className="mb-3">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">{roleTitle ? `${roleTitle}s` : 'Users'}</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
 
-          <div className="flex flex-wrap justify-end items-center gap-3 w-full">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {roleTitle ? `${roleTitle}s` : 'Users'}
+          </h1>
+
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             {!archived ? (
               <>
                 <button
