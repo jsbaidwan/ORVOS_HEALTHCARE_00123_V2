@@ -5,7 +5,7 @@ import Pagination from '../Common/Pagination';
 import Modal from '../Common/Modal';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -16,6 +16,7 @@ import { usePermissions } from '../../context/PermissionsContext';
 import { ArchiveBoxIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUserRoleSlugs } from '../../constants/userRoles';
+import EllipsisMenu from '../Common/EllipsisMenu';
 
 const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const {
@@ -50,6 +51,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const userRoleSlugs = useUserRoleSlugs();
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
+  const [activeEllipsisMenu, setActiveEllipsisMenu] = useState(null);
 
   const parseListParam = (value) =>
     !value ? [] : String(value).split(',').map((v) => v.trim()).filter(Boolean);
@@ -294,6 +296,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     {
       header: '#',
       accessor: 'sno',
+      className: 'w-10',
       render: (row, index) => (
         <div className='flex items-center justify-center'>
           <span className="text-gray-500">
@@ -398,16 +401,14 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       header: 'Actions',
       accessor: 'actions',
       sortable: false,
+      className: 'w-10',
       render: (row) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
+
           <Link to={getRoutePath(buildEditPath(row))} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-          </Link>
-
-          <Link to={getRoutePath(buildViewPath(row))} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
-            <EyeIcon className="w-5 h-5" />
           </Link>
 
           <button
@@ -418,6 +419,18 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
             {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
 
+          <EllipsisMenu
+            row={row}
+            activeMenu={activeEllipsisMenu}
+            setActiveMenu={setActiveEllipsisMenu}
+            menus={[
+              {
+                label: "View",
+                path: (row) => getRoutePath(`/users/view/${row.id}`),
+
+              }
+            ]}
+          />
 
         </div>
       ),

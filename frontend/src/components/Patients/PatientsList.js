@@ -15,6 +15,7 @@ import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 import Swal from 'sweetalert2';
 import { Send, FileSpreadsheet } from 'lucide-react';
+import EllipsisMenu from '../Common/EllipsisMenu';
 
 const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'all' }) => {
   const {
@@ -52,6 +53,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
   const [reportDownloadStatusData, setReportDownloadStatusData] = useState({});
+  const [activeEllipsisMenu, setActiveEllipsisMenu] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -365,6 +367,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       ),
       accessor: 'checkbox',
       sortable: false,
+      className: 'w-10',
       render: (row) => (
         <div className='flex items-center justify-center'>
           <input
@@ -379,6 +382,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     {
       header: '#',
       accessor: 'sno',
+      className: 'w-10',
       render: (row, index) => (
         <div className='flex items-center justify-center'>
           <span className="text-gray-500">
@@ -548,20 +552,14 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       header: 'Actions',
       accessor: 'actions',
       sortable: false,
+      className: 'w-10',
       render: (row) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           {!archived && (
             <>
               <Link to={getRoutePath(`/patients/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </Link>
-
-              <Link to={getRoutePath(`/patients/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </Link>
 
@@ -589,6 +587,19 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           >
             {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
+
+          <EllipsisMenu
+            row={row}
+            activeMenu={activeEllipsisMenu}
+            setActiveMenu={setActiveEllipsisMenu}
+            menus={[
+              {
+                label: "View",
+                path: (row) => getRoutePath(`/patients/view/${row.id}`),
+
+              }
+            ]}
+          />
         </div>
       ),
     },

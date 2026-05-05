@@ -157,7 +157,9 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
                 className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${column.sortable !== false
                   ? 'cursor-pointer select-none   border-r border-b  hover:bg-primary-600'
                   : 'border-r border-b'
-                  }`}
+                  }  
+                  ${column.className ? column.className : ''}`
+                }
               >
                 <div className="flex items-center">
                   {column.header}

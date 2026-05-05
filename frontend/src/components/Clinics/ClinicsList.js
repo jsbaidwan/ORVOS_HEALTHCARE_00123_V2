@@ -6,7 +6,7 @@ import Modal from '../Common/Modal';
 import ClinicForm from './ClinicForm';
 import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
-import { PlusIcon, EyeIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ArchiveBoxIcon, ArrowLeftIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useLoader } from '../../context/LoaderContext';
@@ -15,6 +15,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useTitle } from '../../context/TitleContext';
 import { usePermissions } from '../../context/PermissionsContext';
 import { PreviewImage } from '../Patients/EyeImageUploader';
+import EllipsisMenu from '../Common/EllipsisMenu';
 
 const ClinicsList = ({ archived = false }) => {
   const {
@@ -43,6 +44,7 @@ const ClinicsList = ({ archived = false }) => {
   const prevTab = useRef(tab);
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
+  const [activeEllipsisMenu, setActiveEllipsisMenu] = useState(null);
 
   useEffect(() => {
     setPageTitle(archived ? 'Archived Clinics' : 'Clinics');
@@ -254,8 +256,9 @@ const ClinicsList = ({ archived = false }) => {
       header: 'Actions',
       accessor: 'actions',
       sortable: false,
+      className: 'w-10',
       render: (row) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           {/* <button
             onClick={() => handleEdit(row)}
             className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200"
@@ -272,9 +275,6 @@ const ClinicsList = ({ archived = false }) => {
             </svg>
           </Link>
 
-          <Link to={getRoutePath(`/clinics/view/${row.id}`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
-            <EyeIcon className="w-5 h-5" />
-          </Link>
 
           <button
             onClick={() => handleArchive(row)}
@@ -284,9 +284,23 @@ const ClinicsList = ({ archived = false }) => {
             {archived ? <ArrowUpCircleIcon className="w-5 h-5 text-warning" /> : <ArchiveBoxIcon className="w-5 h-5 text-warning" />}
           </button>
 
-          <Link to={getRoutePath(`/clinics/${row.id}/staffs`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="View">
-            <EllipsisVerticalIcon className="w-5 h-5" />
-          </Link>
+          <EllipsisMenu
+            row={row}
+            activeMenu={activeEllipsisMenu}
+            setActiveMenu={setActiveEllipsisMenu}
+            menus={[
+              {
+                label: "View",
+                path: (row) => getRoutePath(`/clinics/view/${row.id}`),
+
+              },
+              {
+                label: "Clinic Staff",
+                path: (row) => getRoutePath(`/clinics/${row.id}/staffs`),
+
+              }
+            ]}
+          />
         </div>
       ),
     },
