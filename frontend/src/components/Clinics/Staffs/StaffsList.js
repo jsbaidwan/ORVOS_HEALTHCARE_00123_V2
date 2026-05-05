@@ -156,10 +156,11 @@ const StaffsList = () => {
                 <div className="w-auto">
                     <div className="flex items-center">
                         <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
-                            {row?.user?.profile_image?.status === 200 ? (
+
+                            {row?.user?.display_avatar?.status === 200 ? (
                                 <div className="w-full h-full object-cover">
                                     <PreviewImage
-                                        preview={row?.user?.profile_image?.src}
+                                        preview={row?.user?.display_avatar?.src}
                                         hasCustomClass="h-10 w-10 object-contain"
                                         hasRemoveButton={false}
                                         hasViewButton={false}
@@ -195,7 +196,7 @@ const StaffsList = () => {
             accessor: 'role',
             render: (row) => (
                 <div>
-                    {console.log(row)}
+
                     <p className="text-gray-900 text-sm">{row?.user?.roles?.[0]?.name || row?.user?.role?.name || '-'}</p>
                 </div>
             ),
