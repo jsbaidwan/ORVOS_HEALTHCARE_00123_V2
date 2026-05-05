@@ -386,7 +386,7 @@ class ClinicController extends Controller
 		
 		$search = trim($input['q'] ?? null);
 		$perPage = env('PAGINATION_PER_PAGE', 15);
-		$page = $filters['page'] ?? 1;
+		$page = $input['page'] ?? 1;
 		$clinicUsers = $clinic->clinicUsers()
 			->with(['user', 'user.role'])
 
