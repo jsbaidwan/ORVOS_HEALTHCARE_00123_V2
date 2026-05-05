@@ -153,7 +153,7 @@ class User extends Authenticatable
 	
 	public function getDisplaySignatureAttribute()
 	{
-		$signature = $this->attributes['signature'];
+		$signature = $this->attributes['signature'] ?? null;
 		$path = 'uploads/users/' . $this->user_name . '/signature/'.$signature;
 		$exists = !empty($signature) && \Storage::disk('public')->exists($path);
 		$status = $exists ? 200 : 422;
@@ -177,7 +177,7 @@ class User extends Authenticatable
 	
 	public function getDisplayDocumentsAttribute()
 	{
-		$value = $this->attributes['documents'];
+		$value = $this->attributes['documents'] ?? [];
 		$arrFiles = !empty($value) ? json_decode($value, true) : [];
 		$files = [];
 
@@ -206,7 +206,7 @@ class User extends Authenticatable
 	
 	public function getDisplayAvatarAttribute()
 	{
-		$image = $this->attributes['image'];
+		$image = $this->attributes['image'] ?? null;
 		$path = 'uploads/users/' . $this->user_name . '/'.$image;
 		$exists = !empty($image) && \Storage::disk('public')->exists($path);
 		$status = $exists ? 200 : 422;

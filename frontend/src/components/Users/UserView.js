@@ -95,7 +95,7 @@ const UserView = ({ roleSlug = null }) => {
 
 
       {/* Main Card */}
-      <div className={`bg-white rounded-lg shadow border ${loading ? 'animate-pulse opacity-70' : ''}`}>
+      <div className={`bg-white text-sm rounded-lg shadow border ${loading ? 'animate-pulse opacity-70' : ''}`}>
 
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Overview</h3>
@@ -128,7 +128,7 @@ const UserView = ({ roleSlug = null }) => {
 
               {/* Basic Info */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900">
                   {user?.first_name || '-'} {user?.last_name || '-'}
                 </h2>
                 <p className="text-sm text-gray-500">
