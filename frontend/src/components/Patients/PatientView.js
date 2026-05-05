@@ -568,6 +568,7 @@ const PatientView = () => {
         {
             header: 'PDF Download',
             accessor: 'report_download_status_data',
+            sortable: false,
             render: (row) => (
                 <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
 
@@ -592,6 +593,7 @@ const PatientView = () => {
         {
             header: 'Email Report',
             accessor: 'patient_report_email_enabled',
+            sortable: false,
             render: (row) => (
                 <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
 
@@ -617,6 +619,7 @@ const PatientView = () => {
         {
             header: 'Fax',
             accessor: 'fax_status',
+            sortable: false,
             render: (row) => (
                 <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
 
@@ -648,6 +651,7 @@ const PatientView = () => {
         {
             header: 'DICOM',
             accessor: 'dicom_file_status',
+            sortable: false,
             render: (row) => (
                 <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
 
