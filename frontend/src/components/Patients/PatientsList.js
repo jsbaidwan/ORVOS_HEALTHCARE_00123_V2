@@ -818,13 +818,13 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
 
           <div className="flex flex-wrap gap-2 sm:justify-end">
             {!archived ? (
-              <Link
-                to={getRoutePath('/patients/create')}
-                className="inline-flex items-center justify-center px-4 py-2 w-full sm:w-auto border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#009efb] hover:bg-[#0089db]"
+              <button
+                onClick={() => navigate(getRoutePath('/patients/create'))}
+                className="inline-flex items-center justify-center px-4 py-2 btn-sm btn-primary w-full sm:w-auto text-sm sm:text-base"
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
                 Add New Patient
-              </Link>
+              </button>
             ) : (
               <button
                 onClick={() => navigate(getRoutePath('/patients'))}
