@@ -30,9 +30,10 @@ class Helper{
 	 * Start: All roles
 	 * ------------------------
 	 */
-	 public static function getRoles($isAdmin = true)
-	 {
+	 public static function getRoles($isAdmin = false)
+	 { 
 		$query = Role::OrderBy('id','ASC');
+		$query->where('id','!=',1);
 		if($isAdmin == false){
 			$query->whereNotIn('id',[1,2]);
 		}

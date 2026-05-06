@@ -6,7 +6,7 @@ import { handleApiError } from "../utils/errorHandler";
 const AdditionalDataContext = createContext();
 
 export const AdditionalDataProvider = ({ children }) => {
-  const { getToken, logout } = useAuth();
+  const { user, getToken, logout } = useAuth();
 
   // ✅ load from localStorage (decoded)
   const [additionalData, setAdditionalData] = useState(() => {
@@ -25,7 +25,7 @@ export const AdditionalDataProvider = ({ children }) => {
     if (!api) return;
 
     try {
-      const response = await api.call("additional-data", "GET", null, true);
+      const response = await api.call(`additional-data/?data=${encodeURIComponent(JSON.stringify({ user: user }))}`, "GET", null, true);
 
       if (response.status === 200) {
         const newData = response.data?.additionalData || response.data || {};
@@ -64,7 +64,7 @@ export const AdditionalDataProvider = ({ children }) => {
     } catch (err) {
       handleApiError(err, logout);
     }
-  }, [getToken, logout]);
+  }, [getToken, logout, user]);
 
   // ✅ auto fetch on mount
   useEffect(() => {

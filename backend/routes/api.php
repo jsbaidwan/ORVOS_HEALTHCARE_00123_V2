@@ -105,13 +105,16 @@ Route::get('states', function(){
 	return response()->json(['states' => $states],200,[],JSON_UNESCAPED_SLASHES);
 }); 
 
-Route::get('additional-data', function(){
+Route::get('additional-data', function(Request $request){
+	
+	$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 	 
+	$isAdmin = !empty($input['user']['role_id']) && $input['user']['role_id'] == 1;
 	$additionalData = [
 		'countries' => \Helper::getCountries()['countries'],
 		'states' => \Helper::getStates(['country_id' => 231])['states'],
 		'deviceTypes' => \Helper::getDeviceTypes(),
-		'roles' => \Helper::getRoles(false)['roles'],
+		'roles' => \Helper::getRoles($isAdmin)['roles'],
 		'insuranceCarriers' => \Helper::insuranceCarriers(),
 		'medicalConditions' => \Helper::getMedicalConditionLists(),
 		'genders' => \Helper::getGenders(),
