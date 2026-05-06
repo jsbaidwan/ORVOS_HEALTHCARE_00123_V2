@@ -333,6 +333,7 @@ class Helper{
 		if(isset($filters['diagnosis_status'])){
 			$query->where('diagnosis_status',$filters['diagnosis_status']);
 		}
+		
 		if(isset($filters['remark_status'])){
 			$query->where('remark_status',$filters['remark_status']);
 		}
