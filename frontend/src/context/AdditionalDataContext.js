@@ -25,7 +25,7 @@ export const AdditionalDataProvider = ({ children }) => {
     if (!api) return;
 
     try {
-      const response = await api.call(`additional-data/?data=${encodeURIComponent(JSON.stringify({ user: user }))}`, "GET", null, true);
+      const response = await api.call(`additional-data/?data=${encodeURIComponent(JSON.stringify({ user_id: user?.id }))}`, "GET", null, true);
 
       if (response.status === 200) {
         const newData = response.data?.additionalData || response.data || {};

@@ -108,8 +108,14 @@ Route::get('states', function(){
 Route::get('additional-data', function(Request $request){
 	
 	$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+	$isAdmin = false;
+	if (!empty($input['user_id'])) {
+		$userData = \Helper::getUserById($input['user_id']);
+		$user = $userData['user'] ?? null;
+
+		$isAdmin = ($user['role_id'] ?? null) == 1;
+	}	
 	 
-	$isAdmin = !empty($input['user']['role_id']) && $input['user']['role_id'] == 1;
 	$additionalData = [
 		'countries' => \Helper::getCountries()['countries'],
 		'states' => \Helper::getStates(['country_id' => 231])['states'],
