@@ -295,7 +295,7 @@ const ClinicsList = ({ archived = false }) => {
 
               },
               {
-                label: "Clinic Staff",
+                label: "Clinic Staffs",
                 path: (row) => getRoutePath(`/clinics/${row.id}/staffs`),
 
               }

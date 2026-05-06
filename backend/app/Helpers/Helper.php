@@ -34,7 +34,7 @@ class Helper{
 	 {
 		$query = Role::OrderBy('id','ASC');
 		if($isAdmin == false){
-			$query->where('id','!=',1);
+			$query->whereNotIn('id',[1,2]);
 		}
 		$roles = $query->get();
 		 
@@ -340,7 +340,7 @@ class Helper{
 			 
 			$query->where('clinic_id',$filters['clinic_id']);
 		}
-		 
+		
 		if(\Auth::user() && \Auth::user()->role_id != 1){
 			 
 			if(\Auth::user()->role_id == 2){
@@ -348,17 +348,20 @@ class Helper{
 				$query->whereHas('clinic',function($q) {
 					$q->whereIn('state_id', \Auth::user()->licenses->pluck('l_state_id'));
 				});
-				
+				 
 				if(isset($filters['diagnosis_status']) && $filters['diagnosis_status'] == 1){
+					
 					$query->where('remark_by',\Auth::user()->id);
 				}
 				//$query->where('state_id',\Auth::user()->state_id);
 				 
 			} else{
-				if(isset($filters['clinic_ids'])){
+				
+				$query->whereIn('clinic_id', \Auth::user()->clinicUsers()->pluck('clinic_id'));
+				// if(isset($filters['clinic_ids'])){
 			 
-					$query->whereIn('clinic_id',$filters['clinic_ids']);
-				}
+					// $query->whereIn('clinic_id',$filters['clinic_ids']);
+				// }
 				if(\Auth::user()->role_id != 6){
 					// Comment on 8/9/2025
 					//$query->where('user_id',\Auth::user()->id);

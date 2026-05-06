@@ -4,6 +4,7 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
 import { usePermissions } from '../../context/PermissionsContext';
 import { useUserRoleSlugs } from '../../constants/userRoles';
+import { useAuth } from '../../context/AuthContext';
 import {
   HomeIcon,
   BuildingStorefrontIcon,
@@ -22,7 +23,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const getRoutePath = useRoutePath();
   const { permission } = usePermissions();
   const userRoleSlugs = useUserRoleSlugs();
-  const menuItems = [
+  const { user } = useAuth();
+  let menuItems = [
     { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" />, module_id: true }, // No module for dashboard
     { title: 'Clinic Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" />, module_id: 8 },
     { title: 'Clinics', basePath: '/clinics', icon: <BuildingStorefrontIcon className="w-5 h-5" />, module_id: 1 },
@@ -65,6 +67,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
   ];
 
+  if (![1].includes(user?.role_id)) {
+
+    menuItems = menuItems.map(item => {
+
+      if (item?.subItems) {
+        return {
+          ...item,
+          subItems: item.subItems.filter(
+            sub => sub?.basePath !== '/users/orvos-doctor'
+          ),
+        };
+      }
+      return item;
+    });
+  }
+
   const filteredMenuItems = menuItems
     .filter(item => {
 
@@ -78,11 +96,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ...item,
       subItems: item.subItems
         ? item.subItems.filter(sub => {
+
           if (!sub.module_id) return true;
           if (sub?.basePath?.includes('create')) {
             return permission(sub.module_id, 'write');
           }
           return permission(sub.module_id, 'read');
+
+
         })
         : null,
     }));

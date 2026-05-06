@@ -292,7 +292,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
   const { currentPage = 1, perPage = 10 } = pagination || {};
 
-  const columns = [
+  let columns = [
     {
       header: '#',
       accessor: 'sno',
@@ -388,6 +388,33 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       ),
     },
     {
+      header: 'Clinics',
+      accessor: 'clinics',
+      sortable: false,
+      render: (row) => (
+        <>
+          <ul className="px-3 py-1 text-xs font-semibold  text-blue-800">
+            {row?.clinic_users?.length > 0 ? (
+              row.clinic_users.map((c, index) => (
+                <li key={c.clinic_id}>
+                  <Link
+                    to={getRoutePath(`/clinics/view/${c.clinic_id}`)}
+                    className='underline'
+                  >
+                    {c?.clinic?.name}
+                  </Link>
+
+                </li>
+              ))
+            ) : (
+              "-"
+            )}
+          </ul>
+        </>
+      ),
+
+    },
+    {
       header: 'Created At',
       accessor: 'created_at',
       sortValue: (row) => row?.formated_created_at,
@@ -436,6 +463,10 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       ),
     },
   ];
+
+  if (roleIdProp === 2) {
+    columns = columns.filter(c => !['clinics'].includes(c.accessor));
+  }
 
   const handlePageChange = async (page) => {
     await getUsers(page, buildActiveFilters(), true);

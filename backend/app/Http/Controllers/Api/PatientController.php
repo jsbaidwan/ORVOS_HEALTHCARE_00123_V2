@@ -29,7 +29,8 @@ class PatientController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
-		$patients = \Helper::getPatients(true,$input)['patients']; 
+		 
+		$patients = \Helper::getPatients(false,$input)['patients']; 
 		if(!empty($input['export_excel'])){
             return ['patients' => $patients];
         }

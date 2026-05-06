@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import { useClinic } from '../../context/ClinicContext';
@@ -6,20 +6,23 @@ import StatsCard from './StatsCard';
 import { useTitle } from "../../context/TitleContext";
 import Table from '../Common/Table';
 import { useUser } from '../../context/UserContext';
+import { useAuth } from '../../context/AuthContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { patients, getPatients } = usePatient();
+  const { getPatients } = usePatient();
   const { clinics, getClinics } = useClinic();
   const { users, getUsers } = useUser();
   const { setPageTitle } = useTitle();
   const getRoutePath = useRoutePath();
+  const [pendingPatients, setPendingPatients] = useState([]);
+  const [completedPatients, setCompletedPatients] = useState([]);
+  const { user } = useAuth();
 
-  const pendingPatients = patients?.filter(patient => patient.diagnosis_status === 0) || [];
-  const completedPatients = patients?.filter(patient => patient.diagnosis_status === 1) || [];
   const orvosDoctors = users?.filter(user => user.role_id === 2) || [];
+
   const topOrvosDoctors = orvosDoctors?.slice(0, 5) || [];
 
   useEffect(() => {
@@ -27,7 +30,21 @@ const Dashboard = () => {
   }, [getClinics]);
 
   useEffect(() => {
-    getPatients(1, {}, false);
+    const fetchPending = async () => {
+      const pending = await getPatients(1, { diagnosis_status: 0 }, false);
+      setPendingPatients(pending);
+    };
+
+    fetchPending();
+  }, [getPatients]);
+
+  useEffect(() => {
+    const fetchCompleted = async () => {
+      const completed = await getPatients(1, { diagnosis_status: 1 }, false);
+      setCompletedPatients(completed);
+    };
+
+    fetchCompleted();
   }, [getPatients]);
 
   useEffect(() => {
@@ -116,10 +133,11 @@ const Dashboard = () => {
     setPageTitle("Dashboard");
   }, [setPageTitle]);
 
-  const stats = [
+  let stats = [
     {
       title: 'Total Clinics',
       value: clinics?.length || 0,
+      accessor: 'total_clinics',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -132,6 +150,7 @@ const Dashboard = () => {
     {
       title: 'Orvos Doctors',
       value: orvosDoctors?.length || 0,
+      accessor: 'total_orvos_doctors',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -144,6 +163,7 @@ const Dashboard = () => {
     {
       title: 'Pending Patients',
       value: pendingPatients?.length,
+      accessor: 'pending_patients',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -155,6 +175,7 @@ const Dashboard = () => {
     },
     {
       title: 'Completed Patients',
+      accessor: 'completed_patients',
       value: completedPatients?.length,
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,6 +189,7 @@ const Dashboard = () => {
     {
       title: 'Total Patients',
       value: pendingPatients?.length + completedPatients?.length,
+      accessor: 'total_patients',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -178,6 +200,14 @@ const Dashboard = () => {
       bgColor: 'bg-purple-50',
     },
   ];
+
+  if (user?.role_id === 2) {
+    stats = stats.filter(c => !['total_clinics', 'total_orvos_doctors'].includes(c.accessor));
+  }
+
+  if ((![1].includes(user?.role_id))) {
+    stats = stats.filter(c => !['total_orvos_doctors'].includes(c.accessor));
+  }
 
   const doctorColumns = [
     {
@@ -274,7 +304,7 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-3 mb-4">
-            {pendingPatients?.slice(0, 5)?.map((patient) => (
+            {pendingPatients?.length > 0 && pendingPatients?.slice(0, 5)?.map((patient) => (
               <div
                 key={patient.id}
                 className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors duration-200 cursor-pointer"
@@ -337,7 +367,7 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-3 mb-4">
-            {completedPatients?.slice(0, 5)?.map((patient) => (
+            {completedPatients?.length > 0 && completedPatients?.slice(0, 5)?.map((patient) => (
 
               < div
                 key={patient.id}
@@ -384,55 +414,60 @@ const Dashboard = () => {
       </div>
 
       {/* Clinics and Doctors Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Clinics Table */}
-        <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Clinics</h2>
-            <button
-              onClick={() => navigate(getRoutePath('/clinics'))}
-              className="btn-primary text-sm px-4 py-1.5"
-            >
-              View all
-            </button>
+
+      {(user?.role_id !== 2) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Clinics Table */}
+          <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Clinics</h2>
+              <button
+                onClick={() => navigate(getRoutePath('/clinics'))}
+                className="btn-primary text-sm px-4 py-1.5"
+              >
+                View all
+              </button>
+            </div>
+            <div className="mb-4">
+              <Table
+                columns={clinicColumns}
+                data={topClinics}
+                emptyMessage="No clinics available"
+                isDataLoaded={true}
+                onRowClick={(row) => navigate(getRoutePath(`/clinics/view/${row.id}`))}
+                permissions={{ read: true, write: true }}
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <Table
-              columns={clinicColumns}
-              data={topClinics}
-              emptyMessage="No clinics available"
-              isDataLoaded={true}
-              onRowClick={(row) => navigate(getRoutePath(`/clinics/view/${row.id}`))}
-              permissions={{ read: true, write: true }}
-            />
-          </div>
+
+          {/* Orvos Doctors */}
+          {([1].includes(user?.role_id)) && (
+            <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-1">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Orvos Doctors</h2>
+                <button
+                  onClick={() => navigate(getRoutePath('/users/orvos-doctor'))}
+                  className="btn-primary text-sm px-4 py-1.5"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="space-y-3">
+
+                <Table
+                  columns={doctorColumns}
+                  data={topOrvosDoctors}
+                  emptyMessage="No doctors available"
+                  isDataLoaded={true}
+                  onRowClick={(row) => navigate(getRoutePath(`/users/view/${row.id}`))}
+                  permissions={{ read: true, write: true }}
+                />
+
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Orvos Doctors */}
-        <div className="bg-white rounded-xl shadow-card p-6 lg:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Orvos Doctors</h2>
-            <button
-              onClick={() => navigate(getRoutePath('/users/orvos-doctor'))}
-              className="btn-primary text-sm px-4 py-1.5"
-            >
-              View all
-            </button>
-          </div>
-          <div className="space-y-3">
-
-            <Table
-              columns={doctorColumns}
-              data={topOrvosDoctors}
-              emptyMessage="No doctors available"
-              isDataLoaded={true}
-              onRowClick={(row) => navigate(getRoutePath(`/users/view/${row.id}`))}
-              permissions={{ read: true, write: true }}
-            />
-
-          </div>
-        </div>
-      </div>
+      )}
     </div >
   );
 };

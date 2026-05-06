@@ -25,7 +25,7 @@ class UserController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
-		$users = \Helper::users(true,$input)['users']; 
+		$users = \Helper::users(false,$input)['users']; 
 		return response()->json(['users' => $users], 200);
 		 
 	}

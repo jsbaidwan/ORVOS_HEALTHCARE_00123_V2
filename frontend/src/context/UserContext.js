@@ -30,7 +30,6 @@ export const UserProvider = ({ children }) => {
     if (!api) return;
 
     const fetchGen = ++usersListFetchGenRef.current;
-
     try {
       const data = { paginate, page, ...filters };
       const endpoint = 'users?data=' + encodeURIComponent(JSON.stringify(data));
@@ -94,11 +93,11 @@ export const UserProvider = ({ children }) => {
     }
   }, [getToken]);
 
-  const getUserById = useCallback(async (id,options = {}) => {
+  const getUserById = useCallback(async (id, options = {}) => {
     const api = Api(() => getToken());
     if (!api) return;
     let url = `users/${id}/edit`;
-    if(options?.action && options?.action === 'view'){
+    if (options?.action && options?.action === 'view') {
       url = `users/${id}`;
     }
     try {

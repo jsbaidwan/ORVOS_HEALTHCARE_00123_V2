@@ -294,7 +294,7 @@ const StaffsList = () => {
 
                 </div>
 
-                <p>Clinic - {clinic?.name || '-'}</p>
+                <p>Clinic - {clinic?.name || ''}</p>
             </div>
 
             {/* Tabs */}
