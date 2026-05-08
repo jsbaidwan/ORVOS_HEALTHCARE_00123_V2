@@ -17,6 +17,7 @@ import { ArchiveBoxIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUserRoleSlugs } from '../../constants/userRoles';
 import EllipsisMenu from '../Common/EllipsisMenu';
+import { useAuth } from '../../context/AuthContext';
 
 const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const {
@@ -52,6 +53,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
   const searchDebounceRef = useRef(null);
   const requestSeqRef = useRef(0);
   const [activeEllipsisMenu, setActiveEllipsisMenu] = useState(null);
+  const { user } = useAuth();
 
   const parseListParam = (value) =>
     !value ? [] : String(value).split(',').map((v) => v.trim()).filter(Boolean);
@@ -395,11 +397,18 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
         <>
           <ul className="px-3 py-1 text-xs font-semibold  text-blue-800">
             {row?.clinic_users?.length > 0 ? (
+
               row.clinic_users.map((c, index) => (
-                <li key={c.clinic_id}>
+
+                < li key={c.clinic_id} >
                   <Link
                     to={getRoutePath(`/clinics/view/${c.clinic_id}`)}
-                    className='underline'
+                    className={`${user?.clinic_users?.some(u => u.clinic_id === c?.clinic_id)
+                        ? "underline"
+                        : user?.role_id !== 1
+                          ? "cursor-not-allowed text-gray-500"
+                          : "underline"
+                      }`}
                   >
                     {c?.clinic?.name}
                   </Link>

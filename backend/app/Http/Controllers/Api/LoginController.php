@@ -228,7 +228,8 @@ class LoginController extends Controller
 	
 	function user($user,$input)
 	{     
-		$user->load('role');
+		$user->load(['role', 'clinicUsers']);
+		 
 		$success  =  $user->createToken('MyApp')-> accessToken; 
 		$user['token'] = $success;
 		  

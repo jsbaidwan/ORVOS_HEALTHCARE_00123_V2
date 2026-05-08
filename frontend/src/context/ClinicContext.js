@@ -83,6 +83,7 @@ export const ClinicProvider = ({ children }) => {
         return handleApiError(response.error, logout);
       }
     } catch (err) {
+
       return handleApiError(err, logout);
     }
   }, [getToken, logout]);

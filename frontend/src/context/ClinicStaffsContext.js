@@ -67,11 +67,29 @@ export const ClinicStaffsProvider = ({ children }) => {
     }, [getToken, logout]);
 
 
+    const removeStaff = useCallback(async (id) => {
+        const api = Api(() => getToken());
+        if (!api) return;
+
+        try {
+            const response = await api.call(`clinics/remove-clinic-staff`, 'POST', { p_id: id }, true);
+
+            if (response.status === 200) {
+                return response;
+            } else {
+                return handleApiError(response.error, logout);
+            }
+        } catch (err) {
+            return handleApiError(err, logout);
+        }
+    }, [getToken, logout]);
+
     const value = {
         staffs,
         setStaffs,
         pagination,
         getStaffs,
+        removeStaff,
     };
 
     return <ClinicStaffsContext.Provider value={value}>{children}</ClinicStaffsContext.Provider>;

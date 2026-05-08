@@ -156,7 +156,11 @@ class ClinicController extends Controller
 		if(!$haveAccess){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
-		
+		if( \Auth::user()->role_id != 1 ){
+			if (!in_array($id, \Auth::user()->clinicUsers()->pluck('clinic_id')->toArray())) {
+				return response()->json(['message' => \Helper::alertMsg('view','Clinic','error')['message']], 404); 
+			}
+		} 
         $clinic = \Helper::getClinicById($id)['clinic'];
 		if(!$clinic){
 			return response()->json(['message' => \Helper::alertMsg('view','Clinic','error')['message']], 404);
@@ -419,6 +423,34 @@ class ClinicController extends Controller
 		
 		return json_encode(['clinicUsers' => $clinicUsers,'clinic' => $clinic]);
       
+    }
+	
+	 /**
+     * remove staff the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function rmvClinicStaff(Request $request)
+    {
+		$haveAccess = \Helper::permission(4,'delete');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
+        $input = $request->all();
+		if(empty($input['p_id'])){
+			return response()->json(['message' => 'The clinic staff id (p_id) is required.'], 422);
+		}
+         
+        $pId = $input['p_id'];
+        $clinicUser = ClinicUser::find($pId);
+        if(!$clinicUser){
+			return response()->json(['message' => 'The staff you are trying to get does not exist.'], 422);
+		}
+		
+		$clinicUser->delete();
+		return response()->json(['message' => 'The staff has been remove from the clinic.'], 200);
+         
     }
   
 }

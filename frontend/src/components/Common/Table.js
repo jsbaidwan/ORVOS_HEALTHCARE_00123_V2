@@ -113,11 +113,11 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
 
   let blockedTitles = [];
   if (permissions?.read === false) {
-    blockedTitles = ['view', 'edit', 'delete', 'archive', 'unarchive'];
+    blockedTitles = ['view', 'edit', 'delete', 'archive', 'unarchive', 'remove'];
   }
 
   if (permissions?.write === false) {
-    blockedTitles = ['edit', 'delete', 'archive', 'unarchive'];
+    blockedTitles = ['edit', 'delete', 'archive', 'unarchive', 'remove'];
   }
 
   let filteredColumns = columns.map(col => {

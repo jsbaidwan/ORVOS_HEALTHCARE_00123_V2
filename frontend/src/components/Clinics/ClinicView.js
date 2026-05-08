@@ -45,7 +45,6 @@ const ClinicView = () => {
 
         // ❌ Otherwise call API
         const data = await getClinicById(id, { action: 'view' });
-
         if (data?.status && data?.status !== 200) {
           setErrors({
             general: data?.message || 'Unable to load clinic'

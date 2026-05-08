@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ClinicProvider } from './context/ClinicContext';
 import { ClinicGroupProvider } from './context/ClinicGroupContext';
@@ -17,6 +17,7 @@ import Header from './components/Common/Header';
 import Sidebar from './components/Common/Sidebar';
 import Footer from './components/Common/Footer';
 import Loader from './components/Common/Loader';
+import NoInternet from './components/Common/NoInternet';
 
 // Auth Components
 import UserLogin from './components/Auth/UserLogin';
@@ -385,6 +386,29 @@ const AppContent = () => {
   const { isAuthenticated, loading, user } = useAuth();
   const { permission } = usePermissions();
   const userRoleSlugs = useUserRoleSlugs();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+
+    const handleOffline = () => {
+      navigate("/no-internet");
+    };
+
+    const handleOnline = () => {
+      navigate("/");
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+
+  }, [navigate]);
+
+
   useAutoLogoutOnIdle();
   if (loading) {
     return <Loader />;
@@ -459,6 +483,9 @@ const AppContent = () => {
           </MainLayout>
         }
       />
+
+      <Route path="/no-internet" element={<MainLayout><NoInternet /></MainLayout>} />
+
       <Route
         path={`/${ADMIN_PREFIX}`}
         element={<Navigate to={`/${ADMIN_PREFIX}/dashboard`} replace />}

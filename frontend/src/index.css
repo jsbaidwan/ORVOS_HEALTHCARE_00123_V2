@@ -1608,6 +1608,10 @@
     background-color: #fff3cd;
   }
 
+  .bg-danger-50 {
+    background-color: #f8d7da;
+  }
+
   .text-warning {
     color: #ffc107;
   }

@@ -5,12 +5,15 @@ import Pagination from '../../Common/Pagination';
 import Breadcrumb from '../../Common/Breadcrumb';
 import Filters from '../../Common/Filters';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import ErrorHandle from '../../Common/ErrorHandle';
 import { useTitle } from '../../../context/TitleContext';
 import { usePermissions } from '../../../context/PermissionsContext';
 import { PreviewImage } from '../../Patients/EyeImageUploader';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import Swal from 'sweetalert2';
+import { useUserRoleSlugs } from '../../../constants/userRoles';
 
 const StaffsList = () => {
     const { id: clinicId } = useParams();
@@ -19,6 +22,7 @@ const StaffsList = () => {
         setStaffs,
         pagination,
         getStaffs,
+        removeStaff,
     } = useClinicStaffs();
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,6 +38,21 @@ const StaffsList = () => {
     const searchDebounceRef = useRef(null);
     const requestSeqRef = useRef(0);
     const [clinic, setClinic] = useState(null);
+
+    const userRoleSlugs = useUserRoleSlugs();
+
+    const getUserSlug = (rid) => {
+        const slug = userRoleSlugs.find((r) => r.roleId === Number(rid))?.slug || null;
+
+        return slug;
+    }
+
+
+    const buildEditPath = (row) => {
+
+        const slug = getUserSlug(row?.user?.role_id);
+        return slug ? `/users/${slug}/${row.id}/edit` : `/users/${row.id}/edit`;
+    };
 
     useEffect(() => {
         setPageTitle('Clinic Staffs');
@@ -149,6 +168,64 @@ const StaffsList = () => {
         runFilterRequest(filters);
     };
 
+    const removeStaffRequest = async (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to remove this staff?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, remove it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true,
+            confirmButtonColor: "#009efb",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await removeStaff(id);
+                    if (!response || response.status !== 200) {
+                        Swal.showValidationMessage(
+                            response?.data?.message || 'Failed to remove staff. Please try again.'
+                        );
+                        return false;
+                    }
+
+                    return response;
+
+                } catch (error) {
+                    Swal.showValidationMessage('Something went wrong. Please try again.');
+                    return false;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const response = result.value;
+                if (response.status === 200) {
+                    Swal.fire({
+                        title: "Staff Removed",
+                        text: response?.data?.message,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#009efb",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    setStaffs((prev) => prev.filter((s) => s.id !== id));
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response?.data?.message,
+                    });
+                    Swal.showValidationMessage('Failed to remove staff. Please try again.');
+                }
+                return false;
+            }
+        });
+    };
+
     const columns = [
         {
             header: 'Name',
@@ -245,6 +322,24 @@ const StaffsList = () => {
             render: (row) => (
                 <div className="flex items-center space-x-2">
                     {/* Action buttons can go here */}
+
+                    <Link to={getRoutePath(buildEditPath(row))} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </Link>
+
+                    {row?.user?.role_id !== 6 && (
+                        <button
+                            onClick={() => removeStaffRequest(row.id)}
+                            title="delete"
+                            className="p-2 hover:bg-danger-50 text-danger rounded-lg transition-colors duration-200"
+
+                        >
+                            <TrashIcon className="w-5 h-5 " />
+                        </button>
+                    )}
+
                 </div>
             ),
         },

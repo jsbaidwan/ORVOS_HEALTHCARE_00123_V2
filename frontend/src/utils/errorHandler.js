@@ -9,7 +9,7 @@
  * @returns {Object} Formatted error response
  */
 export const handleApiError = (error, logout = null) => {
-   
+
   // Handle 401 Unauthorized - trigger logout
   if (error?.status === 401) {
     if (logout && typeof logout === 'function') {
@@ -22,15 +22,14 @@ export const handleApiError = (error, logout = null) => {
     };
   }
 
-  if(error?.status === 404){
-    
+  if (error?.status === 404) {
     return {
       status: 404,
       errors: error?.validationErrors ? error?.validationErrors : null,
-      message: 'The requested resource was not found.',
+      message: error?.message || 'The requested resource was not found.',
     };
   }
-   
+
   // Handle validation errors (422)
   if (error?.status === 422 && error?.validationErrors) {
     return {
@@ -39,7 +38,7 @@ export const handleApiError = (error, logout = null) => {
       message: 'Please correct the validation errors below.',
     };
   }
- 
+
   // Handle specific error messages
   if (error?.message) {
     return {
@@ -47,7 +46,7 @@ export const handleApiError = (error, logout = null) => {
       message: error.message,
     };
   }
- 
+
   // Handle network or connection errors
   if (error?.name === 'TypeError' && error?.message?.includes('fetch')) {
     return {
@@ -55,7 +54,7 @@ export const handleApiError = (error, logout = null) => {
       message: 'Network error. Please check your connection and try again.',
     };
   }
- 
+
   // Default error handling
   return {
     status: error?.status || 500,
@@ -74,7 +73,7 @@ export const handleValidationErrors = (errors) => {
   }
 
   const formattedErrors = {};
-  
+
   Object.entries(errors).forEach(([field, messages]) => {
     if (Array.isArray(messages)) {
       formattedErrors[field] = messages.join(', ');
@@ -101,7 +100,7 @@ export const requiresLogout = (error) => {
  * @returns {string} User-friendly error message
  */
 export const getErrorMessage = (error) => {
- 
+
   if (error?.message) {
     return error.message;
   }
@@ -139,7 +138,7 @@ export const logError = (error, context = 'Unknown') => {
     console.error(`[${context}] Error:`, error);
   }
 };
- 
+
 export const errorsFormatted = (response, setError) => {
   try {
 
@@ -175,7 +174,7 @@ export const errorsFormatted = (response, setError) => {
     }, 10); // 🔥 delay added
 
   } catch (error) {
-    
+
     setTimeout(() => {
       setError('general', {
         type: 'server',
