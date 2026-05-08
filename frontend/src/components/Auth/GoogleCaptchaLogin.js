@@ -144,7 +144,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
           <button
             type="button"
             onClick={handleReload}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009efb]"
+            className="inline-flex items-center gap-2 px-4 py-2 btn btn-primary-light rounded"
           >
             <svg
               className="w-4 h-4"
