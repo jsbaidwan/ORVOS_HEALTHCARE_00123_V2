@@ -468,7 +468,7 @@ function buildDicomFile(options) {
     // (0008,0050) AccessionNumber
     dataElements.push(writeDicomElement(0x0008, 0x0050, "SH", accessionNumber || ""));
     // (0008,0060) Modality
-    dataElements.push(writeDicomElement(0x0008, 0x0060, "CS", "OT"));
+    dataElements.push(writeDicomElement(0x0008, 0x0060, "CS", "DOC"));
     // (0008,0064) ConversionType
     dataElements.push(writeDicomElement(0x0008, 0x0064, "CS", "WSD"));
     // (0008,0070) Manufacturer
