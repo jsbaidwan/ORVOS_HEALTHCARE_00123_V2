@@ -484,7 +484,7 @@ const AppContent = () => {
         }
       />
 
-      <Route path="/no-internet" element={<MainLayout><NoInternet /></MainLayout>} />
+      <Route path="/no-internet" element={<NoInternet />} />
 
       <Route
         path={`/${ADMIN_PREFIX}`}
