@@ -16,6 +16,8 @@ export const usePatient = () => {
 export const PatientProvider = ({ children }) => {
   const { getToken, logout } = useAuth();
   const [patients, setPatients] = useState([]);
+  const [pendingPatients, setPendingPatients] = useState([]);
+  const [completedPatients, setCompletedPatients] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     lastPage: 1,
@@ -183,12 +185,18 @@ export const PatientProvider = ({ children }) => {
     return patients.find(p => p.id === Number(id)) || null;
   };
 
-  const getPendingPatients = () => {
-    return patients.filter((patient) => patient.status === 'Pending');
+  const getPendingPatients = async () => {
+
+    const pateints = await getPatients(0, { 'diagnosis_status': 0, 'active': 1 }, false);
+    setPendingPatients(pateints);
+    return pateints;
+
   };
 
-  const getCompletedPatients = () => {
-    return patients.filter((patient) => patient.status === 'Completed');
+  const getCompletedPatients = async () => {
+    const pateints = await getPatients(0, { 'diagnosis_status': 1, 'active': 1 }, false);
+    setCompletedPatients(pateints);
+    return pateints;
   };
 
   const markAsCompleted = async (id) => {
@@ -327,6 +335,8 @@ export const PatientProvider = ({ children }) => {
     getExistingPatient,
     getPendingPatients,
     getCompletedPatients,
+    pendingPatients,
+    completedPatients,
     markAsCompleted,
     downloadReport,
     sendReport,

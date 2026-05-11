@@ -170,7 +170,7 @@ class LoginController extends Controller
 		? 'email'
 		: 'name';
   
-		$rolesResult = \Helper::getRoles();
+		$rolesResult = \Helper::getRoles(true);
 		
 		$roleIds = [];
 		

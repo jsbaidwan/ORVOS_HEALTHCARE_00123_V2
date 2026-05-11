@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePatient } from '../../context/PatientContext';
 import { useClinic } from '../../context/ClinicContext';
@@ -12,13 +12,11 @@ import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { getPatients } = usePatient();
+  const { pendingPatients, completedPatients, getPendingPatients, getCompletedPatients } = usePatient();
   const { clinics, getClinics } = useClinic();
   const { users, getUsers } = useUser();
   const { setPageTitle } = useTitle();
   const getRoutePath = useRoutePath();
-  const [pendingPatients, setPendingPatients] = useState([]);
-  const [completedPatients, setCompletedPatients] = useState([]);
   const { user } = useAuth();
 
   const orvosDoctors = users?.filter(user => user.role_id === 2) || [];
@@ -29,23 +27,26 @@ const Dashboard = () => {
     getClinics(1, { active: 1 }, false);
   }, [getClinics]);
 
+  const lp = useRef(false);
   useEffect(() => {
-    const fetchPending = async () => {
-      const pending = await getPatients(1, { diagnosis_status: 0 }, false);
-      setPendingPatients(pending);
-    };
 
-    fetchPending();
-  }, [getPatients]);
+    if (!lp.current) {
+      getPendingPatients();
+      lp.current = true;
+    }
 
+  }, [getPendingPatients]);
+
+  const lc = useRef(false);
   useEffect(() => {
-    const fetchCompleted = async () => {
-      const completed = await getPatients(1, { diagnosis_status: 1 }, false);
-      setCompletedPatients(completed);
-    };
 
-    fetchCompleted();
-  }, [getPatients]);
+    if (!lc.current) {
+      getCompletedPatients();
+      lc.current = true;
+    }
+
+  }, [getCompletedPatients]);
+
 
   useEffect(() => {
     getUsers(1, { active: 1 }, false);
