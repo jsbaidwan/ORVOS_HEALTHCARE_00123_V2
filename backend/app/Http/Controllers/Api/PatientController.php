@@ -610,6 +610,13 @@ class PatientController extends Controller
 			$patient->update(['is_dicom_file_send' => 1]);
 			SendDicomDataJob::dispatch($patient)->onQueue('send-dicom-data');
 		}
+		
+		\Log::save(
+			'Patient Diagnosis.',
+			'The Patient '. $patient->first_name  .' '. $patient->last_name  .' ('. $patient['p_code'] .') has been diagnosed by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Patient', 
+			$patient->id
+		);
 		 
 		if(\Auth::user() && $lastPatientId){
 			$appUrl = !empty($input['app_url']) ?? url('/');
