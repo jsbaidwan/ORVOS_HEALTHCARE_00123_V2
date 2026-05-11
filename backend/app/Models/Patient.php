@@ -165,8 +165,8 @@ class Patient extends Authenticatable
 	
 	public function getDisplayRemarkAtAttribute()
 	{
-		$dob = $this->attributes['remark_at'];
-		return !empty($dob) ? \Carbon\Carbon::parse($dob)->format('D, M d Y') : NULL;
+		$remarkAt = $this->attributes['remark_at'];
+		return !empty($remarkAt) ? \Carbon\Carbon::parse($remarkAt)->format('D, M d Y') : NULL;
 	}
 	
 	public function getMedicalConditionAttribute()
