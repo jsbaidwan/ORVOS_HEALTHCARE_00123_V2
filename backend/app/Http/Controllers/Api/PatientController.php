@@ -620,11 +620,11 @@ class PatientController extends Controller
 		 
 		if(\Auth::user() && $lastPatientId){
 			$appUrl = !empty($input['app_url']) ?? url('/');
-			return response()->json(['message' => 'Remark and Exam Data saved successfully.','redirect_url' =>  '/patients/view/'.$lastPatientId], 200);
+			return response()->json(['message' => 'The Patient has been diagnosed successfully.','redirect_url' =>  '/patients/view/'.$lastPatientId], 200);
 			 
 		}
 		
-		return response()->json(['message' => 'Remark and Exam Data saved successfully.'], 200);
+		return response()->json(['message' => 'The Patient has been diagnosed successfully..'], 200);
 		 
     }
 	
