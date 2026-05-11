@@ -11,7 +11,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
 
     const column = columns.find(col => col.accessor === sortConfig.key);
 
-    const indexed = data.map((row, originalIndex) => ({ row, originalIndex }));
+    const indexed = data?.map((row, originalIndex) => ({ row, originalIndex }));
 
     const sorted = indexed.sort((a, b) => {
       let aValue = column?.sortValue
