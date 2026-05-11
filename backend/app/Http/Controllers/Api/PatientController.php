@@ -40,7 +40,7 @@ class PatientController extends Controller
 	
 	public function store(Request $request)
     {
-        $input = $request->all();
+        $input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
         if(empty($input['guest'])){
             $haveAccess = \Helper::permission(2,'create');
             if(!$haveAccess){
@@ -199,7 +199,7 @@ class PatientController extends Controller
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
 		}
 		
-		$input = $request->all(); 
+		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 		$patient = Patient::find($id); 
 		if(!$patient){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
