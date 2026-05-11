@@ -612,8 +612,8 @@ class PatientController extends Controller
 		}
 		
 		\Log::save(
-			'Patient Diagnosis.',
-			'The Patient '. $patient->first_name  .' '. $patient->last_name  .' ('. $patient['p_code'] .') has been diagnosed by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'Patient Diagnosed.',
+			'The Patient '. $patient['first_name']  .' '. $patient['last_name']  .' ('. $patient['p_code'] .') has been diagnosed by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
 			'Patient', 
 			$patient->id
 		);
