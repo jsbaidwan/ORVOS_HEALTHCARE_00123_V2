@@ -136,7 +136,7 @@ const ContactUs = () => {
         </div>
 
         {/* Right Side Form */}
-        <div className="w-full lg:w-6/12 bg-grey-100 animate-pulse">
+        <div className="w-full lg:w-6/12 bg-grey-100 pulse-once">
           <iframe
             src="https://fs26.formsite.com/duxWli/er38rouxqa/index"
             title="Orvos Support"

@@ -1974,3 +1974,7 @@ textarea.input-field:read-only {
     left: 125%;
   }
 }
+
+.pulse-once {
+  animation: pulse 5s ease-in-out 1;
+}
