@@ -1,6 +1,10 @@
 import React from 'react';
+import { useBusinessHours } from '../../../hooks/useBusinessHours';
 
 const ContactUs = () => {
+
+  const { renderBusinessHours } = useBusinessHours();
+
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-900 mb-6">Contact Support</h2>
@@ -13,7 +17,12 @@ const ContactUs = () => {
             </svg>
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-          <p className="text-sm text-gray-600">support@orvos.com</p>
+          <a
+            href={`mailto:${process.env.REACT_APP_SUPPORT_EMAIL}`}
+            className="text-sm text-primary hover:underline"
+          >
+            {process.env.REACT_APP_SUPPORT_EMAIL}
+          </a>
         </div>
 
         <div className="text-center p-6 bg-gray-50 rounded-lg">
@@ -23,7 +32,12 @@ const ContactUs = () => {
             </svg>
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-          <p className="text-sm text-gray-600">1-800-ORVOS-HELP</p>
+          <a
+            href={`tel:${process.env.REACT_APP_SUPPORT_PHONE_NUMBER.replace(/[^0-9+]/g, '')}`}
+            className="text-sm text-primary hover:underline"
+          >
+            {process.env.REACT_APP_SUPPORT_PHONE_NUMBER}
+          </a>
         </div>
 
         <div className="text-center p-6 bg-gray-50 rounded-lg">
@@ -33,11 +47,15 @@ const ContactUs = () => {
             </svg>
           </div>
           <h3 className="font-semibold text-gray-900 mb-1">Hours</h3>
-          <p className="text-sm text-gray-600">Mon-Fri: 9AM-6PM EST</p>
+          <p className="text-sm text-gray-600">{process.env.REACT_APP_SUPPORT_HOURS}</p>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="text-center p-6 bg-gray-50 rounded-lg mb-3">
+        <h2 className="text-2xl font-bold text-gray-800">Contact Us for Diabetic Retinopathy Screening</h2>
+      </div>
+
+      {/* <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Send us a message</h3>
         <form className="space-y-4">
           <div>
@@ -58,8 +76,78 @@ const ContactUs = () => {
           </div>
           <button type="submit" className="btn-primary">Send Message</button>
         </form>
+      </div> */}
+
+      <div className="w-full min-h-screen bg-gray-100 flex flex-col lg:flex-row">
+
+        {/* Left Side Info */}
+        <div className="w-full lg:w-6/12 bg-white p-3 border-r border-gray-200">
+
+          <h2 className="text-2xl font-bold text-gray-800 mb-5">
+            Better yet, see us in person!
+          </h2>
+
+          <p className="text-sm text-gray-600 mb-10 leading-relaxed">
+            We love our customers, so feel free to visit during normal business hours.
+          </p>
+
+          <div className="mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              {process.env.REACT_APP_NAME}
+            </h3>
+
+            <p className="text-md text-gray-600 leading-relaxed">
+              {process.env.REACT_APP_SUPPORT_ADDRESS}
+            </p>
+          </div>
+
+          <div className="mb-3 space-y-1">
+            <p className="text-md font-medium text-gray-700">
+              <a
+                href={`tel:${process.env.REACT_APP_SUPPORT_PHONE_NUMBER.replace(/[^0-9+]/g, '')}`}
+                className="text-sm text-primary hover:underline"
+              >
+                {process.env.REACT_APP_SUPPORT_PHONE_NUMBER}
+              </a>
+            </p>
+
+            <p className="text-md font-medium text-gray-700">
+              <a
+                href={`mailto:${process.env.REACT_APP_SUPPORT_EMAIL}`}
+                className="text-sm text-primary hover:underline"
+              >
+                {process.env.REACT_APP_SUPPORT_EMAIL}
+              </a>
+            </p>
+          </div>
+
+          <div>
+
+            <div className="w-full">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Hours
+              </h3>
+
+              {/* Dropdown */}
+              {renderBusinessHours()}
+
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side Form */}
+        <div className="w-full lg:w-6/12 bg-white">
+          <iframe
+            src="https://fs26.formsite.com/duxWli/er38rouxqa/index"
+            title="Orvos Support"
+            className="w-full border-0"
+            style={{ height: "100vh" }}
+          />
+        </div>
+
       </div>
-    </div>
+
+    </div >
   );
 };
 
