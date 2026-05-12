@@ -53,13 +53,13 @@ function NoInternet() {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                         e.target.style.display = "none";
-                        document.getElementById("no-internet-text").style.display = "flex";
+                        document.getElementById("heading").style.display = "flex";
                     }}
                 />
 
                 {/* Fallback */}
                 <div
-                    id="no-internet-text"
+                    id="heading"
                     className="hidden absolute inset-0 flex flex-col items-center justify-center bg-primary backdrop-blur-sm text-white"
                 >
                     <h1 className="text-xl md:text-5xl font-semibold">
@@ -73,7 +73,7 @@ function NoInternet() {
                     className="absolute w-40 h-auto top-4 left-1/2 transform -translate-x-1/2 sm:top-4 sm:left-4 sm:translate-x-0 sm:w-60 md:w-72 lg:w-96"
                     onError={(e) => {
                         e.target.style.display = "none";
-                        document.getElementById("no-internet-text").style.display = "flex";
+                        document.getElementById("heading").style.display = "flex";
                     }}
                 />
             </div>
