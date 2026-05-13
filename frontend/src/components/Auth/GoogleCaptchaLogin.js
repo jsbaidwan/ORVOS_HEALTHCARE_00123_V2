@@ -27,7 +27,7 @@ import '../../utils/suppressRecaptchaErrors';
 const DEFAULT_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 const DEFAULT_SECRET_KEY = '6LeIxAcTAAAAAMszoGRg-rOQDVj75ubvfngVuKIH';
 
-const LOAD_TIMEOUT_MS = 10000;
+const LOAD_TIMEOUT_MS = 5000;
 // How long to wait for the reCAPTCHA iframe to actually appear before
 // considering the widget render failed (blank captcha scenario).
 const RENDER_WATCHDOG_MS = 6000;
