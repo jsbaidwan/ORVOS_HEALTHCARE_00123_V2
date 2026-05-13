@@ -53,6 +53,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   const containerRef = useRef(null);
   const autoRetryCountRef = useRef(0);
   const siteKeyTimeoutRef = useRef(null);
+  const [reloadAttempts, setReloadAttempts] = useState(0);
 
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
 
@@ -261,6 +262,18 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     }
   }, [siteKey, captchaKey, isLoading, error, startRenderWatchdog]);
 
+
+  useEffect(() => {
+    if (siteKeyTimedOut) {
+      if (reloadAttempts < 3) {
+        setReloadAttempts(prev => prev + 1);
+        handleReload();
+      } else {
+        setError('reCAPTCHA failed to load. Please click Reload to try again.');
+      }
+    }
+  }, [siteKeyTimedOut, reloadAttempts, handleReload]);
+
   // NOTE: no unmount-reset effect. Manually calling reset() on every
   // unmount / expire / error causes Google to treat the widget as hostile
   // and escalate the difficulty (image puzzles instead of auto-checkmark).
@@ -347,7 +360,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
               </>
             ) : (
               <>
-                <p className="text-xs text-red-500 mb-2">reCAPTCHA failed to prepare. Please reload.</p>
+                <p className="text-xs text-gray-500 mt-2">Preparing reCAPTCHA...</p>
               </>
             )}
           </div>
