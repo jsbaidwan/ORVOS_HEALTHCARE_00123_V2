@@ -43,6 +43,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   // the widget from scratch — fixing the blank-captcha-after-logout bug.
   const [captchaKey, setCaptchaKey] = useState(0);
   const [widgetRendered, setWidgetRendered] = useState(false);
+  const [siteKeyTimedOut, setSiteKeyTimedOut] = useState(false);
 
   const recaptchaRef = useRef(null);
   const cancelLoadRef = useRef(null);
@@ -51,8 +52,35 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   const observerRef = useRef(null);
   const containerRef = useRef(null);
   const autoRetryCountRef = useRef(0);
+  const siteKeyTimeoutRef = useRef(null);
 
   const { decodedValue: siteKey } = useDecode(rawSiteKey || '', 'password');
+
+  // ─── Timeout for siteKey decode (10s) ───────────────────────────
+  // If rawSiteKey is set but useDecode never produces a siteKey,
+  // show a reload button instead of spinning forever.
+  useEffect(() => {
+    if (siteKeyTimeoutRef.current) {
+      clearTimeout(siteKeyTimeoutRef.current);
+      siteKeyTimeoutRef.current = null;
+    }
+
+    if (rawSiteKey && !siteKey && !isLoading && !error) {
+      setSiteKeyTimedOut(false);
+      siteKeyTimeoutRef.current = setTimeout(() => {
+        setSiteKeyTimedOut(true);
+      }, LOAD_TIMEOUT_MS);
+    } else {
+      setSiteKeyTimedOut(false);
+    }
+
+    return () => {
+      if (siteKeyTimeoutRef.current) {
+        clearTimeout(siteKeyTimeoutRef.current);
+        siteKeyTimeoutRef.current = null;
+      }
+    };
+  }, [rawSiteKey, siteKey, isLoading, error]);
 
   // ─── Cleanup any stale Google reCAPTCHA DOM artifacts ────────────
   const cleanupGoogleRecaptchaDOM = useCallback(() => {
@@ -263,7 +291,7 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
     <button
       type="button"
       onClick={handleReload}
-      className={`inline-flex items-center gap-2 px-4 py-2 btn btn-primary-light rounded ${className}`}
+      className={`inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors ${className}`}
     >
       <svg
         className="w-4 h-4"
@@ -309,11 +337,26 @@ const GoogleCaptchaLogin = ({ onVerify }) => {
   // ─── Render: Waiting for siteKey decode ─────────────────────────
   if (!siteKey) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow-md flex justify-center items-center">
-        <div className="inset-0 flex flex-col items-center justify-center bg-white z-10">
-          <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-500"></div>
-          <p className="text-xs text-gray-500 mt-2">Preparing reCAPTCHA...</p>
+      <div className="space-y-2">
+        <div className="bg-white p-4 rounded-lg shadow-md flex justify-center items-center">
+          <div className="inset-0 flex flex-col items-center justify-center bg-white z-10">
+            {!siteKeyTimedOut ? (
+              <>
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-500"></div>
+                <p className="text-xs text-gray-500 mt-2">Preparing reCAPTCHA...</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-red-500 mb-2">reCAPTCHA failed to prepare. Please reload.</p>
+              </>
+            )}
+          </div>
         </div>
+        {siteKeyTimedOut && (
+          <div className="flex justify-center">
+            <ReloadButton />
+          </div>
+        )}
       </div>
     );
   }
