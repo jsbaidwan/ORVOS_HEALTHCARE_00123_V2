@@ -5,44 +5,59 @@ const Faq = () => {
 
   const faqs = [
     {
-      question: 'How do I add a new patient?',
-      answer: 'Navigate to the Patients section and click the "Add Patient" button. Fill in the required information including patient details, insurance information, and upload eye images. All required fields are marked with an asterisk (*).',
+      question: 'As the Clinic Admin can I create another clinic for my organization?',
+      answer: 'No. Clinic Admins can only create users for their respective clinics.',
     },
     {
-      question: 'How do I manage clinics?',
-      answer: 'Go to the Clinics section where you can view, add, edit, or archive clinics. Each clinic requires basic information like company name, contact details, and address. You can also upload contract documents and clinic logos.',
+      question: 'Can there be more than 1 Clinic Admin at each clinic?',
+      answer: 'No. There can only be 1 Clinic Admin at each clinic.',
     },
     {
-      question: 'How do I generate reports?',
-      answer: 'Visit the Reports section, select your desired report type (Clinic Patients or Orvos Doctor Review), choose filters like clinic name, and click "Export to CSV" to download the report.',
+      question: 'What are the different roles at each clinic?',
+      answer: (
+        <ul className="list-none pl-4 space-y-1">
+          <li>(a) Clinic Admin – Create Users, Add Patients, Download Reports, Create PDF Templates, View Patients</li>
+          <li>(b) User – Download Reports, View Patients</li>
+          <li>(c) Doctors – Add Patients, View Patients, Download Reports</li>
+          <li>(d) Medical Assistant - Add Patients, View Patients, Download Reports</li>
+        </ul>
+      ),
     },
     {
-      question: 'Can I customize email templates?',
-      answer: 'Yes! Go to Settings > Email Templates to create and customize email templates for patient communications. You can use variables like {{patient_name}} and {{clinic_name}} in your templates.',
+      question: 'How long will it take for me to get a diagnosis back?',
+      answer: 'Generally, diagnosis should be returned in 24 hours. In the event there may have been an unforeseen high patient volume that day it may take 48 hours.',
     },
     {
-      question: 'How do patient reminders work?',
-      answer: 'Patient appointment reminders are automatically sent 120 days from the last image date if the feature is enabled in Settings > Additional Settings. The patient must have a valid email address on file.',
+      question: 'Are the Orvos doctors licensed in the state my clinic is in?',
+      answer: 'Yes. All of our ophthalmologists have medical licenses in the state the clinic is located in.',
     },
     {
-      question: 'What image formats are supported for eye images?',
-      answer: 'We support JPG, JPEG, PNG, and WEBP formats. Each image must be under 5MB in size. You can upload multiple images for both left and right eyes.',
+      question: 'Is there a way to chart the patient’s retina history in the Orvos portal?',
+      answer: 'No. We recommend storing their specific progression in the clinic’s EMR.',
     },
     {
-      question: 'How do I archive a clinic?',
-      answer: 'In the Clinics list, click the archive icon next to the clinic you want to archive. Archived clinics can be viewed by clicking the "Archives" button at the top of the Clinics page.',
+      question: 'What is the maximum number of images I can send for a patient?',
+      answer: 'We recommend 2 images per eye. Although there is not a maximum number of images, there is a maximum 5MB size limit that can be uploaded per patient.',
     },
     {
-      question: 'Can I add patients without logging in?',
-      answer: 'This feature can be enabled in Settings > Additional Settings by checking "Allow adding patients without logging in" and providing a public clinic URL.',
+      question: 'As a Clinic Admin can I assign a user to multiple clinics?',
+      answer: 'Yes, if a contract is in place with the patient’s health plan.',
     },
     {
-      question: 'How do I change my password?',
-      answer: 'Go to Settings > Change Password, enter your current password and your new password (minimum 8 characters). Click "Update Password" to save your changes.',
+      question: 'Can a patient do Self-Pay with Orvos?',
+      answer: 'No. It is against HIPAA for users to share accounts.',
     },
     {
-      question: 'What is the difference between pending and completed patients?',
-      answer: 'Pending patients are awaiting review or processing, while completed patients have finished their evaluation. You can change a patient\'s status by clicking the complete icon in the patient list.',
+      question: 'Is there a way for Orvos to send reminders to patients based on follow up recommendations?',
+      answer: 'Yes. If the patient’s email is added, they will get reminders. This feature is off by default.',
+    },
+    {
+      question: 'Can I export my patient list into Excel?',
+      answer: 'Yes. All of a clinic’s patients can be exported into Excel.',
+    },
+    {
+      question: 'Can I add a patient without having to log into the portal?',
+      answer: 'Yes. Using a special URL, images can be uploaded to a clinic. This feature must be enabled.',
     },
   ];
 
@@ -53,7 +68,7 @@ const Faq = () => {
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
-      
+
       <div className="space-y-4">
         {faqs.map((faq, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -63,9 +78,8 @@ const Faq = () => {
             >
               <span className="font-semibold text-gray-900 text-left">{faq.question}</span>
               <svg
-                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
-                  openIndex === index ? 'transform rotate-180' : ''
-                }`}
+                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${openIndex === index ? 'transform rotate-180' : ''
+                  }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
