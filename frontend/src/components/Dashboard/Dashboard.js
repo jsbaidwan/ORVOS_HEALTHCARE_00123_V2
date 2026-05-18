@@ -370,7 +370,7 @@ const Dashboard = () => {
           <div className="space-y-3 mb-4">
             {completedPatients?.length > 0 && completedPatients?.slice(0, 5)?.map((patient) => (
 
-              < div
+              <div
                 key={patient.id}
                 className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 cursor-pointer"
                 onClick={() => navigate(getRoutePath(`/patients/view/${patient.id}`))}
