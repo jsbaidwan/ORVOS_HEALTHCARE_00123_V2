@@ -74,7 +74,7 @@ const Faq = () => {
           <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <button
               onClick={() => toggleFaq(index)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200"
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200 btn-primary-light"
             >
               <span className="font-semibold text-gray-900 text-left">{faq.question}</span>
               <svg
@@ -88,7 +88,7 @@ const Faq = () => {
               </svg>
             </button>
             {openIndex === index && (
-              <div className="px-4 pb-4 text-gray-700 border-t border-gray-100">
+              <div className="px-4 pb-4 text-gray-700 border-t border-gray-100 text-sm">
                 <p className="pt-3">{faq.answer}</p>
               </div>
             )}
