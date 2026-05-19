@@ -82,8 +82,6 @@ class UserController extends Controller
         }
 		
         $messages['clinic_ids.required'] = 'The clinic field is required.';
-
-        $validate = Validator::make($input,$rules,$messages); 
 		$messages = User::$messages;
 		$validator = Validator::make($input, $rules,$messages);
 		   
@@ -370,9 +368,9 @@ class UserController extends Controller
 			}
 		}
      
-		$validate = Validator::make($input, $rules);
+		$validator = Validator::make($input, $rules);
 		
-		if ($validate->fails()) {
+		if ($validator->fails()) {
 			
 			return response()->json(['message' => $validator->errors()], 422);
 	 
