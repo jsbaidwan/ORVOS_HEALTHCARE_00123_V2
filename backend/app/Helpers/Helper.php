@@ -1266,7 +1266,8 @@ class Helper{
 	 */
 	public static function getLatLng($address)
 	{
-		$key = self::googleApiKey()['key'];
+		//$key = self::googleApiKey()['key'];
+		$key = env('GOOGLE_MAP_GEOCODE_API_KEY');
 		$geocodeUrl = "https://maps.googleapis.com/maps/api/geocode/json?address=" . urlencode($address) . "&key=".$key;
         $response = file_get_contents($geocodeUrl);
         $data = json_decode($response);

@@ -511,55 +511,103 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
               </div>
 
               <div className={`grid grid-cols-1 ${showClinics && !isSuperAdminProfile ? 'md:grid-cols-2' : ''} gap-4`}>
-                {!isSuperAdminProfile && (
-                  <FormField
-                    label="User Type"
-                    name="role_id"
-                    type="select"
-                    registration={register('role_id')}
-                    options={roles?.map((r) => ({ value: r.id, label: r.name }))}
-                    required
-                    error={errors.role_id?.message}
-                  />
-                )}
-                {showClinics && !isSuperAdminProfile && (
-                  <Controller
-                    name="clinic_ids"
-                    control={control}
-                    render={({ field }) => (
-                      <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Choose Clinics <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <Select
-                          isMulti
-                          options={clinicOptions}
-                          value={clinicOptions.filter((o) => field.value?.includes(o.value))}
-                          onChange={(selected) => field.onChange(selected ? selected.map((s) => s.value) : [])}
-                          placeholder="Select clinics..."
-                          classNamePrefix="react-select"
-                          styles={{
-                            control: (base, state) => ({
-                              ...base,
-                              borderColor: errors.clinic_ids ? '#ef4444' : state.isFocused ? '#009efb' : '#d1d5db',
-                              boxShadow: state.isFocused ? '0 0 0 2px rgba(0, 158, 251, 0.2)' : base.boxShadow,
-                              '&:hover': { borderColor: state.isFocused ? '#009efb' : '#9ca3af' },
-                              minHeight: '38px',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                            }),
-                            multiValue: (base) => ({ ...base, backgroundColor: '#e0f2fe', borderRadius: '0.25rem' }),
-                            multiValueLabel: (base) => ({ ...base, color: '#0369a1', fontSize: '0.8rem' }),
-                            multiValueRemove: (base) => ({ ...base, color: '#0369a1', '&:hover': { backgroundColor: '#bae6fd', color: '#0c4a6e' } }),
-                            menu: (base) => ({ ...base, zIndex: 50 }),
-                          }}
-                        />
-                        {errors.clinic_ids && (
-                          <p className="mt-1 text-sm text-red-600">{errors.clinic_ids.message}</p>
-                        )}
-                      </div>
+
+                {!isProfile && (
+                  <>
+                    {!isSuperAdminProfile && (
+                      <FormField
+                        label="User Type"
+                        name="role_id"
+                        type="select"
+                        registration={register('role_id')}
+                        options={roles?.map((r) => ({ value: r.id, label: r.name }))}
+                        required
+                        error={errors.role_id?.message}
+                      />
                     )}
-                  />
+
+                    {showClinics && !isSuperAdminProfile && (
+                      <Controller
+                        name="clinic_ids"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Choose Clinics <span className="text-red-500 ml-1">*</span>
+                            </label>
+
+                            <Select
+                              isMulti
+                              options={clinicOptions}
+                              value={clinicOptions.filter((o) =>
+                                field.value?.includes(o.value)
+                              )}
+                              onChange={(selected) =>
+                                field.onChange(
+                                  selected ? selected.map((s) => s.value) : []
+                                )
+                              }
+                              placeholder="Select clinics..."
+                              classNamePrefix="react-select"
+                              styles={{
+                                control: (base, state) => ({
+                                  ...base,
+                                  borderColor: errors.clinic_ids
+                                    ? '#ef4444'
+                                    : state.isFocused
+                                      ? '#009efb'
+                                      : '#d1d5db',
+                                  boxShadow: state.isFocused
+                                    ? '0 0 0 2px rgba(0, 158, 251, 0.2)'
+                                    : base.boxShadow,
+                                  '&:hover': {
+                                    borderColor: state.isFocused
+                                      ? '#009efb'
+                                      : '#9ca3af',
+                                  },
+                                  minHeight: '38px',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.875rem',
+                                }),
+
+                                multiValue: (base) => ({
+                                  ...base,
+                                  backgroundColor: '#e0f2fe',
+                                  borderRadius: '0.25rem',
+                                }),
+
+                                multiValueLabel: (base) => ({
+                                  ...base,
+                                  color: '#0369a1',
+                                  fontSize: '0.8rem',
+                                }),
+
+                                multiValueRemove: (base) => ({
+                                  ...base,
+                                  color: '#0369a1',
+                                  '&:hover': {
+                                    backgroundColor: '#bae6fd',
+                                    color: '#0c4a6e',
+                                  },
+                                }),
+
+                                menu: (base) => ({
+                                  ...base,
+                                  zIndex: 50,
+                                }),
+                              }}
+                            />
+
+                            {errors.clinic_ids && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors.clinic_ids.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    )}
+                  </>
                 )}
               </div>
 
