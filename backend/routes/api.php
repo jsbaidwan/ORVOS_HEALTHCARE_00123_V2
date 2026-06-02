@@ -33,6 +33,8 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('reports/clinic-patient','App\Http\Controllers\Api\ReportController@clinicPatient');
     Route::get('reports/orvos-doctor-review','App\Http\Controllers\Api\ReportController@orvosDoctorReview');
     Route::post('reports/get-doctor-states','App\Http\Controllers\Api\ReportController@getDoctorStates');
+	Route::get('reports/clinic-patient/export','App\Http\Controllers\Api\ReportController@clinicPatientExport');
+	Route::get('reports/orvos-doctor-review/export','App\Http\Controllers\Api\ReportController@orvosDoctorReviewExport');
 	 
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();

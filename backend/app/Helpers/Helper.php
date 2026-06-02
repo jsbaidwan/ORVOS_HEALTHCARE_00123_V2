@@ -243,32 +243,48 @@ class Helper{
 		   
 		$from = null;
 		$to   = null;
+		
+		$tz = config('app.custom_timezone');
 		// If month is set → define base start and end of month
+		// If month is set → base range (USER timezone)
 		if (!empty($filters['month'])) {
-			$month = \Carbon\Carbon::createFromFormat('m-Y', $filters['month']);
-			$from  = $month->copy()->startOfMonth();
-			$to    = $month->copy()->endOfMonth();
+			$month = Carbon::createFromFormat('m-Y', $filters['month'], $tz);
+
+			$from = $month->copy()->startOfMonth()->setTimezone('UTC');
+			$to   = $month->copy()->endOfMonth()->setTimezone('UTC');
 		}
 
-		// If from_date is set → narrow the lower bound
+		// If from_date is set → narrow lower bound
 		if (!empty($filters['from_date'])) {
-			$fromDate = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['from_date']);
-			$from = $from ? $fromDate->greaterThan($from) ? $fromDate : $from : $fromDate;
+			$fromDate = Carbon::createFromFormat('m-d-Y', $filters['from_date'], $tz)
+				->startOfDay()
+				->setTimezone('UTC');
+
+			$from = $from
+				? ($fromDate->greaterThan($from) ? $fromDate : $from)
+				: $fromDate;
 		}
 
-		// If to_date is set → narrow the upper bound
+		// If to_date is set → narrow upper bound
 		if (!empty($filters['to_date'])) {
-			$toDate = \Carbon\Carbon::createFromFormat('m-d-Y', $filters['to_date']);
-			$to = $to ? $toDate->lessThan($to) ? $toDate : $to : $toDate;
-		}
+			$toDate = Carbon::createFromFormat('m-d-Y', $filters['to_date'], $tz)
+				//->endOfDay() 
+				 ->setTimezone('UTC');
 
-		// Apply condition
+			$to = $to
+				? ($toDate->lessThan($to) ? $toDate : $to)
+				: $toDate;
+		}
+		 
+
+		// Apply condition (UTC timestamps)
 		if ($from && $to) {
-		   $query->whereDate('created_at', '>=', $from->format('Y-m-d'))->whereDate('created_at', '<=', $to->format('Y-m-d'));
+			$query->whereDate('created_at', '>=', $from)
+			->whereDate('created_at', '<=', $to);
 		} elseif ($from) {
-			$query->whereDate('created_at', $from->format('Y-m-d'));
+			$query->whereDate('created_at', $from);
 		} elseif ($to) {
-			$query->whereDate('created_at', $to->format('Y-m-d'));
+			$query->whereDate('created_at', $to);
 		}
 		
 		if(!empty($filters['q'])){
@@ -341,6 +357,11 @@ class Helper{
 		if(isset($filters['clinic_id'])){
 			 
 			$query->where('clinic_id',$filters['clinic_id']);
+		}
+		
+		if(isset($filters['r_clinic_ids'])){
+			 
+			$query->whereIn('clinic_id',$filters['r_clinic_ids']);
 		}
 		
 		if(\Auth::user() && \Auth::user()->role_id != 1){

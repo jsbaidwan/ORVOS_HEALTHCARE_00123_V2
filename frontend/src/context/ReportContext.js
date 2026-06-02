@@ -67,11 +67,37 @@ export const ReportProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
+  const exportReport = useCallback(async (filters = {}, endpoint) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const data = { ...filters };
+
+      const url =
+        'reports/' +
+        endpoint +
+        '/export?data=' +
+        encodeURIComponent(JSON.stringify(data));
+
+      const response = await api.call(url, 'GET', null, true);
+
+      if (response.status === 200) {
+        return response;
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  }, [getToken, logout]);
+
   const value = {
     reports,
     setReports,
     getDoctorReviewReport,
     getClinicPatientsReport,
+    exportReport
   };
 
   return <ReportContext.Provider value={value}>{children}</ReportContext.Provider>;
