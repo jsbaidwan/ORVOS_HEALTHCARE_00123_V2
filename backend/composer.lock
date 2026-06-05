@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "93974c6514f60e124bf30f7876eb9829",
+    "content-hash": "f59a3246f7ad361b39fd5be1358355e3",
     "packages": [
         {
             "name": "beyondcode/laravel-websockets",
@@ -3539,6 +3539,68 @@
                 "source": "https://github.com/MarkBaker/PHPMatrix/tree/3.0.1"
             },
             "time": "2022-12-02T22:17:43+00:00"
+        },
+        {
+            "name": "mkinyua53/orthanc",
+            "version": "v0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/MKinyua53/laravel-orthanc.git",
+                "reference": "e92b993e5a3e0553f0176bb1d0b62363ab580f58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/MKinyua53%2Flaravel-orthanc/repository/archive.zip?sha=e92b993e5a3e0553f0176bb1d0b62363ab580f58",
+                "reference": "e92b993e5a3e0553f0176bb1d0b62363ab580f58",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/support": "*",
+                "php": "^7.4|^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0",
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Orthanc": "Mkinyua53\\Orthanc\\OrthancFacade"
+                    },
+                    "providers": [
+                        "Mkinyua53\\Orthanc\\OrthancServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Mkinyua53\\Orthanc\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mwatha Kinyua",
+                    "email": "mwatha.kinyua@hotmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Orthanc API for Laravel",
+            "homepage": "https://github.com/mkinyua53/orthanc",
+            "keywords": [
+                "mkinyua53",
+                "orthanc"
+            ],
+            "support": {
+                "issues": "https://gitlab.com/MKinyua53/laravel-orthanc/-/issues",
+                "source": "https://gitlab.com/MKinyua53/laravel-orthanc/-/tree/v0.2.0"
+            },
+            "time": "2024-11-09T13:33:43+00:00"
         },
         {
             "name": "monolog/monolog",

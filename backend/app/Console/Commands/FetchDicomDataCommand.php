@@ -41,7 +41,7 @@ class FetchDicomDataCommand extends Command
 		
 		$dicomArray = [];
 		$seen = [];
-		$yesterday = gmdate('Ymd', strtotime('-1 day'));
+		$startDate  = gmdate('Ymd', strtotime('-6 day'));
 		$today = gmdate('Ymd');
 		  
 		if(!empty($id) && !empty($type)){
@@ -60,7 +60,7 @@ class FetchDicomDataCommand extends Command
 				"Level"  => "Study",
 				"Expand" => true,
 				"Query"  => [
-					"StudyDate" => $yesterday . "-" . $today
+					"StudyDate" => $startDate  . "-" . $today
 				]
 			]);
 		}
@@ -170,12 +170,14 @@ class FetchDicomDataCommand extends Command
 			
 			$dicomArray[] = $study; 
 		}
+		
+		
 		    
-		\Artisan::call('queue:work', [
-            '--stop-when-empty' => true,
-			'--queue' => 'insert-dicom-data',
-            '--tries' => count($dicomArray),
-        ]);
+		// \Artisan::call('queue:work', [
+            // '--stop-when-empty' => true,
+			// '--queue' => 'insert-dicom-data',
+            // '--tries' => count($dicomArray),
+        // ]);
 		
         $this->info('All DICOM data dispatched successfully.');
 	   	

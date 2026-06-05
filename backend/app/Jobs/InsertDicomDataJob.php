@@ -11,7 +11,8 @@ use App\Models\Patient;
 use App\Models\Clinic;
 use Mkinyua53\Orthanc\Facades\System;
 use App\Services\MyOrthancClient;
-
+use Illuminate\Support\Facades\Storage;
+  
 class InsertDicomDataJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -47,12 +48,12 @@ class InsertDicomDataJob implements ShouldQueue
 			return false;
 		}
 		
-		$clinic = Clinic::where('device_id', $deviceSerialNumber)
+		$clinic = Clinic::whereJsonContains('device_ids', $deviceSerialNumber)
 		->where('is_dicom_enabled', 1)
 		->first();
 
 		if (!$clinic) {
-			$clinic = Clinic::whereRaw('? REGEXP device_id', [$deviceSerialNumber])
+			$clinic = Clinic::where('device_ids', 'LIKE', '%"'.$deviceSerialNumber.'"%')
 			->where('is_dicom_enabled', 1)
 			->first();
 		}
@@ -74,64 +75,63 @@ class InsertDicomDataJob implements ShouldQueue
 		$input['dos'] = $date ? $date->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s');
 		  
 		$input['clinic_id'] = $clinic->id;
-		$input['mr_number'] = $study['Patient']['PatientUID']  ?? null;  
+		$input['ehr'] = $study['Patient']['PatientUID']  ?? null;  
 		$input['l_eye'] = $study['EyeAvailability']['l_eye'] ?? 0;
 		$input['r_eye'] = $study['EyeAvailability']['r_eye'] ?? 0; 
+		 
+		$input['slug'] = \Helper::genSlug(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7))['slug'];
 		
-		$input['provider_id'] = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7);
-		$input['slug'] = \Helper::genSlug($input['provider_id'])['slug'];
-		
-		if($input['l_eye']){
-			
+		if ($input['l_eye']) {
+
 			$leftEyeInstances = array_values(array_filter(
 				$study['Instances'],
 				fn($i) => strtolower($i['ImageLaterality'] ?? '') === 'l'
 			));
-		
+
 			$uLeftEyeFiles = [];
-			
-			foreach($leftEyeInstances as $lInstance){
-				 
+			$path = 'uploads/patients/' . $input['slug'];
+
+			foreach ($leftEyeInstances as $lInstance) {
+
 				$imageData = $client->getRaw("/instances/{$lInstance['ID']}/preview");
-				  
-				$destinationPath = public_path('uploads/patients/' . $input['slug']);
-				 
-				if (!file_exists($destinationPath)) {
-					mkdir($destinationPath, 0755, true);
-				}
-				$lEfilename = uniqid().'-'.$lInstance['ID'].'.png';
-				 
-				$path = $destinationPath.'/'.$lEfilename;
-				file_put_contents($path, $imageData);
-				
+
+				$lEfilename = uniqid() . '-' . $lInstance['ID'] . '.png';
+
+				Storage::put(
+					'public/' . $path . '/' . $lEfilename,
+					$imageData
+				);
+
 				$uLeftEyeFiles[] = $lEfilename;
 			}
+
 			$input['l_eye_images'] = json_encode($uLeftEyeFiles);
 		}
 		
-		if($input['r_eye']){
-			
+		if ($input['r_eye']) {
+
 			$rightEyeInstances = array_values(array_filter(
 				$study['Instances'],
 				fn($i) => strtolower($i['ImageLaterality'] ?? '') === 'r'
 			));
-			
+
 			$uRightEyeFiles = [];
-			foreach($rightEyeInstances as $rInstance){
-				 
+			$path = 'uploads/patients/' . $input['slug'];
+
+			foreach ($rightEyeInstances as $rInstance) {
+
 				$imageData = $client->getRaw("/instances/{$rInstance['ID']}/preview");
-				$destinationPath = public_path('uploads/patients/' . $input['slug']);
-				 
-				if (!file_exists($destinationPath)) {
-					mkdir($destinationPath, 0755, true);
-				}
-				$rEfilename = uniqid().'-'.$rInstance['ID'].'.png';
-				 
-				$path = $destinationPath.'/'.$rEfilename;
-				file_put_contents($path, $imageData);
-				
+
+				$rEfilename = uniqid() . '-' . $rInstance['ID'] . '.png';
+
+				Storage::put(
+					'public/' . $path . '/' . $rEfilename,
+					$imageData
+				);
+
 				$uRightEyeFiles[] = $rEfilename;
 			}
+
 			$input['r_eye_images'] = json_encode($uRightEyeFiles);
 		}
 		

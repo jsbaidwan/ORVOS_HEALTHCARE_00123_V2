@@ -183,6 +183,23 @@ export const ClinicProvider = ({ children }) => {
     return clinics.find(c => c.id === Number(id)) || null;
   };
 
+  const runDicomFetchCron = async (data) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`run-cron`, 'POST', data, true);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'DICOM Fetch Cron run successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
   const value = {
     clinics,
     setClinics,
@@ -194,7 +211,8 @@ export const ClinicProvider = ({ children }) => {
     deleteClinic,
     archiveClinic,
     unarchiveClinic,
-    getExistingClinic
+    getExistingClinic,
+    runDicomFetchCron
   };
 
   return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;

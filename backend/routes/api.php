@@ -94,8 +94,100 @@ Route::middleware('auth:api')->group(function () {
 		);
 		return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'success')['message']],200,[],JSON_UNESCAPED_SLASHES);
 	});
-	 
 	
+	Route::post('/run-cron', function (Request $request) {
+ 
+		if (!$request->clinic_id) {
+			return response()->json([
+				'message' => 'The clinic id field is required.'
+			], 422);
+		}
+		
+		if (!$request->cron_type) {
+			return response()->json([
+				'message' => 'The cron type field is required.'
+			], 422);
+		}
+
+		$clinicId = $request->clinic_id;
+		$clinic = \Helper::getClinicById($clinicId)['clinic'];
+
+		$deviceIds = $clinic->device_ids;
+
+		$runInBackground = $request->boolean('background', false);
+  
+		$cronType = $request->cron_type;
+
+		if ($cronType === 'dicom:fetch') {
+
+			if (!$deviceIds || count($deviceIds) === 0) {
+				return response()->json([
+					'message' => 'No device ids found for this clinic.'
+				], 422);
+			}
+
+			/**
+			 * Run in Background
+			 */
+			if ($runInBackground) {
+
+				$artisan = base_path('artisan');
+
+				foreach ($deviceIds as $deviceId) {
+
+					$cmd = sprintf(
+						'php "%s" %s --id=%s --type=%s',
+						$artisan,
+						escapeshellarg($cronType),
+						escapeshellarg($deviceId),
+						escapeshellarg('DeviceSerialNumber')
+					);
+
+					if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+						pclose(popen('start /B ' . $cmd, 'r'));
+					} else {
+						exec($cmd . ' > /dev/null 2>&1 &');
+					}
+				}
+
+				return response()->json([
+					'message' => 'DICOM Fetch Cron is now running in the background.',
+					'background' => true
+				], 200);
+			}
+
+			/**
+			 * Run Synchronously
+			 */
+			set_time_limit(300);
+
+			$outputs = [];
+
+			foreach ($deviceIds as $deviceId) {
+
+				\Artisan::call($cronType, [
+					'id'   => $deviceId,
+					'type' => 'DeviceSerialNumber'
+				]);
+
+				$outputs[] = [
+					'device_id' => $deviceId,
+					'output'    => \Artisan::output()
+				];
+			}
+
+			return response()->json([
+				'message'    => 'Cron executed successfully.',
+				'output'     => $outputs,
+				'background' => false
+			], 200);
+		}
+
+		return response()->json([
+			'message' => 'Invalid cron type.'
+		], 422);
+	});
+	  
 });
   
 Route::get('countries', function(){
