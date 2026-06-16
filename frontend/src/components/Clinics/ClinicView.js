@@ -12,6 +12,7 @@ import useBlobUrl from '../../hooks/useBlobUrl';
 import BlobFileItem from '../UI/BlobFileItem';
 import PageLoader from '../Common/PageLoader';
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 
 const ClinicView = () => {
   const { id } = useParams();
@@ -49,15 +50,7 @@ const ClinicView = () => {
     };
     if (id) loadSettings();
   }, [id, getAdditionalSettings]);
-
-  const handleSettingsChange = (e) => {
-    const { name, value } = e.target;
-    setSettingsData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
+ 
   const handleToggleField = (fieldName) => {
     setSettingsData((prev) => ({
       ...prev,
@@ -498,14 +491,28 @@ const ClinicView = () => {
                   {settingsData.allow_add_patient_without_login && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Clinic URL</label>
-                      <input
-                        type="text"
-                        name="clinic_url"
-                        value={settingsData.clinic_url}
-                        readOnly
-                        placeholder="https://yourclinic.com/add-patient"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-default"
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          name="clinic_url"
+                          value={settingsData.clinic_url}
+                          readOnly
+                          placeholder="https://yourclinic.com/add-patient"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-default"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(settingsData.clinic_url);
+                            toast.success('Clinic URL copied to clipboard.');
+                          }}
+                          className="px-3 py-2 text-sm font-medium text-white rounded-lg shadow"
+                          style={{ backgroundColor: '#009efb' }}
+                          title="Copy URL"
+                        >
+                          Copy
+                        </button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         Public URL where patients can submit their information
                       </p>
