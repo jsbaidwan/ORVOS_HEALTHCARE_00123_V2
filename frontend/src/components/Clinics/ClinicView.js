@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClinic } from '../../context/ClinicContext';
+import { useAuth } from '../../context/AuthContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
@@ -16,11 +17,78 @@ const ClinicView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
-  const { getClinicById, getExistingClinic, runDicomFetchCron } = useClinic();
-
+  const { getClinicById, getExistingClinic, runDicomFetchCron, postAdditionalSettings,getAdditionalSettings } = useClinic();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState(null);
   const [clinic, setClinic] = useState(null);
+
+  const [settingsData, setSettingsData] = useState({
+    patient_ins_billing_fields: false,
+    patient_address: false,
+    emailToggle: false,
+    patient_appointment_reminders: false,
+    allow_add_patient_without_login: false,
+    clinic_url: '',
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const response = await getAdditionalSettings(id);
+      if (response?.status === 200 && response?.data) {
+        const d = response.data;
+        setSettingsData({
+          patient_ins_billing_fields: d.patient_ins_billing_fields === 'on' || d.patient_ins_billing_fields === true,
+          patient_address: d.patient_address === 'on' || d.patient_address === true,
+          emailToggle: d.emailToggle === 'on' || d.emailToggle === true,
+          patient_appointment_reminders: d.patient_appointment_reminders === 'on' || d.patient_appointment_reminders === true,
+          allow_add_patient_without_login: d.allow_add_patient_without_login === 'on' || d.allow_add_patient_without_login === true,
+          clinic_url: d.clinic_url || '',
+        });
+      }
+    };
+    if (id) loadSettings();
+  }, [id, getAdditionalSettings]);
+
+  const handleSettingsChange = (e) => {
+    const { name, value } = e.target;
+    setSettingsData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleToggleField = (fieldName) => {
+    setSettingsData((prev) => ({
+      ...prev,
+      [fieldName]: !prev[fieldName],
+    }));
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    const response = await postAdditionalSettings({
+      clinic_id: id,
+      patient_ins_billing_fields: settingsData.patient_ins_billing_fields ? 'on' : 'off',
+      patient_address: settingsData.patient_address ? 'on' : 'off',
+      emailToggle: settingsData.emailToggle ? 'on' : 'off',
+      patient_appointment_reminders: settingsData.patient_appointment_reminders ? 'on' : 'off',
+      allow_add_patient_without_login: settingsData.allow_add_patient_without_login ? 'on' : 'off',
+      clinic_url: settingsData.clinic_url,
+    });
+    if (response?.status && response?.status !== 200) {
+      setErrors({
+        general: response?.message || 'Unable to save settings'
+      });
+      return;
+    }
+    Swal.fire({
+      icon: 'success',
+      title: 'Saved',
+      text: 'Clinic settings saved successfully!',
+      confirmButtonColor: '#3b82f6',
+    });
+  };
 
   const { setPageTitle } = useTitle();
 
@@ -348,16 +416,113 @@ const ClinicView = () => {
           </div>
         </div>
         {/* Right Side */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
+
+          {/* Run DICOM Fetch Cron - Only for role_id === 1 */}
+          {user?.role_id === 1 && (
+            <div className="bg-white rounded-lg shadow border p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Run DICOM Fetch Cron</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Run DICOM Fetch Cron
+              </p>
+              <button className="mt-4 px-4 py-2 text-sm font-medium btn-primary-light rounded-lg shadow" onClick={() => handleRunDicomFetchCron()}>
+                Run DICOM Fetch Cron
+              </button>
+            </div>
+          )}
+
+          {/* Clinic Settings Card */}
           <div className="bg-white rounded-lg shadow border p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Run DICOM Fetch Cron</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Run DICOM Fetch Cron
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Clinic Settings</h3>
+            <p className="mt-1 text-sm text-gray-500 mb-4">
+              Configure clinic-specific settings
             </p>
-            <button className="mt-4 px-4 py-2 text-sm font-medium btn-primary-light rounded-lg shadow" onClick={() => handleRunDicomFetchCron()}>
-              Run DICOM Fetch Cron
-            </button>
+
+            <form onSubmit={handleSaveSettings} className="space-y-4">
+
+              {/* Patient Settings */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">Patient Settings</h4>
+
+                {[
+                  { name: 'patient_ins_billing_fields', label: 'Patient Insurance & Billing Fields' },
+                  { name: 'patient_address', label: 'Patient Address Field' },
+                  { name: 'emailToggle', label: 'Require Email Address' },
+                  { name: 'patient_appointment_reminders', label: 'Patient Appointment Reminders' },
+                ].map((field) => (
+                  <div key={field.name} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{field.label}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleField(field.name)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        settingsData[field.name] ? '' : 'bg-gray-300'
+                      }`}
+                      style={settingsData[field.name] ? { backgroundColor: '#009efb' } : {}}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          settingsData[field.name] ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Clinic Access - Only for role_id === 1 */}
+              {user?.role_id === 1 && (
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Clinic Access</h4>
+
+                  {/* Toggle - Allow adding patients without logging in */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Allow adding patients without logging in</span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleField('allow_add_patient_without_login')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        settingsData.allow_add_patient_without_login ? '' : 'bg-gray-300'
+                      }`}
+                      style={settingsData.allow_add_patient_without_login ? { backgroundColor: '#009efb' } : {}}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          settingsData.allow_add_patient_without_login ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Clinic URL - Visible when toggle is ON, readonly */}
+                  {settingsData.allow_add_patient_without_login && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Clinic URL</label>
+                      <input
+                        type="text"
+                        name="clinic_url"
+                        value={settingsData.clinic_url}
+                        readOnly
+                        placeholder="https://yourclinic.com/add-patient"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-default"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Public URL where patients can submit their information
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="pt-3">
+                <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white btn-primary rounded-lg shadow">
+                  Save Settings
+                </button>
+              </div>
+            </form>
           </div>
+
         </div>
 
       </div>

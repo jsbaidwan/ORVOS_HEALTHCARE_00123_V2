@@ -23,6 +23,8 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('clinics/staff/{id}', 'App\Http\Controllers\Api\ClinicController@staff');
 	Route::post('clinics/remove-clinic-staff','App\Http\Controllers\Api\ClinicController@rmvClinicStaff');
 	Route::resource('patients', 'App\Http\Controllers\Api\PatientController');
+	Route::get('patients/guest/create/{id}','App\Http\Controllers\Api\PatientController@guestPatientsCreate')->name('patients.guest.create');
+    Route::post('patients/guest/store','App\Http\Controllers\Api\PatientController@guestPatientsStore')->name('patients.guest.store');
 	Route::post('patients/pdf/{id}','App\Http\Controllers\Api\PatientController@patientPdf');
 	Route::post('send-pdf','App\Http\Controllers\Api\PatientController@sendPdf');
 	Route::post('send-fax','App\Http\Controllers\Api\PatientController@sendFax');
@@ -35,7 +37,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('reports/get-doctor-states','App\Http\Controllers\Api\ReportController@getDoctorStates');
 	Route::get('reports/clinic-patient/export','App\Http\Controllers\Api\ReportController@clinicPatientExport');
 	Route::get('reports/orvos-doctor-review/export','App\Http\Controllers\Api\ReportController@orvosDoctorReviewExport');
-	 
+	Route::post('settings/clinic-additional', 'App\Http\Controllers\Api\SettingController@postAdditionalSettings');
+	Route::get('settings/clinic-additional/{id}', 'App\Http\Controllers\Api\SettingController@getAdditionalSettings');
+	  
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
 	});

@@ -31,17 +31,7 @@ export const SettingsProvider = ({ children }) => {
       clinic: '',
     },
   ]);
-
-  const [clinicSettings, setClinicSettings] = useState({
-    showPhone: true,
-    showPrimaryInsurance: true,
-    showSecondaryInsurance: true,
-    showAddress: true,
-    requireEmail: true,
-    enableReminders: true,
-    allowPublicAdd: false,
-    clinicUrl: '',
-  });
+ 
 
   const addEmailTemplate = (template) => {
     const newTemplate = {
@@ -63,11 +53,7 @@ export const SettingsProvider = ({ children }) => {
   const deleteEmailTemplate = (id) => {
     setEmailTemplates(emailTemplates.filter((template) => template.id !== id));
   };
-
-  const updateClinicSettings = (settings) => {
-    setClinicSettings({ ...clinicSettings, ...settings });
-  };
-
+ 
   const getTemplateByType = (type) => {
     return emailTemplates.find(t => t.name.toLowerCase().includes(type.toLowerCase()) && t.status === 'Active');
   };
@@ -83,11 +69,9 @@ export const SettingsProvider = ({ children }) => {
 
   const value = {
     emailTemplates,
-    clinicSettings,
     addEmailTemplate,
     updateEmailTemplate,
     deleteEmailTemplate,
-    updateClinicSettings,
     getTemplateByType,
     renderTemplate,
   };

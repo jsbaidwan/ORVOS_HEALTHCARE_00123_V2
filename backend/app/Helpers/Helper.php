@@ -1998,23 +1998,47 @@ class Helper{
 	
 	
 	/********* Start:Generate Signed URL **************/
-	public static function genSignedUrl($id, $data = [], $route, $isExpiry = false)
+	public static function genSignedUrl($id,$data = [],$route,$isExpiry = false,$isFrontendUrl = false)
 	{
 		// Encode ID safely for URL
 		$safeId = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($id));
 
+		$params = array_merge(['id' => $safeId], $data);
+
+		if ($isFrontendUrl) {
+
+			if ($isExpiry) {
+				$params['expires'] = now('UTC')->addMinutes(4320)->timestamp;
+			}
+
+			ksort($params);
+
+			$queryString = http_build_query($params);
+
+			$signature = hash_hmac(
+				'sha256',
+				$route . '?' . $queryString,
+				config('app.key')
+			);
+
+			$params['signature'] = $signature;
+
+			return [
+				'signedRoute' => $route . '?' . http_build_query($params)
+			];
+		}
+
+		// Normal Laravel signed routes
 		if ($isExpiry) {
-			// Temporary signed URL with 3 days expiry (4320 minutes)
 			$signedRoute = \URL::temporarySignedRoute(
 				$route,
 				now('UTC')->addMinutes(4320),
-				array_merge(['id' => $safeId], $data)
+				$params
 			);
 		} else {
-			// Permanent signed URL (no expiry)
 			$signedRoute = \URL::signedRoute(
 				$route,
-				array_merge(['id' => $safeId], $data)
+				$params
 			);
 		}
 

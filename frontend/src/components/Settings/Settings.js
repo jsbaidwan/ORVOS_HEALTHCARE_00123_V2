@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChangePassword from './ChangePassword';
 import EmailTemplates from './EmailTemplates';
-import ClinicSettings from './ClinicSettings';
 import Breadcrumb from '../Common/Breadcrumb';
 import { useTitle } from '../../context/TitleContext';
 
@@ -16,7 +15,6 @@ const Settings = () => {
   const tabs = [
     { id: 'password', name: 'Change Password', icon: '🔒' },
     { id: 'email', name: 'Email Templates', icon: '📧' },
-    { id: 'clinic', name: 'Additional Settings', icon: '⚙️' },
   ];
 
   return (
@@ -55,9 +53,6 @@ const Settings = () => {
 
           {/* Email Templates Tab */}
           {activeTab === 'email' && <EmailTemplates />}
-
-          {/* Additional Settings Tab */}
-          {activeTab === 'clinic' && <ClinicSettings />}
         </div>
       </div>
     </div>

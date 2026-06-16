@@ -200,6 +200,34 @@ export const ClinicProvider = ({ children }) => {
     }
   };
 
+  const postAdditionalSettings = async (data) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+    try {
+      const response = await api.call(`settings/clinic-additional`, 'POST', data, true);
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Additional settings added successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const getAdditionalSettings = async (id) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+    try {
+      const response = await api.call(`settings/clinic-additional/${id}?data=${encodeURIComponent(JSON.stringify({ clinic_id: id }))}`, 'GET', null, true);
+      if (response.status === 200) {
+        return { status: response.status, data: response.data?.additionalSettings || [] };
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
   const value = {
     clinics,
     setClinics,
@@ -212,7 +240,9 @@ export const ClinicProvider = ({ children }) => {
     archiveClinic,
     unarchiveClinic,
     getExistingClinic,
-    runDicomFetchCron
+    runDicomFetchCron,
+    postAdditionalSettings,
+    getAdditionalSettings
   };
 
   return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;
