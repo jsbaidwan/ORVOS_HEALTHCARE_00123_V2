@@ -39,11 +39,11 @@ const ClinicView = () => {
       if (response?.status === 200 && response?.data) {
         const d = response.data;
         setSettingsData({
-          patient_ins_billing_fields: d.patient_ins_billing_fields === 'on' || d.patient_ins_billing_fields === true,
-          patient_address: d.patient_address === 'on' || d.patient_address === true,
-          emailToggle: d.emailToggle === 'on' || d.emailToggle === true,
-          patient_appointment_reminders: d.patient_appointment_reminders === 'on' || d.patient_appointment_reminders === true,
-          allow_add_patient_without_login: d.allow_add_patient_without_login === 'on' || d.allow_add_patient_without_login === true,
+          patient_ins_billing_fields: !!d.patient_ins_billing_fields,
+          patient_address: !!d.patient_address,
+          emailToggle: !!d.emailToggle,
+          patient_appointment_reminders: !!d.patient_appointment_reminders,
+          allow_add_patient_without_login: !!d.allow_add_patient_without_login,
           clinic_url: d.clinic_url || '',
         });
       }
@@ -62,11 +62,11 @@ const ClinicView = () => {
     e.preventDefault();
     const response = await postAdditionalSettings({
       clinic_id: id,
-      patient_ins_billing_fields: settingsData.patient_ins_billing_fields ? 'on' : 'off',
-      patient_address: settingsData.patient_address ? 'on' : 'off',
-      emailToggle: settingsData.emailToggle ? 'on' : 'off',
-      patient_appointment_reminders: settingsData.patient_appointment_reminders ? 'on' : 'off',
-      allow_add_patient_without_login: settingsData.allow_add_patient_without_login ? 'on' : 'off',
+      patient_ins_billing_fields: settingsData.patient_ins_billing_fields,
+      patient_address: settingsData.patient_address,
+      emailToggle: settingsData.emailToggle,
+      patient_appointment_reminders: settingsData.patient_appointment_reminders,
+      allow_add_patient_without_login: settingsData.allow_add_patient_without_login,
       clinic_url: settingsData.clinic_url,
     });
     if (response?.status && response?.status !== 200) {

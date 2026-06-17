@@ -82,9 +82,9 @@ const buildDefaults = (data) => ({
 });
 
 
-const PatientForm = ({ patient }) => {
-  const { addPatient, updatePatient, getPatientById, getExistingPatient } = usePatient();
-  const { clinics, getClinics } = useClinic();
+const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignature = '' }) => {
+  const { addPatient, updatePatient, getPatientById, getExistingPatient, guestPatientsStore } = usePatient();
+  const { clinics, setClinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const navigate = useNavigate();
@@ -117,9 +117,16 @@ const PatientForm = ({ patient }) => {
   useGoogleAutocomplete({
     setValue,
     standaloneFields: { address: 'address' },
+    apiKey: isGuest ? (additionalData?.google_map_api_key || '') : undefined,
   });
 
   const pId = patient?.id || id || null;
+
+  useEffect(() => {
+    if (isGuest && guestClinicId && clinics?.length) {
+      setValue('clinic_id', guestClinicId);
+    }
+  }, [isGuest, guestClinicId, setValue, clinics]);
 
   const loadData = useCallback(async () => {
     try {
@@ -159,6 +166,13 @@ const PatientForm = ({ patient }) => {
   }, [pId, getClinics, getPatientById, hideLoader, reset, setError]);
 
   useEffect(() => {
+    if (isGuest) {
+      if (additionalData?.clinics?.length) {
+        setClinics(additionalData.clinics.map(c => ({ id: c.id, name: c.name })));
+      }
+      return;
+    }
+
     if (!id && patientData) {
       // Transition from Edit -> Create
       setPatientData(null);
@@ -187,7 +201,7 @@ const PatientForm = ({ patient }) => {
       loadData();
       fetched.current = true;
     }
-  }, [id, patientData, getExistingPatient, reset, loadData]);
+  }, [id, isGuest, patientData, getExistingPatient, reset, loadData, hideLoader, setClinics, additionalData]);
 
   const handleRemoveExistingLeftEye = (imgObj) => {
     if (imgObj?.name) setRemovedLeftEyeFiles(prev => [...prev, imgObj.name]);
@@ -259,14 +273,40 @@ const PatientForm = ({ patient }) => {
 
     try {
       showLoader();
-      const result = patientData?.id
-        ? await updatePatient(patientData.id, formData)
-        : await addPatient(formData);
+      let result;
+
+      if (isGuest) {
+        formData.append('signature', guestSignature);
+        result = await guestPatientsStore(formData);
+      } else {
+        result = patientData?.id
+          ? await updatePatient(patientData.id, formData)
+          : await addPatient(formData);
+      }
 
       if (result && (result.status === 200 || result.success)) {
         toast.success(result?.message);
-        const status = patientData?.diagnosis_status === 1 ? 'completed' : 'pending';
-        navigate(getRoutePath('/patients/' + status));
+       
+        if (isGuest) {
+          toast.success('Patient submitted successfully!');
+          setPatientData(null);
+          setExistingLeftEyes([]);
+          setExistingRightEyes([]);
+          setRemovedLeftEyeFiles([]);
+          setRemovedRightEyeFiles([]);
+          setLEyeChecked(false);
+          setREyeChecked(false);
+          reset(buildDefaults(null));
+          setValue('l_eye_images', []);
+          setValue('r_eye_images', []);
+          setTimeout(() => {
+            setLEyeChecked(true);
+            setREyeChecked(true);
+          }, 100);
+        } else {
+          const status = patientData?.diagnosis_status === 1 ? 'completed' : 'pending';
+          navigate(getRoutePath('/patients/' + status));
+        }
       } else {
         errorsFormatted(result, setError);
       }
@@ -278,13 +318,13 @@ const PatientForm = ({ patient }) => {
   };
 
   return (
-    <div className="py-6">
-      <Breadcrumb />
+    <div className={isGuest ? "py-6 px-4 md:px-8 lg:px-16 max-w-10xl mx-auto" : "py-6"}>
+      {!isGuest && <Breadcrumb />}
       <div className="mb-3">
 
         <div className="bg-white px-6 py-4 border-b rounded-t-lg shadow-sm border-gray-200">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            {patientData?.id ? 'Edit Patient' : 'Add Patient'}
+            {isGuest ? 'Patient Form' : patientData?.id ? 'Edit Patient' : 'Add Patient'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
             Fill in the patient information below.
@@ -307,10 +347,11 @@ const PatientForm = ({ patient }) => {
                     type="select"
                     registration={register('clinic_id')}
                     options={clinics?.map(c => ({
-                      value: c.id,
+                      value: Number(c.id), // if clinic_id is a string, convert it to a number
                       label: c.name,
                     }))}
                     required
+                    disabled={isGuest}
                     error={errors.clinic_id?.message}
                   />
 

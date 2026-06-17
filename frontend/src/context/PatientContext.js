@@ -130,6 +130,40 @@ export const PatientProvider = ({ children }) => {
     }
   };
 
+  const guestPatientsStore = async (patientData) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call('patients/guest/store', 'POST', patientData, false);
+
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Guest patient stored successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
+  const verifyGuestToken = async (id,signature) => {
+    const api = Api(() => getToken());
+    if (!api) return;
+
+    try {
+      const response = await api.call(`patients/guest/verify/${id}?signature=${signature}`, 'GET', null, false);
+      if (response.status === 200) {
+        return { status: response.status, data: response.data };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+  };
+
   const archivePatient = async (id) => {
     const api = Api(() => getToken());
     if (!api) return;
@@ -344,6 +378,8 @@ export const PatientProvider = ({ children }) => {
     sendDicomFile,
     reDiagnosis,
     exportToExcel,
+    guestPatientsStore,
+    verifyGuestToken
   };
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;

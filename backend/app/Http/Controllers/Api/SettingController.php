@@ -18,41 +18,52 @@ class SettingController extends Controller
   
 	public function getAdditionalSettings(Request $request)
 	{
-		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
-		  
-        if (!$input['clinic_id']) {
-            return response()->json([
+		$input = $request->filled('data')
+			? json_decode($request->input('data'), true)
+			: $request->all();
+
+		if (empty($input['clinic_id'])) {
+			return response()->json([
 				'additionalSettings' => null,
-                'message' => 'No clinic ID provided.'
-            ], 422);
-        }
-		
+				'message' => 'No clinic ID provided.'
+			], 422);
+		}
+
 		$clinicId = $input['clinic_id'];
-		
-		$signedUrl = \Helper::genSignedUrl($clinicId, [], $request->app_url.'/patients/guest/create',false,true)['signedRoute'];
-		 
-		//$signedUrl = $request->app_url.'/patients/guest/create';
-	
-        $settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
-		$clinic = \Helper::getClinicById($clinicId)['clinic'];
-		 
-        if (!$settings || !$settings->data) { 
-            
-            return response()->json([
-				'additionalSettings' => $data,
-                'message' => 'No settings found for clinic ID: ' . $clinicId
-            ],200);
-        }
-		
-        $data  = json_decode($settings->data,true);
+
+		$signedUrl = \Helper::genSignedUrl(
+			$clinicId,
+			[],
+			'patients.guest.verify',
+			false,
+			true
+		)['signedRoute'];
+
+		$settings = AdditionalSetting::where('clinic_id', $clinicId)->first();
+		$clinic   = \Helper::getClinicById($clinicId)['clinic'] ?? null;
+
+		$data = [];
+
+		if (!empty($settings) && !empty($settings->data)) {
+			$data = json_decode($settings->data, true) ?? [];
+		}
+
 		$data['clinic_url'] = $signedUrl;
-		if($clinic){
+
+		if ($clinic) {
 			$data['is_dicom_enabled'] = $clinic->is_dicom_enabled;
 		}
-         
-        return response()->json([
-            'additionalSettings' => $data,
-        ],200);
+
+		if (empty($settings) || empty($settings->data)) {
+			return response()->json([
+				'additionalSettings' => $data,
+				'message' => 'No settings found for clinic ID: ' . $clinicId
+			], 200);
+		}
+
+		return response()->json([
+			'additionalSettings' => $data
+		], 200);
 	}
 	
 	public function postAdditionalSettings(Request $request)

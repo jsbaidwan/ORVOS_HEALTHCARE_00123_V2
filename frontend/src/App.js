@@ -37,6 +37,7 @@ import ArchiveClinicGroups from './components/ClinicGroups/ArchiveClinicGroups';
 import ClinicGroupView from './components/ClinicGroups/ClinicGroupView';
 import PatientsList from './components/Patients/PatientsList';
 import PatientForm from './components/Patients/PatientForm';
+import PatientGuestForm from './components/Patients/PatientGuestForm';
 import PatientView from './components/Patients/PatientView';
 import ClinicPatientsReport from './components/Reports/ClinicPatients';
 import OrvosDoctorReviewReport from './components/Reports/OrvosDoctorReview';
@@ -455,6 +456,14 @@ const AppContent = () => {
           ) : (
             <MainLayout><ResetPassword /></MainLayout>
           )
+        }
+      />
+
+      {/* Guest Patient Form - Public Route */}
+      <Route
+        path="/patients/guest/create"
+        element={
+          <MainLayout><PatientGuestForm /></MainLayout>
         }
       />
 

@@ -3,8 +3,9 @@ import { useAuth } from "../context/AuthContext";
 
 let scriptLoadPromise = null;
 
-export function useGoogleAutocomplete({ setValue, standaloneFields = {} }) {
-  const { googleMapApiKey } = useAuth();
+export function useGoogleAutocomplete({ setValue, standaloneFields = {}, apiKey: externalApiKey }) {
+  const { googleMapApiKey: authApiKey } = useAuth();
+  const googleMapApiKey = externalApiKey || authApiKey || process.env.REACT_APP_GOOGLE_MAP_API_KEY || '';
   const [isReady, setIsReady] = useState(() => !!window.google?.maps);
   const [loadError, setLoadError] = useState(null);
 

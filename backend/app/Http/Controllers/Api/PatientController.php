@@ -180,16 +180,24 @@ class PatientController extends Controller
         // Create new Patient record
         $patient = Patient::create($input);
 		
-		\Log::save(
-			'Patient Created.',
-			'The Patient has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
-			'Patient',
-			$patient->id
-		);
-		  
+		if(\Auth::user()){
+			\Log::save(
+				'Patient Created.',
+				'The Patient has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+				'Patient',
+				$patient->id
+			);
+		}else{
+			\Log::save(
+				'Patient Created.',
+				'The Patient has been created by Guest',
+				'Patient',
+				$patient->id
+			);
+		}
+		 
 		return response()->json(['message' => 'Patient created successfully.'], 200);
-		 
-		 
+		  
     }
 	
 	public function update(Request $request, $id)
@@ -200,6 +208,7 @@ class PatientController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+		
 		$patient = Patient::find($id); 
 		if(!$patient){
 			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
@@ -433,9 +442,10 @@ class PatientController extends Controller
 				$input['remark_at'] = \Helper::changeDateFormat($input['remark_at'],'Y-m-d H:i:s')['date'];
 				
 			}
-			if(!empty($input['dos'])){
-				$input['dos'] = \Helper::changeDateFormat($input['dos'],'Y-m-d H:i:s')['date'];
-			}
+			
+		}
+		if(!empty($input['dos'])){
+			$input['dos'] = \Helper::changeDateFormat($input['dos'],'Y-m-d H:i:s')['date'];
 		}
 		 
 		// Update the patient's data
@@ -772,48 +782,13 @@ class PatientController extends Controller
 			'message' => 'Patients list exported successfully.'
 		], 200); 
     }
-	 
-
-    public function guestPatientsCreate(Request $request, $id)
-    { 
-		$input = $request->all();
-        $id = base64_decode(str_replace(['-', '_'], ['+', '/'], $id));
-		$fullUrl = url()->full();
-		$requestFromUrl = \Request::create($fullUrl);
-		 
-		if (!\URL::hasValidSignature($requestFromUrl)) {
-			return response()->json(['message' => \Helper::permissionMsg()['message']], 403);
-		}
-        $clinic = \Helper::getClinicById($id)['clinic'];
-        if(!$clinic){
-           return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
-        }
-        if($clinic->status == 0){
-           return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
-        }
-        if (!empty($clinic->additionalSetting)) {
-            $data = json_decode($clinic->additionalSetting->data, true);
-       
-            $setting = $data['allow_add_patient_without_login'] ?? null;
-        
-            if ($setting !== "on") {
-               return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
-            }
-        }else{
-            return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
-        }
-    
-
-        
-        return view('superadmin/patients/create', compact('clinic'));
-	}
+	  
 
     public function guestPatientsStore(Request $request)
     {
         $input = $request->all();
         $input['guest'] = true;
-        $input['ajaxRqt'] = true;
-        $newRqst = new Request($input);
+		$newRqst = new Request($input);
         $newRqst->replace($input);
          
         return $this->store($newRqst);

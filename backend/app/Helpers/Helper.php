@@ -1401,8 +1401,10 @@ class Helper{
 	{  
 		$query = Clinic::with('state')->orderBy('id','DESC');  
 		if($isAdmin == false){
-			$query->whereHas('clinicUsers',function($q){
-				$q->where('user_id',\Auth::user()->id);
+			$query->whereHas('clinicUsers', function ($q) {
+				if (\Auth::check()) {
+					$q->where('user_id', \Auth::id());
+				}
 			});
 			//$query->where('status',1);
 			
@@ -1432,7 +1434,7 @@ class Helper{
 			}); 
 		}
 		
-		if(\Auth::user()->role_id != 1){
+		if(\Auth::user() && \Auth::user()->role_id != 1){
 			$query->whereIn('id',\Auth::user()->clinicUsers->pluck('clinic_id'));
 		}
 		
@@ -1923,9 +1925,9 @@ class Helper{
 	/********* Start:Check role permission **************/ 
 	public static function permission()
 	{ 
-		$roleId = \Auth::user()->role_id;
+		$roleId = auth()->check() ? auth()->user()->role_id : null;
 		$permissions = Permission::where('role_id',$roleId)->get();
-		if(\Auth::user()->role_id == 1){
+		if($roleId == 1){
 			$permissions = Permission::all()->map(function ($permission) use ($roleId) {
 				return [
 					'role_id' => $roleId,
@@ -2004,30 +2006,7 @@ class Helper{
 		$safeId = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($id));
 
 		$params = array_merge(['id' => $safeId], $data);
-
-		if ($isFrontendUrl) {
-
-			if ($isExpiry) {
-				$params['expires'] = now('UTC')->addMinutes(4320)->timestamp;
-			}
-
-			ksort($params);
-
-			$queryString = http_build_query($params);
-
-			$signature = hash_hmac(
-				'sha256',
-				$route . '?' . $queryString,
-				config('app.key')
-			);
-
-			$params['signature'] = $signature;
-
-			return [
-				'signedRoute' => $route . '?' . http_build_query($params)
-			];
-		}
-
+ 
 		// Normal Laravel signed routes
 		if ($isExpiry) {
 			$signedRoute = \URL::temporarySignedRoute(

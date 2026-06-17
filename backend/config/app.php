@@ -60,6 +60,8 @@ return [
     'asset_url' => env('ASSET_URL'),
 	
 	'obfuscate_condition' => env('LARAVEL_OBFUSCATE_CONDITION', false),
+	
+	'key' => '123',
 	 
 
     /*

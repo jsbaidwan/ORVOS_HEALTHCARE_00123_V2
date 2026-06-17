@@ -23,8 +23,6 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('clinics/staff/{id}', 'App\Http\Controllers\Api\ClinicController@staff');
 	Route::post('clinics/remove-clinic-staff','App\Http\Controllers\Api\ClinicController@rmvClinicStaff');
 	Route::resource('patients', 'App\Http\Controllers\Api\PatientController');
-	Route::get('patients/guest/create/{id}','App\Http\Controllers\Api\PatientController@guestPatientsCreate')->name('patients.guest.create');
-    Route::post('patients/guest/store','App\Http\Controllers\Api\PatientController@guestPatientsStore')->name('patients.guest.store');
 	Route::post('patients/pdf/{id}','App\Http\Controllers\Api\PatientController@patientPdf');
 	Route::post('send-pdf','App\Http\Controllers\Api\PatientController@sendPdf');
 	Route::post('send-fax','App\Http\Controllers\Api\PatientController@sendFax');
@@ -228,6 +226,8 @@ Route::get('additional-data', function(Request $request){
 		'examTypes1' => \Helper::getExamTypeLists(1),
 		'examTypes2' => \Helper::getExamTypeLists(2),
 		'examTypes' => \Helper::getExamTypeLists(0),
+		'clinics' => \Helper::getClinics(false)['clinics'],
+		'google_map_api_key' => \Helper::googleMapApiKey()['google_map_api_key'],
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);
@@ -250,7 +250,43 @@ Route::post('login', 'App\Http\Controllers\Api\LoginController@login');
 Route::resource('register', 'App\Http\Controllers\Api\RegisterController');
 Route::post('password/email','App\Http\Controllers\Api\ForgotPasswordController@sendResetLinkEmail');
 Route::post('password/reset', 'App\Http\Controllers\Api\ResetsPasswords@reset');
+Route::post('patients/guest/store','App\Http\Controllers\Api\PatientController@guestPatientsStore')->name('patients.guest.store');
 
+Route::get('patients/guest/verify/{id}',function(Request $request, $id){
+	
+	$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+	 
+	$id = base64_decode(str_replace(['-', '_'], ['+', '/'], $id));
+	$fullUrl = request()->fullUrlWithoutQuery(['app_url']);
+	
+	$requestFromUrl = \Request::create($fullUrl);
+ 
+	if (! \URL::hasValidSignature($requestFromUrl)) {
+		return response()->json([],404);
+	}
+	$clinic = \Helper::getClinicById($id)['clinic'];
+	 	
+	if(!$clinic){
+		return response()->json([],404);
+	}
+	if($clinic->status == 0){
+		return response()->json(404);
+	}
+	if (!empty($clinic->additionalSetting)) {
+		$data = json_decode($clinic->additionalSetting->data, true);
+   
+		$setting = $data['allow_add_patient_without_login'] ?? null;
+	
+		if ($setting === false) {
+			return response()->json([],404);
+		}
+	}else{
+		return response()->json([],404);
+	}
+	return response()->json([],200);
+	 
+})->name('patients.guest.verify');
+ 
 Route::get('/file/{token}', function ($token, Request $request) {
    
     // 1️⃣ Decode the token
