@@ -160,7 +160,8 @@ const ClinicForm = ({ clinic, onClose }) => {
     defaultValues: buildDefaults(clinic),
   });
 
-  const { fields, append, remove } = useFieldArray({
+  //  const { fields, append, remove } = useFieldArray({});
+  const { fields } = useFieldArray({
     control,
     name: 'device_ids',
   });
@@ -620,17 +621,17 @@ const ClinicForm = ({ clinic, onClose }) => {
                         <div key={field.id}>
                           <div className="flex items-center space-x-2">
                             <FormField name={`device_ids.${index}.value`} type="text" placeholder="Enter Device ID" registration={register(`device_ids.${index}.value`)} error={errors.device_ids?.[index]?.value?.message} />
-                            <button type="button" onClick={() => remove(index)} className="px-2 py-1 mb-5 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Remove</button>
+                            {/* <button type="button" onClick={() => remove(index)} className="px-2 py-1 mb-5 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Remove</button> */}
                           </div>
                         </div>
                       ))}
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => append({ value: '' })}
                         className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
                       >
                         + Add Device ID
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </>

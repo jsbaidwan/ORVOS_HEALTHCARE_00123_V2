@@ -30,11 +30,12 @@ class SettingController extends Controller
 		}
 
 		$clinicId = $input['clinic_id'];
-
+		$appUrl = $request->app_url;
 		$signedUrl = \Helper::genSignedUrl(
 			$clinicId,
 			[],
 			'patients.guest.verify',
+			$appUrl,
 			false,
 			true
 		)['signedRoute'];

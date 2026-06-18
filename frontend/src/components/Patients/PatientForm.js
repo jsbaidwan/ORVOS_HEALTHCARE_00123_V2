@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -21,7 +21,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 
-const patientSchema = yup.object({
+const buildPatientSchema = (fieldVisibility) => yup.object({
   clinic_id: yup.string().required('Clinic is required'),
   first_name: yup.string().required('First Name is required').trim(),
   last_name: yup.string().required('Last Name is required').trim(),
@@ -31,17 +31,31 @@ const patientSchema = yup.object({
     .required('Date of Birth is required')
     .typeError('Date of Birth is required'),
   gender: yup.string().required('Gender is required'),
-  phone: yup.string().required('Phone is required'),
+  phone: fieldVisibility.showInsBilling
+    ? yup.string().required('Phone is required')
+    : yup.string().notRequired(),
   ehr: yup.string().required('EHR # is required').trim(),
-  email: yup.string().email('Invalid email address').required('Email is required').trim(),
-  address: yup.string().required('Address is required').trim(),
-  p_insurance_name: yup.string().required('Primary Insurance Name is required').trim(),
-  p_insurance_group_no: yup.string().required('Primary Insurance Group No is required').trim(),
-  p_insurance_member_no: yup.string().required('Primary Insurance Member No is required').trim(),
+  email: fieldVisibility.showEmail
+    ? yup.string().email('Invalid email address').required('Email is required').trim()
+    : yup.string().email('Invalid email address').notRequired().trim(),
+  address: fieldVisibility.showAddress
+    ? yup.string().required('Address is required').trim()
+    : yup.string().notRequired().trim(),
+  p_insurance_name: fieldVisibility.showInsBilling
+    ? yup.string().required('Primary Insurance Name is required').trim()
+    : yup.string().notRequired().trim(),
+  p_insurance_group_no: fieldVisibility.showInsBilling
+    ? yup.string().required('Primary Insurance Group No is required').trim()
+    : yup.string().notRequired().trim(),
+  p_insurance_member_no: fieldVisibility.showInsBilling
+    ? yup.string().required('Primary Insurance Member No is required').trim()
+    : yup.string().notRequired().trim(),
   s_insurance_name: yup.string().trim(),
   s_insurance_group_no: yup.string().trim(),
   s_insurance_member_no: yup.string().trim(),
-  medical_condition_id: yup.string().required('Medical Condition is required'),
+  medical_condition_id: fieldVisibility.showMedicalCondition
+    ? yup.string().required('Medical Condition is required')
+    : yup.string().notRequired(),
   medical_history: yup.array().of(yup.string()),
 });
 
@@ -100,6 +114,15 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   const [removedLeftEyeFiles, setRemovedLeftEyeFiles] = useState([]);
   const [removedRightEyeFiles, setRemovedRightEyeFiles] = useState([]);
 
+  const [fieldVisibility, setFieldVisibility] = useState({
+    showInsBilling: true,
+    showAddress: true,
+    showEmail: true,
+    showMedicalCondition: true,
+  });
+
+  const schema = useMemo(() => buildPatientSchema(fieldVisibility), [fieldVisibility]);
+
   const {
     register,
     handleSubmit,
@@ -107,10 +130,11 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     setValue,
     getValues,
     setError,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(patientSchema),
+    resolver: yupResolver(schema),
     defaultValues: buildDefaults(patient),
   });
 
@@ -124,7 +148,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
 
   useEffect(() => {
     if (isGuest && guestClinicId && clinics?.length) {
-      setValue('clinic_id', guestClinicId);
+      setValue('clinic_id', guestClinicId, { shouldDirty: true, shouldTouch: true });
     }
   }, [isGuest, guestClinicId, setValue, clinics]);
 
@@ -212,6 +236,38 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     if (imgObj?.name) setRemovedRightEyeFiles(prev => [...prev, imgObj.name]);
     setExistingRightEyes(prev => prev.filter(item => item.name !== imgObj.name));
   };
+
+  const watchedClinicId = watch('clinic_id');
+
+  useEffect(() => {
+    if (!watchedClinicId) {
+      setFieldVisibility({ showInsBilling: true, showAddress: true, showEmail: true, showMedicalCondition: true });
+      return;
+    }
+
+    const selectedClinic = additionalData?.clinics?.find(
+      c => String(c.id) === String(watchedClinicId)
+    );
+
+    const isDicomEnabled = !!selectedClinic?.is_dicom_enabled;
+
+    if (!selectedClinic?.additional_setting?.data) {
+      setFieldVisibility({ showInsBilling: false, showAddress: false, showEmail: false, showMedicalCondition: !isDicomEnabled });
+      return;
+    }
+
+    let settings = selectedClinic.additional_setting.data;
+    if (typeof settings === 'string') {
+      try { settings = JSON.parse(settings); } catch { settings = {}; }
+    }
+
+    setFieldVisibility({
+      showInsBilling: !!settings.patient_ins_billing_fields,
+      showAddress: !!settings.patient_address,
+      showEmail: !!settings.emailToggle,
+      showMedicalCondition: !isDicomEnabled,
+    });
+  }, [watchedClinicId, additionalData, clinics]);
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -341,19 +397,19 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
               <div className="border-b border-gray-200 pb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    label="Clinic"
-                    name="clinic_id"
-                    type="select"
-                    registration={register('clinic_id')}
-                    options={clinics?.map(c => ({
-                      value: Number(c.id), // if clinic_id is a string, convert it to a number
-                      label: c.name,
-                    }))}
-                    required
-                    disabled={isGuest}
-                    error={errors.clinic_id?.message}
-                  />
+                    <FormField
+                      label="Clinic"
+                      name="clinic_id"
+                      type="select"
+                      registration={register('clinic_id')}
+                      options={clinics?.map(c => ({
+                        value: c.id,
+                        label: c.name,
+                      }))}
+                      required
+                      disabled={isGuest}
+                      error={errors.clinic_id?.message}
+                    />
 
                   <FormField
                     label="EHR #"
@@ -474,109 +530,120 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                     error={errors.gender?.message}
                   />
 
-                  <Controller
-                    name="phone"
-                    control={control}
-                    render={({ field }) => (
+                  {fieldVisibility.showInsBilling && (
+                    <Controller
+                      name="phone"
+                      control={control}
+                      render={({ field }) => (
+                        <FormField
+                          label="Phone"
+                          name="phone"
+                          value={field.value}
+                          onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          placeholder="(xxx) xxx-xxxx"
+                          required
+                          error={errors.phone?.message}
+                        />
+                      )}
+                    />
+                  )}
+
+                  {fieldVisibility.showEmail && (
+                    <div>
                       <FormField
-                        label="Phone"
-                        name="phone"
-                        value={field.value}
-                        onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                        placeholder="(xxx) xxx-xxxx"
+                        label="Email"
+                        name="email"
+                        type="email"
+                        registration={register('email')}
+                        placeholder="Enter Email"
                         required
-                        error={errors.phone?.message}
+                        error={errors.email?.message}
                       />
-                    )}
-                  />
-
-                  <FormField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    registration={register('email')}
-                    placeholder="Enter Email"
-                    required
-                    error={errors.email?.message}
-                  />
+                      <p className="text-xs text-gray-500 -mt-2">* To use patient appointment reminders this must be on</p>
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-4">
-                  <FormField
-                    label="Address"
-                    name="address"
-                    registration={register('address')}
-                    placeholder="Enter Address"
-                    required
-                    inputClassName="gmap-autocomplete"
-                    error={errors.address?.message}
-                  />
-                </div>
+                {fieldVisibility.showAddress && (
+                  <div className="mt-4">
+                    <FormField
+                      label="Address"
+                      name="address"
+                      registration={register('address')}
+                      placeholder="Enter Address"
+                      required
+                      inputClassName="gmap-autocomplete"
+                      error={errors.address?.message}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Insurance Information */}
-              <div className="border-b border-gray-200 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Insurance Information</h2>
+              {fieldVisibility.showInsBilling && (
+                <div className="border-b border-gray-200 pb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Insurance Information</h2>
 
-                {/* Primary Insurance */}
-                <h3 className="text-md font-semibold text-gray-700 mb-3">Primary Insurance</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <FormField
-                    label="Insurance Name"
-                    name="p_insurance_name"
-                    registration={register('p_insurance_name')}
-                    placeholder="Enter Primary Insurance Name"
-                    required
-                    error={errors.p_insurance_name?.message}
-                  />
+                  {/* Primary Insurance */}
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Primary Insurance</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <FormField
+                      label="Insurance Name"
+                      name="p_insurance_name"
+                      registration={register('p_insurance_name')}
+                      placeholder="Enter Primary Insurance Name"
+                      required
+                      error={errors.p_insurance_name?.message}
+                    />
 
-                  <FormField
-                    label="Group No"
-                    name="p_insurance_group_no"
-                    registration={register('p_insurance_group_no')}
-                    placeholder="Enter Group No"
-                    required
-                    error={errors.p_insurance_group_no?.message}
-                  />
+                    <FormField
+                      label="Group No"
+                      name="p_insurance_group_no"
+                      registration={register('p_insurance_group_no')}
+                      placeholder="Enter Group No"
+                      required
+                      error={errors.p_insurance_group_no?.message}
+                    />
 
-                  <FormField
-                    label="Member No"
-                    name="p_insurance_member_no"
-                    registration={register('p_insurance_member_no')}
-                    placeholder="Enter Member No"
-                    required
-                    error={errors.p_insurance_member_no?.message}
-                  />
+                    <FormField
+                      label="Member No"
+                      name="p_insurance_member_no"
+                      registration={register('p_insurance_member_no')}
+                      placeholder="Enter Member No"
+                      required
+                      error={errors.p_insurance_member_no?.message}
+                    />
+                  </div>
+
+                  {/* Secondary Insurance */}
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Secondary Insurance (Optional)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      label="Insurance Name"
+                      name="s_insurance_name"
+                      registration={register('s_insurance_name')}
+                      placeholder="Enter Secondary Insurance Name"
+                      error={errors.s_insurance_name?.message}
+                    />
+
+                    <FormField
+                      label="Group No"
+                      name="s_insurance_group_no"
+                      registration={register('s_insurance_group_no')}
+                      placeholder="Enter Group No"
+                      error={errors.s_insurance_group_no?.message}
+                    />
+
+                    <FormField
+                      label="Member No"
+                      name="s_insurance_member_no"
+                      registration={register('s_insurance_member_no')}
+                      placeholder="Enter Member No"
+                      error={errors.s_insurance_member_no?.message}
+                    />
+                  </div>
                 </div>
-
-                {/* Secondary Insurance */}
-                <h3 className="text-md font-semibold text-gray-700 mb-3">Secondary Insurance (Optional)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    label="Insurance Name"
-                    name="s_insurance_name"
-                    registration={register('s_insurance_name')}
-                    placeholder="Enter Secondary Insurance Name"
-                    error={errors.s_insurance_name?.message}
-                  />
-
-                  <FormField
-                    label="Group No"
-                    name="s_insurance_group_no"
-                    registration={register('s_insurance_group_no')}
-                    placeholder="Enter Group No"
-                    error={errors.s_insurance_group_no?.message}
-                  />
-
-                  <FormField
-                    label="Member No"
-                    name="s_insurance_member_no"
-                    registration={register('s_insurance_member_no')}
-                    placeholder="Enter Member No"
-                    error={errors.s_insurance_member_no?.message}
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Eye Images */}
               <div className="border-b border-gray-200 pb-6">
@@ -644,40 +711,42 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                 </div>
               </div>
 
-              {/* Medical Information */}
-              <div className="border-b border-gray-200 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Medical Information</h2>
+              {/* Medical Information - Hidden when DICOM is enabled */}
+              {fieldVisibility.showMedicalCondition && (
+                <div className="border-b border-gray-200 pb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Medical Information</h2>
 
-                <FormField
-                  label="Medical Condition"
-                  name="medical_condition_id"
-                  type="select"
-                  registration={register('medical_condition_id')}
-                  options={additionalData?.medicalConditions?.map((item) => {
-                    return {
-                      value: item.id,
-                      label: item.name,
-                    }
-                  })}
-                  required
-                  error={errors.medical_condition_id?.message}
-                />
-
-                <div className="mt-4">
-                  <Controller
-                    name="medical_history"
-                    control={control}
-                    render={({ field }) => (
-
-                      <MedicalHistorySection
-                        selectedHistory={field.value || patient?.medical_history || []}
-                        medicalHistoryOptions={additionalData?.medicalHistories}
-                        onChange={(updatedHistory) => field.onChange(updatedHistory)}
-                      />
-                    )}
+                  <FormField
+                    label="Medical Condition"
+                    name="medical_condition_id"
+                    type="select"
+                    registration={register('medical_condition_id')}
+                    options={additionalData?.medicalConditions?.map((item) => {
+                      return {
+                        value: item.id,
+                        label: item.name,
+                      }
+                    })}
+                    required
+                    error={errors.medical_condition_id?.message}
                   />
+
+                  <div className="mt-4">
+                    <Controller
+                      name="medical_history"
+                      control={control}
+                      render={({ field }) => (
+
+                        <MedicalHistorySection
+                          selectedHistory={field.value || patient?.medical_history || []}
+                          medicalHistoryOptions={additionalData?.medicalHistories}
+                          onChange={(updatedHistory) => field.onChange(updatedHistory)}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Note */}
               <FormField

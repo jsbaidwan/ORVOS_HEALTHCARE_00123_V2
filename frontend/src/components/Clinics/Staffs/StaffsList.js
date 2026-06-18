@@ -51,7 +51,7 @@ const StaffsList = () => {
     const buildEditPath = (row) => {
 
         const slug = getUserSlug(row?.user?.role_id);
-        return slug ? `/users/${slug}/${row.id}/edit` : `/users/${row.id}/edit`;
+        return slug ? `/users/${slug}/${row.user.id}/edit` : `/users/${row.user.id}/edit`;
     };
 
     useEffect(() => {
@@ -328,7 +328,7 @@ const StaffsList = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </Link>
-
+                   
                     {row?.user?.role_id !== 6 && (
                         <button
                             onClick={() => removeStaffRequest(row.id)}

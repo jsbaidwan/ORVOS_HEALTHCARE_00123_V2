@@ -1399,7 +1399,7 @@ class Helper{
 	 */
 	public static function getClinics($isAdmin = true,$filters = [])
 	{  
-		$query = Clinic::with('state')->orderBy('id','DESC');  
+		$query = Clinic::with('state','additionalSetting')->orderBy('id','DESC');  
 		if($isAdmin == false){
 			$query->whereHas('clinicUsers', function ($q) {
 				if (\Auth::check()) {
@@ -1462,7 +1462,7 @@ class Helper{
 	 */
 	public static function getClinicById($id)
 	{
-		$clinic = Clinic::with('state')->find($id);
+		$clinic = Clinic::with('state','additionalSetting')->find($id);
 		return ['clinic' => $clinic];
 	} 
 	 /*
@@ -2000,7 +2000,7 @@ class Helper{
 	
 	
 	/********* Start:Generate Signed URL **************/
-	public static function genSignedUrl($id,$data = [],$route,$isExpiry = false,$isFrontendUrl = false)
+	public static function genSignedUrl($id,$data = [],$route,$appUrl,$isExpiry = false,$isFrontendUrl = false)
 	{
 		// Encode ID safely for URL
 		$safeId = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($id));
@@ -2019,6 +2019,15 @@ class Helper{
 				$route,
 				$params
 			);
+		}
+		 
+		if($isFrontendUrl){
+			$signature = parse_url($signedRoute, PHP_URL_QUERY);
+
+			parse_str($signature, $queryParams);
+
+			$signature = $queryParams['signature'] ?? null;
+			$signedRoute = $appUrl. '/patients/guest/create/?id=' .$params['id'].'&signature='.$signature;
 		}
 
 		return ['signedRoute' => $signedRoute];
