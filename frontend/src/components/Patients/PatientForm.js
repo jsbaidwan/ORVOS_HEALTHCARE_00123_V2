@@ -115,6 +115,8 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   const [removedLeftEyeFiles, setRemovedLeftEyeFiles] = useState([]);
   const [removedRightEyeFiles, setRemovedRightEyeFiles] = useState([]);
 
+  const isCompleted = patientData?.diagnosis_status === 1;
+
   const [fieldVisibility, setFieldVisibility] = useState({
     showInsBilling: true,
     showAddress: true,
@@ -412,7 +414,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         label: c.name,
                       }))}
                       required
-                      disabled={isGuest}
+                      disabled={isGuest || isCompleted}
                       error={errors.clinic_id?.message}
                     />
 
@@ -532,6 +534,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       }
                     })}
                     required
+                    disabled={isCompleted}
                     error={errors.gender?.message}
                   />
 
@@ -547,6 +550,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                           onChange={(e) => field.onChange(formatPhone(e.target.value))}
                           placeholder="(xxx) xxx-xxxx"
                           required
+                          disabled={isCompleted}
                           error={errors.phone?.message}
                         />
                       )}
@@ -562,6 +566,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         registration={register('email')}
                         placeholder="Enter Email"
                         required
+                        disabled={isCompleted}
                         error={errors.email?.message}
                       />
                       <p className="text-xs text-gray-500 -mt-2">* To use patient appointment reminders this must be on</p>
@@ -577,6 +582,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       registration={register('address')}
                       placeholder="Enter Address"
                       required
+                      disabled={isCompleted}
                       inputClassName="gmap-autocomplete"
                       error={errors.address?.message}
                     />
@@ -598,6 +604,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       registration={register('p_insurance_name')}
                       placeholder="Enter Primary Insurance Name"
                       required
+                      disabled={isCompleted}
                       error={errors.p_insurance_name?.message}
                     />
 
@@ -607,6 +614,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       registration={register('p_insurance_group_no')}
                       placeholder="Enter Group No"
                       required
+                      disabled={isCompleted}
                       error={errors.p_insurance_group_no?.message}
                     />
 
@@ -616,6 +624,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       registration={register('p_insurance_member_no')}
                       placeholder="Enter Member No"
                       required
+                      disabled={isCompleted}
                       error={errors.p_insurance_member_no?.message}
                     />
                   </div>
@@ -628,6 +637,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       name="s_insurance_name"
                       registration={register('s_insurance_name')}
                       placeholder="Enter Secondary Insurance Name"
+                      disabled={isCompleted}
                       error={errors.s_insurance_name?.message}
                     />
 
@@ -636,6 +646,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       name="s_insurance_group_no"
                       registration={register('s_insurance_group_no')}
                       placeholder="Enter Group No"
+                      disabled={isCompleted}
                       error={errors.s_insurance_group_no?.message}
                     />
 
@@ -644,6 +655,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       name="s_insurance_member_no"
                       registration={register('s_insurance_member_no')}
                       placeholder="Enter Member No"
+                      disabled={isCompleted}
                       error={errors.s_insurance_member_no?.message}
                     />
                   </div>
@@ -651,7 +663,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
               )}
 
               {/* Eye Images */}
-              <div className="border-b border-gray-200 pb-6">
+              <div className={`border-b border-gray-200 pb-6 ${isCompleted ? 'opacity-60 pointer-events-none' : ''}`}>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Eye Images</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -660,6 +672,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         type="checkbox"
                         name="l_eye"
                         checked={lEyeChecked}
+                        disabled={isCompleted}
                         onChange={(e) => {
                           const checked = e.target.checked;
                           setLEyeChecked(checked);
@@ -690,6 +703,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         type="checkbox"
                         name="r_eye"
                         checked={rEyeChecked}
+                        disabled={isCompleted}
                         onChange={(e) => {
                           const checked = e.target.checked;
                           setREyeChecked(checked);
@@ -718,7 +732,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
 
               {/* Medical Information - Hidden when DICOM is enabled */}
               {fieldVisibility.showMedicalCondition && (
-                <div className="border-b border-gray-200 pb-6">
+                <div className={`border-b border-gray-200 pb-6 ${isCompleted ? 'opacity-60 pointer-events-none' : ''}`}>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Medical Information</h2>
 
                   <FormField
@@ -733,6 +747,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                       }
                     })}
                     required
+                    disabled={isCompleted}
                     error={errors.medical_condition_id?.message}
                   />
 
@@ -746,6 +761,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                           selectedHistory={field.value || patient?.medical_history || []}
                           medicalHistoryOptions={additionalData?.medicalHistories}
                           onChange={(updatedHistory) => field.onChange(updatedHistory)}
+                          disabled={isCompleted}
                         />
                       )}
                     />
@@ -760,6 +776,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                 type="textarea"
                 registration={register('note')}
                 placeholder="Enter Note"
+                disabled={isCompleted}
                 error={errors.note?.message}
               />
 
