@@ -56,10 +56,10 @@ const PatientGuestForm = () => {
            Patient Form
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Please wait while we verify your guest token.
+            Please wait while we load the patient form.
           </p>
         </div>
-          <PageLoader loading={loading} title="Verifying Guest Token..." />
+          <PageLoader loading={loading} title="Loading Patient Form..." />
         </div>
          
         
