@@ -23,10 +23,10 @@ class ApiError extends Error {
 const Api = (getToken) => {
 
   /* =============================
-     🔹 Concurrency Control (OPTIONAL)
+     🔹 Concurrency Control
   ============================== */
   let activeRequests = 0;
-  const MAX_CONCURRENT = 5; // change if needed
+  const MAX_CONCURRENT = 5;
   const queue = [];
 
   const next = () => {
@@ -44,6 +44,38 @@ const Api = (getToken) => {
         queue.push(resolve);
       }
     });
+
+  /* =============================
+     🔹 Deduplication
+  ============================== */
+  const pendingRequests = new Map();
+
+  const getRequestKey = (endpoint, method) => `${method.toUpperCase()}:${endpoint}`;
+
+  const deduplicatedCall = (endpoint, method, data, useToken) => {
+    const key = getRequestKey(endpoint, method);
+
+    if (method.toUpperCase() === 'GET') {
+      if (pendingRequests.has(key)) {
+        return pendingRequests.get(key);
+      }
+      const promise = call(endpoint, method, data, useToken).finally(() => {
+        pendingRequests.delete(key);
+      });
+      pendingRequests.set(key, promise);
+      return promise;
+    }
+
+    const mutationKey = `${key}:${JSON.stringify(data || '')}`;
+    if (pendingRequests.has(mutationKey)) {
+      return pendingRequests.get(mutationKey);
+    }
+    const promise = call(endpoint, method, data, useToken).finally(() => {
+      pendingRequests.delete(mutationKey);
+    });
+    pendingRequests.set(mutationKey, promise);
+    return promise;
+  };
 
   /* =============================
      🔹 Headers
@@ -176,18 +208,18 @@ const Api = (getToken) => {
      🔹 Methods
   ============================== */
   return {
-    call,
+    call: deduplicatedCall,
     get: (endpoint, useToken = true) =>
-      call(endpoint, 'GET', null, useToken),
+      deduplicatedCall(endpoint, 'GET', null, useToken),
 
     post: (endpoint, data, useToken = true) =>
-      call(endpoint, 'POST', data, useToken),
+      deduplicatedCall(endpoint, 'POST', data, useToken),
 
     put: (endpoint, data, useToken = true) =>
-      call(endpoint, 'PUT', data, useToken),
+      deduplicatedCall(endpoint, 'PUT', data, useToken),
 
     delete: (endpoint, useToken = true) =>
-      call(endpoint, 'DELETE', null, useToken),
+      deduplicatedCall(endpoint, 'DELETE', null, useToken),
   };
 };
 
