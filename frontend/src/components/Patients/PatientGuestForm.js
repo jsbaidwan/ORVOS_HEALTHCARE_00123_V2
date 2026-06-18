@@ -4,12 +4,13 @@ import PatientForm from './PatientForm';
 import { usePatient } from '../../context/PatientContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import PageLoader from '../Common/PageLoader';
+import { useTitle } from '../../context/TitleContext';
 
 const PatientGuestForm = () => {
   const [searchParams] = useSearchParams();
   const { verifyGuestToken } = usePatient();
   const getRoutePath = useRoutePath();
-
+  const { setPageTitle } = useTitle();
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +22,10 @@ const PatientGuestForm = () => {
   const clinicId = encodedClinicId
     ? atob(encodedClinicId.replace(/-/g, '+').replace(/_/g, '/'))
     : '';
+ 
+    useEffect(() => {
+      setPageTitle('Patient Form');
+    }, [setPageTitle]);
 
   useEffect(() => {
     const verify = async () => {

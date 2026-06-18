@@ -20,6 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Breadcrumb from '../Common/Breadcrumb';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import BlobFileItem from '../UI/BlobFileItem';
+import { useTitle } from '../../context/TitleContext';
 
 const clinicSchema = yup.object({
   clinic_group_id: yup.string().required('Clinic Group is required'),
@@ -188,7 +189,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   };
 
   const cId = clinic?.id || id || null;
-
+  const { setPageTitle } = useTitle();
   const loadData = useCallback(async () => {
     try {
 
@@ -223,6 +224,10 @@ const ClinicForm = ({ clinic, onClose }) => {
       hideLoader();
     }
   }, [cId, getClinicGroups, additionalData, getClinicById, hideLoader, reset, setError]);
+
+  useEffect(() => {
+    setPageTitle(clinicData?.id ? 'Clinic Edit' : 'Clinic Create');
+  }, [setPageTitle, clinicData]);
 
   useEffect(() => {
     const existingClinic = getExistingClinic(id);

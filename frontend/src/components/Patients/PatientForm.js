@@ -20,6 +20,7 @@ import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
+import { useTitle } from '../../context/TitleContext';
 
 const buildPatientSchema = (fieldVisibility) => yup.object({
   clinic_id: yup.string().required('Clinic is required'),
@@ -108,7 +109,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   const { additionalData } = useAdditionalData();
   const [lEyeChecked, setLEyeChecked] = useState(true);
   const [rEyeChecked, setREyeChecked] = useState(true);
-
+  const { setPageTitle } = useTitle();
   const [existingLeftEyes, setExistingLeftEyes] = useState([]);
   const [existingRightEyes, setExistingRightEyes] = useState([]);
   const [removedLeftEyeFiles, setRemovedLeftEyeFiles] = useState([]);
@@ -145,6 +146,10 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   });
 
   const pId = patient?.id || id || null;
+
+  useEffect(() => {
+    setPageTitle(isGuest ? 'Patient Form' : patientData?.id ? 'Patient Edit' : 'Patient Create');
+  }, [setPageTitle, isGuest, patientData]);
 
   useEffect(() => {
     if (isGuest && guestClinicId && clinics?.length) {

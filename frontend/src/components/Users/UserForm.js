@@ -22,6 +22,7 @@ import Select from 'react-select';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 import { useAuth } from '../../context/AuthContext';
 import BlobFileItem from '../UI/BlobFileItem';
+import { useTitle } from '../../context/TitleContext';
 
 const createUserSchema = (isEdit, skipRoleAndClinic = false) =>
   yup.object({
@@ -188,7 +189,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   const { additionalData } = useAdditionalData();
   const { user: authUser, updateUser: setAuthUser } = useAuth();
   const usersListPath = roleSlug ? `/users/${roleSlug}` : '/users';
-
+  const { setPageTitle } = useTitle();
   const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
   const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
   const [isSuperAdminProfile, setIsSuperAdminProfile] = useState(isProfile && (authUser?.role_id === 1));
@@ -244,6 +245,9 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   const fetched = useRef(false);
   const uId = userProp?.id || id || null;
 
+  useEffect(() => {
+    setPageTitle(isEditMode ? 'User Edit' : 'User Create');
+  }, [setPageTitle, isEditMode]);
 
   const loadData = useCallback(async () => {
     try {
