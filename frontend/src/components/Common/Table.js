@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { useLocation } from 'react-router-dom';
 
 const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', isDataLoaded, permissions, forceLoading = 'not_loading', tableClass = "min-w-full" }) => {
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const location = useLocation();
 
   // Sort data based on current sort configuration
   const sortedData = useMemo(() => {
@@ -66,13 +68,14 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   }, [isDataLoaded]);
 
   useEffect(() => {
-    if (forceLoading !== 'not_loading') {
+   
+    if (forceLoading === true) {
       setLoading(true)
-      setTimeout(() => setLoading(false), 1000)
+      setTimeout(() => setLoading(false), 1500)
     } else {
       setLoading(false)
     }
-  }, [forceLoading]);
+  }, [forceLoading,location.pathname]);
 
   // Handle column header click for sorting
   const handleSort = (accessor, sortable) => {

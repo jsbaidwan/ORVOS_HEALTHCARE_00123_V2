@@ -611,6 +611,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
           emptyMessage="No users found"
           isDataLoaded={isDataLoaded}
           permissions={{ read: permission(3, 'read'), write: permission(3, 'write') }}
+          forceLoading={true}
 
         />
       </div>

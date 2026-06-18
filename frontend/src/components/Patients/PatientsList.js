@@ -920,7 +920,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           emptyMessage="No patients found"
           isDataLoaded={isDataLoaded}
           permissions={{ 'read': permission(2, 'read'), 'write': permission(2, 'write') }}
-          forceLoading={false}
+          forceLoading={true}
         />
       </div>
 
