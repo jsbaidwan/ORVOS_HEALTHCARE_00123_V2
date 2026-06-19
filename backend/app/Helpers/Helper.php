@@ -2112,8 +2112,11 @@ class Helper{
 	 */
 	 
 	public static function getPdfTempCategories()
-	{
-		$logo = Url('public/uploads/editor/1757501387_OrvosTransparentLogo1.png').'?convertToServerPath=1758591159_Orvos_med.png';
+	{ 
+		$logo = \Storage::disk('public')->url(
+			'uploads/editor/1757583915_1757501387_OrvosTransparentLogo1.png'
+		);
+				 
 		$pdfTempCategories = [
 		
 			['id' => 1,'name' => 'Patient Diagnosis Report','template' => '<pre style="text-align:center;"><img src="'.$logo.'" style="width: 300px;" class="fr-fic fr-dib"></pre>
@@ -2201,20 +2204,37 @@ class Helper{
 	 * Start: PDF Templates
 	 * -----------------------------------------
 	 */
-	public static function getPdfTemplates($filters = []) 
+	public static function getPdfTemplates($filters)
 	{
-		$query = PdfTemplate::orderBy('id','DESC');
+		$query = PdfTemplate::with('clinic')->orderBy('id','DESC');
 
 		if(isset($filters['status'])){
 			$query->where('status',$filters['status']);
 		}
-		 
-		//$query->where('user_id',\Auth::user()->id);
-		$query->whereIn('clinic_id',\Auth::user()->clinicUsers->pluck('clinic_id'));
-		 
+
+		if( \Auth::user()->role_id != 1 ){
+			$query->whereIn('clinic_id',\Auth::user()->clinicUsers->pluck('clinic_id'));
+		}	
 		
-		$pdfTemplates = $query->paginate();
+		if(!empty($filters['q'])){
+			$search = trim($filters['q']);
+			$query->where(function ($q) use ($search) {
+				$q->where('name', 'LIKE', "%$search%")
+				   ->orWhereHas('clinic', function ($q2) use ($search) {
+					  $q2->where('name', 'LIKE', "%$search%");
+				});
+			}); 
+		}
 		
+		if(empty($filters['paginate']) || $filters['paginate'] === false){
+			$pdfTemplates = $query->get();
+		} else {
+			 
+			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$page = $filters['page'] ?? 1;
+			$pdfTemplates = $query->paginate($perPage, ['*'], 'page', $page);
+		}
+  
 		return ['pdfTemplates' => $pdfTemplates];
 	}
 	 
@@ -2233,7 +2253,7 @@ class Helper{
 	 
 	public static function getPdfTemplateById($id) 
 	{
-		$pdfTemplate = PdfTemplate::find($id);
+		$pdfTemplate = PdfTemplate::with('clinic')->find($id);
 		return ['pdfTemplate' => $pdfTemplate];
 	}
 	/*

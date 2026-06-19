@@ -1,59 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import ChangePassword from './ChangePassword';
-import EmailTemplates from './EmailTemplates';
 import Breadcrumb from '../Common/Breadcrumb';
 import { useTitle } from '../../context/TitleContext';
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState('password');
   const { setPageTitle } = useTitle();
 
   useEffect(() => {
-    setPageTitle('Settings');
+    setPageTitle('Change Password');
   }, [setPageTitle]);
-
-  const tabs = [
-    { id: 'password', name: 'Change Password', icon: '🔒' },
-    { id: 'email', name: 'Email Templates', icon: '📧' },
-  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <Breadcrumb />
-      <div className="bg-primary rounded-xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-primary-100">Manage your account and application settings</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-card overflow-hidden">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-6 text-center font-medium text-sm transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'border-b-2 border-primary-600 text-primary-600 bg-primary-50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-6">
-          {/* Change Password Tab */}
-          {activeTab === 'password' && <ChangePassword />}
-
-          {/* Email Templates Tab */}
-          {activeTab === 'email' && <EmailTemplates />}
-        </div>
+      <div className="bg-white rounded-xl shadow-card overflow-hidden p-6">
+        <ChangePassword />
       </div>
     </div>
   );

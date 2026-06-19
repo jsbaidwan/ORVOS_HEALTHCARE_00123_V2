@@ -37,9 +37,49 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('reports/orvos-doctor-review/export','App\Http\Controllers\Api\ReportController@orvosDoctorReviewExport');
 	Route::post('settings/clinic-additional', 'App\Http\Controllers\Api\SettingController@postAdditionalSettings');
 	Route::get('settings/clinic-additional/{id}', 'App\Http\Controllers\Api\SettingController@getAdditionalSettings');
+	Route::resource('pdf-templates', 'App\Http\Controllers\Api\PdfTemplateController');
+	
+	Route::post('/ckeditor/upload', function (Request $request) {
+
+		if ($request->hasFile('file')) {
+
+			$file = $request->file('file');
+
+			$filename = time() . '_' . $file->getClientOriginalName();
+
+			\Storage::disk('public')->putFileAs(
+				'uploads/editor',
+				$file,
+				$filename
+			);
+
+			$url = \Storage::disk('public')->url('uploads/editor/' . $filename)
+				 . '?convertToServerPath=' . $filename;
+
+			return response()->json([
+				'url' => $url
+			]);
+		}
+
+		return response()->json([
+			'error' => ['message' => 'Upload failed']
+		], 400);
+	})->name('ckeditor.upload');
 	  
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
+	});
+	
+	Route::post('/get-pdf-temp-category', function (Request $request) {
+		$input =  $request->all();
+		if(!empty($input['pdf_temp_cat_id'])){
+			$pdfTempCategory = \Helper::getPdfTempCategoryById($input['pdf_temp_cat_id']);
+			if($pdfTempCategory['status'] == 200){
+				return json_encode(['status' => 200,'pdfTempCategory' => $pdfTempCategory['pdfTempCategory']]);
+			}
+			
+		}
+		return json_encode(['status' => 422,'message' => 'The pdf_temp_cat_id is required.']);
 	});
 	
 	Route::post('archive', function(Request $request){
@@ -57,9 +97,14 @@ Route::middleware('auth:api')->group(function () {
 		if(!$moduleData){
 			return response()->json(['message' => \Helper::alertMsg('archive',$fModule,'error')['message']], 404);
 		}
-		
-		$moduleData->update(['is_archived' => 1]);
-		
+		 
+		if($input['module'] == 'pdfTemplate'){
+			 
+			$moduleData->update(['status' => 0]);
+		}else{
+			$moduleData->update(['is_archived' => 1]);
+		}
+		 
 		\Log::save(
 			$fModule.' Archived.',
 			'The ' . $fModule . ' has been archived by ' . \Auth::user()->first_name . ' ' . \Auth::user()->last_name . '.',
@@ -86,7 +131,12 @@ Route::middleware('auth:api')->group(function () {
 			return response()->json(['message' => \Helper::alertMsg('unarchive',$fModule,'error')['message']], 404);
 		}
 		
-		$moduleData->update(['is_archived' => 0]);
+		if($input['module'] == 'pdfTemplate'){
+			$moduleData->update(['status' => 1]);
+		}else{
+			$moduleData->update(['is_archived' => 0]);
+		}
+		
 		$user = \Auth::user();
 		\Log::save(
 			$fModule.' Unarchived.',
@@ -228,6 +278,8 @@ Route::get('additional-data', function(Request $request){
 		'examTypes' => \Helper::getExamTypeLists(0),
 		'clinics' => \Helper::getClinics(false)['clinics'],
 		'google_map_api_key' => \Helper::googleMapApiKey()['google_map_api_key'],
+		'pdfTempCategories' => \Helper::getPdfTempCategories()['pdfTempCategories'],
+		'tempBodyTags' => \Helper::tempBodyTags(),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);

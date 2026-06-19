@@ -6,6 +6,7 @@ import { ClinicGroupProvider } from './context/ClinicGroupContext';
 import { PatientProvider } from './context/PatientContext';
 import { ReportProvider } from './context/ReportContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { PdfTemplateProvider } from './context/PdfTemplateContext';
 import { ChangePasswordProvider } from './context/ChangePasswordContext';
 import { UserProvider } from './context/UserContext';
 import { ForgotPasswordProvider } from './context/ForgotPasswordContext';
@@ -42,6 +43,10 @@ import PatientView from './components/Patients/PatientView';
 import ClinicPatientsReport from './components/Reports/ClinicPatients';
 import OrvosDoctorReviewReport from './components/Reports/OrvosDoctorReview';
 import Settings from './components/Settings/Settings';
+import PdfTemplateList from './components/Settings/PdfTemplates/PdfTemplateList';
+import PdfTemplateForm from './components/Settings/PdfTemplates/PdfTemplateForm';
+import PdfTemplateView from './components/Settings/PdfTemplates/PdfTemplateView';
+import ArchivePdfTemplate from './components/Settings/PdfTemplates/ArchivePdfTemplate';
 import UsersList from './components/Users/UsersList';
 import UserForm from './components/Users/UserForm';
 import UserView from './components/Users/UserView';
@@ -360,6 +365,54 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
           </ProtectedRoute>
         }
       />
+      <Route
+        path={`${basePath}/settings/change-password`}
+        element={
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+            <MainLayout><Settings /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/settings/pdf-templates`}
+        element={
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+            <MainLayout><PdfTemplateList /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/settings/pdf-templates/create`}
+        element={
+          <ProtectedRoute permission={permission(true, 'create')} requiredRole={roleId}>
+            <MainLayout><PdfTemplateForm /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/settings/pdf-templates/:id/edit`}
+        element={
+          <ProtectedRoute permission={permission(true, 'write')} requiredRole={roleId}>
+            <MainLayout><PdfTemplateForm /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/settings/pdf-templates/view/:id`}
+        element={
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+            <MainLayout><PdfTemplateView /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basePath}/settings/pdf-templates/archived`}
+        element={
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+            <MainLayout><ArchivePdfTemplate /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path={`${basePath}/profile`}
@@ -523,11 +576,13 @@ function App() {
                     <PatientProvider>
                       <ReportProvider>
                         <SettingsProvider>
-                          <ChangePasswordProvider>
-                            <UserProvider>
-                              <AppContent />
-                            </UserProvider>
-                          </ChangePasswordProvider>
+                          <PdfTemplateProvider>
+                            <ChangePasswordProvider>
+                              <UserProvider>
+                                <AppContent />
+                              </UserProvider>
+                            </ChangePasswordProvider>
+                          </PdfTemplateProvider>
                         </SettingsProvider>
                       </ReportProvider>
                     </PatientProvider>

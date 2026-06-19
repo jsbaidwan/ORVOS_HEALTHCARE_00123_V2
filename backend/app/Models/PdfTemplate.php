@@ -11,7 +11,9 @@ class PdfTemplate extends Authenticatable
 {
     use Notifiable;
 
-	protected $table = 'pdf_templates';  
+	protected $table = 'pdf_templates'; 
+
+	protected $appends = ['category'];	
 	 
     /**
      * The attributes that are mass assignable.
@@ -69,5 +71,12 @@ class PdfTemplate extends Authenticatable
         return $this->hasOne('App\Models\User','id','user_id');
 
     }
+	
+	public function getCategoryAttribute()
+	{
+		$value = $this->attributes['pdf_template_category_id'] ?? null;
+
+		return \Helper::getPdfTempCategoryById($value)['pdfTempCategory'] ?? null;
+	}
        
 }

@@ -96,6 +96,6 @@ class SettingController extends Controller
 		  
 		return response()->json(['setting' => $setting,'message' => 'Setting created successfully.'], 200);
 	}
-	
+	 
 	  
 }

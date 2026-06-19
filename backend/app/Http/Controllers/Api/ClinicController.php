@@ -200,7 +200,7 @@ class ClinicController extends Controller
 			return abort(404);
 		}
 		
-        $input = $request->all();
+        $input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
         $rules = Clinic::$rules;
 		$messages = Clinic::$messages;
         $rules['name'] .= ',name,'.$id;  

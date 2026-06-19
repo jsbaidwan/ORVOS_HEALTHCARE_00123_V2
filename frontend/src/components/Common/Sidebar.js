@@ -63,7 +63,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { title: 'Orvos Doctor Review', basePath: '/reports/orvos-doctor-review', module_id: 6 },
       ]
     },
-    { title: 'Settings', basePath: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, module_id: true },
+    {
+      title: 'Settings',
+      basePath: '/settings',
+      icon: <Cog6ToothIcon className="w-5 h-5" />,
+      module_id: true,
+      subItems: [
+        { title: 'Change Password', basePath: '/settings/change-password', module_id: true },
+        { title: 'PDF Templates', basePath: '/settings/pdf-templates', module_id: 7 },
+        // { title: 'Email Templates', basePath: '/settings/email-templates', module_id: true },
+      ]
+    },
     { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
   ];
 
