@@ -424,6 +424,8 @@ const ClinicView = () => {
             </div>
           )}
 
+        {(user?.role_id === 1 || user?.role_id === 6) && (
+          <>
           {/* Clinic Settings Card */}
           <div className="bg-white rounded-lg shadow border p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">Clinic Settings</h3>
@@ -463,8 +465,8 @@ const ClinicView = () => {
                 ))}
               </div>
 
-              {/* Clinic Access - Only for role_id === 1 */}
-              {user?.role_id === 1 && (
+              {/* Clinic Access - */}
+              
                 <div className="border-t border-gray-200 pt-4 space-y-3">
                   <h4 className="text-sm font-semibold text-gray-700">Clinic Access</h4>
 
@@ -519,7 +521,7 @@ const ClinicView = () => {
                     </div>
                   )}
                 </div>
-              )}
+              
 
               {/* Save Button */}
               <div className="pt-3">
@@ -529,6 +531,8 @@ const ClinicView = () => {
               </div>
             </form>
           </div>
+          </>
+        )}
 
         </div>
 
