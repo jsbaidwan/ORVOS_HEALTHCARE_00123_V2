@@ -413,6 +413,9 @@ const ClinicView = () => {
 
           {/* Run DICOM Fetch Cron - Only for role_id === 1 */}
           {user?.role_id === 1 && (
+
+          <>
+
             <div className="bg-white rounded-lg shadow border p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Run DICOM Fetch Cron</h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -422,115 +425,113 @@ const ClinicView = () => {
                 Run DICOM Fetch Cron
               </button>
             </div>
-          )}
+            
+          
+            {/* Clinic Settings Card */}
+            <div className="bg-white rounded-lg shadow border p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Clinic Settings</h3>
+              <p className="mt-1 text-sm text-gray-500 mb-4">
+                Configure clinic-specific settings
+              </p>
 
-        {(user?.role_id === 1 || user?.role_id === 6) && (
-          <>
-          {/* Clinic Settings Card */}
-          <div className="bg-white rounded-lg shadow border p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Clinic Settings</h3>
-            <p className="mt-1 text-sm text-gray-500 mb-4">
-              Configure clinic-specific settings
-            </p>
+              <form onSubmit={handleSaveSettings} className="space-y-4">
 
-            <form onSubmit={handleSaveSettings} className="space-y-4">
+                {/* Patient Settings */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Patient Settings</h4>
 
-              {/* Patient Settings */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Patient Settings</h4>
-
-                {[
-                  { name: 'patient_ins_billing_fields', label: 'Patient Insurance & Billing Fields' },
-                  { name: 'patient_address', label: 'Patient Address Field' },
-                  { name: 'emailToggle', label: 'Require Email Address' },
-                  { name: 'patient_appointment_reminders', label: 'Patient Appointment Reminders' },
-                ].map((field) => (
-                  <div key={field.name} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{field.label}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleField(field.name)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        settingsData[field.name] ? '' : 'bg-gray-300'
-                      }`}
-                      style={settingsData[field.name] ? { backgroundColor: '#009efb' } : {}}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          settingsData[field.name] ? 'translate-x-6' : 'translate-x-1'
+                  {[
+                    { name: 'patient_ins_billing_fields', label: 'Patient Insurance & Billing Fields' },
+                    { name: 'patient_address', label: 'Patient Address Field' },
+                    { name: 'emailToggle', label: 'Require Email Address' },
+                    { name: 'patient_appointment_reminders', label: 'Patient Appointment Reminders' },
+                  ].map((field) => (
+                    <div key={field.name} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">{field.label}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleField(field.name)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          settingsData[field.name] ? '' : 'bg-gray-300'
                         }`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Clinic Access - */}
-              
-                <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-700">Clinic Access</h4>
-
-                  {/* Toggle - Allow adding patients without logging in */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Allow adding patients without logging in</span>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleField('allow_add_patient_without_login')}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        settingsData.allow_add_patient_without_login ? '' : 'bg-gray-300'
-                      }`}
-                      style={settingsData.allow_add_patient_without_login ? { backgroundColor: '#009efb' } : {}}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          settingsData.allow_add_patient_without_login ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Clinic URL - Visible when toggle is ON, readonly */}
-                  {settingsData.allow_add_patient_without_login && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Clinic URL</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          name="clinic_url"
-                          value={settingsData.clinic_url}
-                          readOnly
-                          placeholder="https://yourclinic.com/add-patient"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-default"
+                        style={settingsData[field.name] ? { backgroundColor: '#009efb' } : {}}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            settingsData[field.name] ? 'translate-x-6' : 'translate-x-1'
+                          }`}
                         />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(settingsData.clinic_url);
-                            toast.success('Clinic URL copied to clipboard.');
-                          }}
-                          className="px-3 py-2 text-sm font-medium text-white rounded-lg shadow"
-                          style={{ backgroundColor: '#009efb' }}
-                          title="Copy URL"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Public URL where patients can submit their information
-                      </p>
+                      </button>
                     </div>
-                  )}
+                  ))}
                 </div>
-              
 
-              {/* Save Button */}
-              <div className="pt-3">
-                <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white btn-primary rounded-lg shadow">
-                  Save Settings
-                </button>
-              </div>
-            </form>
-          </div>
+                {/* Clinic Access - */}
+                
+                  <div className="border-t border-gray-200 pt-4 space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-700">Clinic Access</h4>
+
+                    {/* Toggle - Allow adding patients without logging in */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">Allow adding patients without logging in</span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleField('allow_add_patient_without_login')}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          settingsData.allow_add_patient_without_login ? '' : 'bg-gray-300'
+                        }`}
+                        style={settingsData.allow_add_patient_without_login ? { backgroundColor: '#009efb' } : {}}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            settingsData.allow_add_patient_without_login ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Clinic URL - Visible when toggle is ON, readonly */}
+                    {settingsData.allow_add_patient_without_login && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Clinic URL</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            name="clinic_url"
+                            value={settingsData.clinic_url}
+                            readOnly
+                            placeholder="https://yourclinic.com/add-patient"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-default"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(settingsData.clinic_url);
+                              toast.success('Clinic URL copied to clipboard.');
+                            }}
+                            className="px-3 py-2 text-sm font-medium text-white rounded-lg shadow"
+                            style={{ backgroundColor: '#009efb' }}
+                            title="Copy URL"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Public URL where patients can submit their information
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                
+
+                {/* Save Button */}
+                <div className="pt-3">
+                  <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white btn-primary rounded-lg shadow">
+                    Save Settings
+                  </button>
+                </div>
+              </form>
+            </div>
           </>
         )}
 
