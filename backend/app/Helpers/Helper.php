@@ -2111,7 +2111,7 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
-	public static function getPdfTempCategories($clinicId)
+	public static function getPdfTempCategories($clinicId = null)
 	{ 
 		$clinic = self::getClinicById($clinicId)['clinic'];
 		

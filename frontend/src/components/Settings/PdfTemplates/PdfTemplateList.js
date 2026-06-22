@@ -13,6 +13,7 @@ import { useRoutePath } from '../../../hooks/useRoutePath';
 import ErrorHandle from '../../Common/ErrorHandle';
 import { useTitle } from '../../../context/TitleContext';
 import EllipsisMenu from '../../Common/EllipsisMenu';
+import { usePermissions } from '../../../context/PermissionsContext';
 
 const PdfTemplateList = ({ archived = false }) => {
   const {
@@ -30,6 +31,7 @@ const PdfTemplateList = ({ archived = false }) => {
   const [templateToArchive, setTemplateToArchive] = useState(null);
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
+  const { permission } = usePermissions();
   const navigate = useNavigate();
   const [errors, setErrors] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -382,6 +384,7 @@ const PdfTemplateList = ({ archived = false }) => {
         data={pdfTemplates}
         isDataLoaded={isDataLoaded}
         emptyMessage={archived ? 'No archived PDF templates found' : 'No PDF templates found'}
+        permissions={{ 'read': permission(7, 'read'), 'write': permission(7, 'write') }}
       />
 
       <Pagination

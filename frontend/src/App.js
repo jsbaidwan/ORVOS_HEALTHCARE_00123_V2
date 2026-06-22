@@ -368,7 +368,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/change-password`}
         element={
-          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(7, 'read')} requiredRole={roleId}>
             <MainLayout><Settings /></MainLayout>
           </ProtectedRoute>
         }
@@ -376,7 +376,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/pdf-templates`}
         element={
-          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(7, 'read')} requiredRole={roleId}>
             <MainLayout><PdfTemplateList /></MainLayout>
           </ProtectedRoute>
         }
@@ -384,7 +384,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/pdf-templates/create`}
         element={
-          <ProtectedRoute permission={permission(true, 'create')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(7, 'create')} requiredRole={roleId}>
             <MainLayout><PdfTemplateForm /></MainLayout>
           </ProtectedRoute>
         }
@@ -392,7 +392,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/pdf-templates/:id/edit`}
         element={
-          <ProtectedRoute permission={permission(true, 'write')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(7, 'write')} requiredRole={roleId}>
             <MainLayout><PdfTemplateForm /></MainLayout>
           </ProtectedRoute>
         }
@@ -400,7 +400,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/pdf-templates/view/:id`}
         element={
-          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(7, 'read')} requiredRole={roleId}>
             <MainLayout><PdfTemplateView /></MainLayout>
           </ProtectedRoute>
         }

@@ -60,7 +60,7 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No data available', 
   const [loading, setLoading] = useState(() => (sortedData.length > 0 ? false : true));
 
   useEffect(() => {
-
+ 
     if (isDataLoaded) {
       setLoading(false)
     }
