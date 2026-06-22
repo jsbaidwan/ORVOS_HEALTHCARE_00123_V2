@@ -2111,11 +2111,26 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
-	public static function getPdfTempCategories()
+	public static function getPdfTempCategories($clinicId)
 	{ 
+		$clinic = self::getClinicById($clinicId)['clinic'];
+		
 		$logo = \Storage::disk('public')->url(
 			'uploads/editor/1757583915_1757501387_OrvosTransparentLogo1.png'
 		);
+		$footerLogo = $logo;
+		 
+		if(!empty($clinic)){
+			$path = "uploads/clinics/".$clinic['slug']."/logo/".$clinic['image'];
+			
+			$exists = !empty($clinic['image']) && \Storage::disk('public')->exists($path);
+			$status = $exists ? 200 : 422;   
+			 
+			if($status == 200){
+				$logo = \Storage::disk('public')->url($path);
+				 
+			}
+		}
 				 
 		$pdfTempCategories = [
 		
@@ -2156,7 +2171,7 @@ class Helper{
 	<br>
 </p>
 
-<p style="text-align: right;"><img src="'.$logo.'"  style="width: 224px;" class="fr-fic fr-dib fr-fir"></p>
+<p style="text-align: right;"><img src="'.$footerLogo.'"  style="width: 224px;" class="fr-fic fr-dib fr-fir"></p>
  
 
 		'],
@@ -2179,9 +2194,9 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
-	public static function getPdfTempCategoryById($id)
+	public static function getPdfTempCategoryById($id,$clinicId = null)
 	{
-		$pdfTempCategories = self::getPdfTempCategories()['pdfTempCategories'];
+		$pdfTempCategories = self::getPdfTempCategories($clinicId)['pdfTempCategories'];
 		 
 		foreach ($pdfTempCategories as $category) {
 			if ($category['id'] == $id) {

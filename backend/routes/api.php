@@ -73,7 +73,8 @@ Route::middleware('auth:api')->group(function () {
 	Route::post('/get-pdf-temp-category', function (Request $request) {
 		$input =  $request->all();
 		if(!empty($input['pdf_temp_cat_id'])){
-			$pdfTempCategory = \Helper::getPdfTempCategoryById($input['pdf_temp_cat_id']);
+			$clinicId = !empty($input['clinic_id']) ? $input['clinic_id'] : NULL;
+			$pdfTempCategory = \Helper::getPdfTempCategoryById($input['pdf_temp_cat_id'],$clinicId);
 			if($pdfTempCategory['status'] == 200){
 				return json_encode(['status' => 200,'pdfTempCategory' => $pdfTempCategory['pdfTempCategory']]);
 			}

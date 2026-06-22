@@ -164,12 +164,12 @@ export const PdfTemplateProvider = ({ children }) => {
     }
   };
 
-  const getPdfTempCategory = async (categoryId) => {
+  const getPdfTempCategory = async (categoryId,clinic_id) => {
     const api = Api(() => getToken());
     if (!api) return;
 
     try {
-      const response = await api.call('get-pdf-temp-category', 'POST', { pdf_temp_cat_id: categoryId }, true);
+      const response = await api.call('get-pdf-temp-category', 'POST', { pdf_temp_cat_id: categoryId,clinic_id:clinic_id }, true);
 
       if (response.status === 200) {
         return { status: 200, data: response.data };

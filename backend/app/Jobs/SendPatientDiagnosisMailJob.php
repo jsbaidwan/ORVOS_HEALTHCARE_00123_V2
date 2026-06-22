@@ -39,14 +39,15 @@ class SendPatientDiagnosisMailJob implements ShouldQueue
         // Get all orvos doctors
 		$filters['role_id'] = 2;
 		$filters['status'] = 1;
+		$filters['is_archived'] = 0;
 		$filters['state_id'] = $this->patient->clinic->state_id;
-		$filters['without_paginate'] = 1;
+		$filters['paginate'] = false;
 		  
         $orvosDoctors = \Helper::users(false,$filters)['users'];
 		  
         // Send email to each orvos doctors
         foreach ($orvosDoctors as $orvDoctor) {
-			//$orvDoctor->email = 'sandeep.intnxt@gmail.com';
+			$orvDoctor->email = 'sandeep.intnxt@gmail.com';
 			$orvDoctor->notify(new PatientDiagnosisMail($this->patient, $orvDoctor));
  
         }

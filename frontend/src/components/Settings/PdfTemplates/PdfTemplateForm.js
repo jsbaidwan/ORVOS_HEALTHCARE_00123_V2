@@ -44,7 +44,7 @@ const PdfTemplateForm = () => {
 
   const [showTagsModal, setShowTagsModal] = useState(false);
 
-  const { register, handleSubmit, control, setValue, reset, setError, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, control, setValue, reset, setError,watch, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       name: '',
@@ -116,15 +116,26 @@ const PdfTemplateForm = () => {
     const value = e.target.value;
     setValue('category_id', value, { shouldValidate: true });
     if (value) {
+
       fetchCategoryTags(value);
     } else {
       setValue('body', '');
     }
   };
 
+  const handleClinicChange = (e) => {
+    const value = e.target.value;
+    if (value) {
+
+      fetchCategoryTags(watch('category_id'));
+    } else {
+      setValue('body', '');
+    }
+  }
+
   const fetchCategoryTags = async (categoryId, skipTemplate = false) => {
     try {
-      const result = await getPdfTempCategory(categoryId);
+      const result = await getPdfTempCategory(categoryId,watch('clinic_id'));
       if (result?.status === 200) {
         const catData = result.data?.pdfTempCategory || result.data || {};
         if (!skipTemplate) {
@@ -258,7 +269,9 @@ const PdfTemplateForm = () => {
               label="Clinics"
               name="clinic_id"
               type="select"
-              registration={register('clinic_id')}
+              registration={register('clinic_id', {
+                onChange: handleClinicChange,
+              })}
               options={clinics?.map((c) => ({
                 value: c.id,
                 label: c.name,

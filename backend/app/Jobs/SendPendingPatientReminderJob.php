@@ -28,14 +28,15 @@ class SendPendingPatientReminderJob implements ShouldQueue
         $filters = [
             'role_id' => 2,
             'status' => 1,
+			'is_archived' => 0;
             'state_id' => $this->stateId,
-            'without_paginate' => 1
+            'paginate' => false
         ];
 
         $orvosDoctors = \Helper::users(false, $filters)['users'];
 
         foreach ($orvosDoctors as $orvDoctor) {
-			//$orvDoctor->email = 'sandeep.intnxt@gmail.com';  
+			$orvDoctor->email = 'sandeep.intnxt@gmail.com';  
             $orvDoctor->notify(new PendingPatientReminderMail($this->patients));
  
         }

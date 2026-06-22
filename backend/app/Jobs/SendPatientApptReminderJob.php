@@ -30,7 +30,7 @@ class SendPatientApptReminderJob implements ShouldQueue
 		$patient = $this->patient;
 		$patient['last_reminder_days'] = $this->lastReminderDays;
 		
-		//$patient->email  = 'sandeep.intnxt@gmail.com';
+		$patient->email  = 'sandeep.intnxt@gmail.com';
 		$patient->notify(new PatientApptReminderMail($patient));
 		 
     }

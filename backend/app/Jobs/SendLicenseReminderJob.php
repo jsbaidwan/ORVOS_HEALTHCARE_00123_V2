@@ -32,7 +32,7 @@ class SendLicenseReminderJob implements ShouldQueue
 		$doctor['expiringLicenses'] = $this->expiringLicenses;
 		$doctor['license_expiring_days'] = $this->licenseExpiringDays;
 		
-		//$doctor->email = 'sandeep.intnxt@gmail.com';  
+		$doctor->email = 'sandeep.intnxt@gmail.com';  
 		$doctor->notify(new LicenseExpiryReminderMail($doctor));
    
     }
