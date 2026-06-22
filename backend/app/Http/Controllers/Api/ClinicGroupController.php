@@ -25,7 +25,7 @@ class ClinicGroupController extends Controller
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
   
-        $clinicGroups = \Helper::getClinicGroups(true, $input)['clinicGroups'];
+        $clinicGroups = \Helper::getClinicGroups(false, $input)['clinicGroups'];
         
         return response()->json(['clinicGroups' => $clinicGroups], 200); 
     }

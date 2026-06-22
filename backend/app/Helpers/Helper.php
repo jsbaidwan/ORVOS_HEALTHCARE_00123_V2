@@ -1316,6 +1316,24 @@ class Helper{
 	public static function getClinicGroups($isAdmin = true,$filters = [])
 	{
 		$query = ClinicGroup::orderBy('id','DESC'); 
+		
+		if($isAdmin == false){
+			$clinicIds = \Auth::user()->clinicUsers->pluck('clinic_id');
+			
+			$clinicGroupIds = [];
+			foreach($clinicIds as $cId){
+				 
+				$clinicGroupIds[] = self::getClinicById($cId)['clinic']['clinic_group_id']; 
+			}
+			
+			if(!empty($clinicGroupIds)){
+				
+				$query->whereIn('id',[$clinicGroupIds]);
+			}
+			
+			 
+		} 
+		 
 		if (isset($filters['active']) && strtolower($filters['active']) != 'all') {
 
 			$query->where('active',$filters['active']);
