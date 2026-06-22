@@ -1092,24 +1092,28 @@ const PatientView = () => {
 
                                 </div>
 
-                                {/* Bottom Actions */}
-                                <div className="mt-8 border-t border-gray-100 pt-6">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-4">Clone and Re-diagnosis the Patient</h3>
-                                    <button className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none" onClick={() => handleReDiagnosis(patient.id)}>
-                                        <ArrowPathIcon className="w-4 h-4 mr-2" />
-                                        Re diagnosis
-                                    </button>
-                                </div>
+                                {patient?.diagnosis_status === 1 && (
+                                    <>
+                                        {/* Bottom Actions */}
+                                        <div className="mt-8 border-t border-gray-100 pt-6">
+                                            <h3 className="text-sm font-medium text-gray-700 mb-4">Clone and Re-diagnosis the Patient</h3>
+                                            <button className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#009efb] hover:bg-[#0089db] rounded shadow-sm focus:outline-none" onClick={() => handleReDiagnosis(patient.id)}>
+                                                <ArrowPathIcon className="w-4 h-4 mr-2" />
+                                                Re diagnosis
+                                            </button>
+                                        </div>
 
-                                <div className="mt-8 border-t border-gray-100 pt-6">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-4">Chart Status</h3>
-                                    <Table
-                                        columns={columns}
-                                        data={Array(patient)}
-                                        emptyMessage="No chart status found"
-                                        tableClass="min-w-auto"
-                                    />
-                                </div>
+                                        <div className="mt-8 border-t border-gray-100 pt-6">
+                                            <h3 className="text-sm font-medium text-gray-700 mb-4">Chart Status </h3>
+                                            <Table
+                                                columns={columns}
+                                                data={Array(patient)}
+                                                emptyMessage="No chart status found"
+                                                tableClass="min-w-auto"
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </>
                         )}
 
