@@ -2334,8 +2334,8 @@ class Helper{
 	{   
 		$leftEyes = '<table width="100%" cellpadding="5" cellspacing="0" style="border:0px solid #eee;"><tr>';
 
-		if(!empty($data->l_eye_images)){
-			$leftEyesArr = $patient->display_left_eye_images;
+		if(!empty($data['l_eye_images'])){
+			$leftEyesArr = $data['display_left_eye_images'];
 			if(count($leftEyesArr) == 1){
 				$leftEyes .= '<td style="border:0;"></td>';
 			}
@@ -2357,9 +2357,9 @@ class Helper{
 		$leftEyes .= '</tr></table>';
 		 
 		$rightEyes = '<table width="100%" cellpadding="5" cellspacing="0" style="border:0px solid #eee;"><tr>';
-		if(!empty($data->r_eye_images)){
+		if(!empty($data['r_eye_images'])){
 			 
-			$rightEyesArr = $patient->display_right_eye_images;
+			$rightEyesArr = $data['display_right_eye_images'];
 			if(count($rightEyesArr) == 1){
 				$rightEyes .= '<td style="border:0;"></td>';
 			} 
@@ -2381,8 +2381,8 @@ class Helper{
 		$leftEyeRemarks = NULL;
 		$rightEyeRemarks = NULL;
 		$note = NULL;
-		if(!empty($data->remark_result)){
-			$examTest = $data->remark_result;
+		if(!empty($data['remark_result'])){
+			$examTest = $data['remark_result'];
 			
 			if(!empty($examTest['exam_data']['leftEye'])){
 				foreach($examTest['exam_data']['leftEye'] as $eKey => $eData){
