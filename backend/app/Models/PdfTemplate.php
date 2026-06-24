@@ -30,7 +30,7 @@ class PdfTemplate extends Authenticatable
 			'name' => [
                 'required',
                 Rule::unique('pdf_templates')->ignore($id)->where(function ($query) use($userId) {
-                    return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
+                    return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
                 }),
             ],
             'clinic_id' => 'required', 
@@ -38,16 +38,16 @@ class PdfTemplate extends Authenticatable
                 'required',
                 Rule::unique('pdf_templates')->ignore($id)->where(function ($query) use($userId) {
 					if(\Auth::user()->role_id == 1){
-						return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'));
+						return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'));
 					}else{
-						return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
+						return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
 					}
                     
                 }),
             ],
             
             'body' => 'required|string',
-            'status' => 'required',
+            //'status' => 'required',
              
         ];
     }
@@ -55,8 +55,8 @@ class PdfTemplate extends Authenticatable
 	public static function messages()
 	{
 		return [
-			'name.unique' => 'The name has already been taken.',
-			'pdf_template_category_id.unique' => 'The category has already been taken to the clinic.',
+			'name.unique' => 'This name is already assigned to the clinic. Please remove it from the active or archived list before assigning it again.',
+			'pdf_template_category_id.unique' => 'This category is already assigned to the clinic. Please remove it from the active or archived list before assigning it again.',
 		];
 	}
  

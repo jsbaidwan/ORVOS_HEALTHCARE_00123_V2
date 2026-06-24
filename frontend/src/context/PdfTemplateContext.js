@@ -62,12 +62,17 @@ export const PdfTemplateProvider = ({ children }) => {
     }
   }, [getToken, logout]);
 
-  const getPdfTemplateById = useCallback(async (id) => {
+  const getPdfTemplateById = useCallback(async (id, options = {}) => {
     const api = Api(() => getToken());
     if (!api) return;
 
+    let url = `pdf-templates/${id}/edit`;
+    if (options?.action && options?.action === 'view') {
+      url = `pdf-templates/${id}`;
+    }
+    
     try {
-      const response = await api.call(`pdf-templates/${id}/edit`, 'GET', null, true);
+      const response = await api.call(url, 'GET', null, true);
 
       if (response.status === 200) {
         return { status: 200, pdfTemplate: response.data.pdfTemplate || response.data.pdf_template || response.data };

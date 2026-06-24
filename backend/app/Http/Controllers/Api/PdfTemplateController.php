@@ -12,6 +12,7 @@ use App\Models\PdfTemplate;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Mpdf\Mpdf;
   
 class PdfTemplateController extends Controller
 { 
@@ -45,9 +46,16 @@ class PdfTemplateController extends Controller
             
             return response()->json(['errors' => $validate->errors()], 422);
         }
-		
+		 
 		$input['user_id'] = \Auth::user()->id;
-		PdfTemplate::create($input);
+		$pdfTemplate = PdfTemplate::create($input);
+		
+		\Log::save(
+			'Pdf Template Created.',
+			'The Pdf Template has been created by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'PdfTemplate', 
+			$pdfTemplate->id
+		);
 		
 		return response()->json(['message' => 'Pdf Template created successfully'], 200);
 		 
@@ -91,6 +99,13 @@ class PdfTemplateController extends Controller
 		}
 		
 		$pdfTemplate->update($input);
+		
+		\Log::save(
+			'Pdf Template Updated.',
+			'The Pdf Template has been updated by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'PdfTemplate', 
+			$pdfTemplate->id
+		);
 		  
 		return response()->json(['message' => 'Pdf Template updated successfully'], 200);
  
@@ -128,10 +143,39 @@ class PdfTemplateController extends Controller
 		$mpdf->SetTitle($pdfTemplate->name.' - '.$pdfTemplate['clinic']['name'] ?? 'PDF Preview');
 		$mpdf->WriteHTML($html);
 
-		return response($mpdf->Output('', 'S'))
-			->header('Content-Type', 'application/pdf')
-			->header('Content-Disposition', 'inline; filename="preview.pdf"');
+		$pdfContent = $mpdf->Output('', 'S');
+		
+		$pdfTemplate['pdf'] =  base64_encode($pdfContent);
+		return response()->json([
+			'status' => 200,
+			'pdfTemplate' => $pdfTemplate,
+			 
+		]);
 		 
+	}
+	
+	public function destroy($id)
+	{
+		$haveAccess = \Helper::permission(7,'write');
+		if(!$haveAccess){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		 
+		$pdfTemplate = \Helper::getPdfTemplateById($id)['pdfTemplate'];
+		if(!$pdfTemplate){
+			return response()->json(['message' => \Helper::permissionMsg()['message']], 404);
+		}
+		
+		$pdfTemplate->delete();
+		
+		\Log::save(
+			'Pdf Template Deleted.',
+			'The Pdf Template has been deleted by '.\Auth::user()->first_name.' '.\Auth::user()->last_name.'.',
+			'PdfTemplate', 
+			$pdfTemplate->id
+		);
+		
+		return response()->json(['message' => 'The pdf template has been deleted successfully.'], 200);
 	}
 	 
 }

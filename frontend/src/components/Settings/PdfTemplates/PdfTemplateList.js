@@ -14,6 +14,8 @@ import ErrorHandle from '../../Common/ErrorHandle';
 import { useTitle } from '../../../context/TitleContext';
 import EllipsisMenu from '../../Common/EllipsisMenu';
 import { usePermissions } from '../../../context/PermissionsContext';
+import Swal from 'sweetalert2';
+import { TrashIcon } from '@heroicons/react/24/solid';
 
 const PdfTemplateList = ({ archived = false }) => {
   const {
@@ -23,6 +25,7 @@ const PdfTemplateList = ({ archived = false }) => {
     getPdfTemplates,
     archivePdfTemplate,
     unarchivePdfTemplate,
+    deletePdfTemplate,
   } = usePdfTemplate();
 
   const initialFilters = { q: '' };
@@ -95,6 +98,55 @@ const PdfTemplateList = ({ archived = false }) => {
   const handleArchive = (template) => {
     setShowArchiveConfirm(true);
     setTemplateToArchive(template);
+  };
+
+  const handleDelete = (template) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to delete this template?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+      confirmButtonColor: "#d33",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          const response = await deletePdfTemplate(template.id);
+  
+          if (!response || response.status !== 200) {
+            Swal.showValidationMessage(
+              response?.message || "Failed to delete template."
+            );
+            return false;
+          }
+  
+          return response;
+        } catch (error) {
+          Swal.showValidationMessage(
+            error?.message || "Something went wrong."
+          );
+          return false;
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const response = result.value;
+  
+        Swal.fire({
+          title: "Deleted!",
+          text: response?.message || "Template deleted successfully.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+  
+        navigate(getRoutePath('/settings/pdf-templates/archived'));
+      }
+    });
   };
 
   const confirmArchive = async () => {
@@ -290,13 +342,23 @@ const PdfTemplateList = ({ archived = false }) => {
               <ArchiveBoxIcon className="w-5 h-5" />
             </button>
           ) : (
-            <button
-              title="unarchive"
-              onClick={() => handleArchive(row)}
-              className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors duration-200"
-            >
-              <ArrowUpCircleIcon className="w-5 h-5" />
-            </button>
+            <>
+              <button
+                title="unarchive"
+                onClick={() => handleArchive(row)}
+                className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors duration-200"
+              >
+                <ArrowUpCircleIcon className="w-5 h-5" />
+              </button>
+
+              <button 
+              title="delete"
+              onClick={() => handleDelete(row)}
+               className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              >
+              <TrashIcon className="w-5 h-5" />
+              </button>
+            </>
           )}
 
           <EllipsisMenu

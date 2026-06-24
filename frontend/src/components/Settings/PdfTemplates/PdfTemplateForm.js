@@ -27,7 +27,7 @@ const schema = yup.object().shape({
   name: yup.string().required('Name is required'),
   clinic_id: yup.string().required('Clinic is required'),
   category_id: yup.string().required('Category is required'),
-  status: yup.string().required('Status is required'),
+  //status: yup.string().required('Status is required'),
   body: yup.string().required('Body is required'),
 });
 
@@ -50,19 +50,19 @@ const PdfTemplateForm = () => {
       name: '',
       clinic_id: '',
       category_id: '',
-      status: '1',
+      //status: '1',
       body: '',
     },
   });
 
   const buildDefaults = (t) => {
-    if (!t) return { name: '', clinic_id: '', category_id: '', status: '1', body: '' };
+    if (!t) return { name: '', clinic_id: '', category_id: '', /*status: '1',*/ body: '' };
     const catId = t.pdf_template_category_id || t.category_id || '';
     return {
       name: t.name || '',
       clinic_id: t.clinic_id ? String(t.clinic_id) : '',
       category_id: catId ? String(catId) : '',
-      status: t.status !== undefined ? String(t.status) : '1',
+      /*status: t.status !== undefined ? String(t.status) : '1',*/
       body: t.body || '',
     };
   };
@@ -295,7 +295,7 @@ const PdfTemplateForm = () => {
               error={errors.category_id?.message}
             />
 
-            <FormField
+            {/* <FormField
               label="Status"
               name="status"
               type="select"
@@ -306,7 +306,7 @@ const PdfTemplateForm = () => {
               ]}
               required
               error={errors.status?.message}
-            />
+            /> */}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
