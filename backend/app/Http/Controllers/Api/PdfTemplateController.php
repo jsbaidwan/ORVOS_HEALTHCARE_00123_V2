@@ -60,6 +60,7 @@ class PdfTemplateController extends Controller
 		return response()->json(['message' => 'Pdf Template created successfully'], 200);
 		 
 	}
+	
 	public function edit($id)
 	{
 		$haveAccess = \Helper::permission(7,'write');
