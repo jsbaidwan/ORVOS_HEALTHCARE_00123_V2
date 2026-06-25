@@ -100,61 +100,66 @@ const PdfTemplateView = () => {
 
         {/* Content - After loading */}
         {!loading && template && (
-          <>
-            {/* Details */}
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Name</span>
-                  <span className="mt-1 text-sm font-medium text-gray-900">{template.name}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Side - Details */}
+            <div className="lg:col-span-1 border rounded-lg p-6 bg-white">
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs font-medium text-gray-400 uppercase">Name</span>
+                  <p className="mt-1 text-sm font-medium text-gray-900">{template.name}</p>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Clinic</span>
-                  <span className="mt-1 text-sm font-medium text-gray-900">
+
+                <div>
+                  <span className="text-xs font-medium text-gray-400 uppercase">Clinic</span>
+                  <p className="mt-1 text-sm font-medium text-gray-900">
                     {template.clinic?.name || template.clinic_name || '-'}
-                  </span>
+                  </p>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Category</span>
-                  <span className="mt-1 text-sm font-medium text-gray-900">
+
+                <div>
+                  <span className="text-xs font-medium text-gray-400 uppercase">Category</span>
+                  <p className="mt-1 text-sm font-medium text-gray-900">
                     {template.category?.name || template.category_name || '-'}
-                  </span>
+                  </p>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Status</span>
-                  <span className="mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      template.status === 1 || template.status === 'Active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {template.status === 1 || template.status === 'Active' ? 'Active' : 'Inactive'}
+
+                <div>
+                  <span className="text-xs font-medium text-gray-400 uppercase">Status</span>
+                  <div className="mt-1">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        template.status === 1 || template.status === 'Active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {template.status === 1 || template.status === 'Active'
+                        ? 'Active'
+                        : 'Inactive'}
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* PDF Preview */}
-            <div className="p-0">
-            {!loading && (
-              <>
+            {/* Right Side - PDF */}
+            <div className="lg:col-span-2">
               {template.pdfUrl ? (
                 <iframe
-                  src={`${template.pdfUrl}#view=FitH`}
+                  src={`${template.pdfUrl}#view=FitH&toolbar=0`}
                   title={`PDF Preview - ${template.name}`}
-                  className="w-full border-0"
-                  style={{ height: '60vh' }}
+                  className="w-full border rounded-lg"
+                  style={{ height: '80vh' }}
                 />
               ) : (
-                <div className="flex items-center justify-center py-20 text-gray-400">
+                <div className="flex items-center justify-center h-[80vh] text-gray-400 border rounded-lg">
                   <p>No preview available</p>
                 </div>
               )}
-              </>
-            )}
             </div>
-          </>
+
+          </div>
         )}
       </div>
     </div>
