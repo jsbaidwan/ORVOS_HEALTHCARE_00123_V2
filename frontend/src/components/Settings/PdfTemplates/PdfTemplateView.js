@@ -141,10 +141,10 @@ const PdfTemplateView = () => {
               <>
               {template.pdfUrl ? (
                 <iframe
-                  src={`${template.pdfUrl}`}
+                  src={`${template.pdfUrl}#view=FitH`}
                   title={`PDF Preview - ${template.name}`}
                   className="w-full border-0"
-                  style={{ height: '80vh', minHeight: '600px' }}
+                  style={{ height: '60vh' }}
                 />
               ) : (
                 <div className="flex items-center justify-center py-20 text-gray-400">
