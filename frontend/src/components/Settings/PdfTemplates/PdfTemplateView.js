@@ -76,7 +76,7 @@ const PdfTemplateView = () => {
               </Link>
               <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {template?.name +' Template' || 'PDF Template'}
+                 {template?.name ? `${template.name} Template` : 'PDF Template'}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">View template details and preview.</p>
               </div>
