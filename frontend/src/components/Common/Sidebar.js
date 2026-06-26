@@ -201,6 +201,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           <li key={subIndex}>
                             <Link
                               to={subItem.path}
+                              onClick={() => { if (isOpen) toggleSidebar(); }}
                               className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${location.pathname === subItem.path
                                 ? 'bg-primary-100 text-primary border'
                                 : 'hover:bg-primary-50 hover:text-primary'
@@ -219,6 +220,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 ) : (
                   <Link
                     to={item.path}
+                    onClick={() => { if (isOpen) toggleSidebar(); }}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
                       ? 'bg-white text-primary'
                       : 'hover:bg-gray-50 hover:shadow-sm hover:text-primary'

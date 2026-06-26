@@ -104,6 +104,10 @@ const MainLayout = ({ children }) => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   return (
     <div className={isAuthenticated() ? "flex h-screen overflow-hidden bg-gray-50" : " "}>
 
@@ -112,7 +116,7 @@ const MainLayout = ({ children }) => {
       ) : null}
 
       <div className={isAuthenticated() ? "flex flex-col flex-1 overflow-hidden lg:ml-64" : " "}>
-        <Header toggleSidebar={toggleSidebar} />
+        <Header toggleSidebar={toggleSidebar} closeSidebar={closeSidebar} />
 
         <main className={isAuthenticated() ? "flex-1 scrollbar-thin overflow-y-auto p-6" : "scrollbar-thin overflow-y-auto "}>
           {children}

@@ -3279,7 +3279,7 @@ class Helper{
 		return [
 			0 => ['name' => 'DICOM File Pending','class' => 'text-primary'],
 			1 => ['name' => 'DICOM File Sending','class' => 'text-warning'],
-			2 => ['name' => 'DICOM File Sent','class' => 'text-success'],
+			2 => ['name' => 'DICOM File Sent','class' => 'text-green-800'],
 			3 => ['name' => 'DICOM File Failed','class' => 'text-danger'],
 		];
 	}

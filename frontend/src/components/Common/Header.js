@@ -8,7 +8,7 @@ import OrvosBannerLogo from '../../assets/images/OrvosTransparentLogo1.png';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUser } from '../../context/UserContext';
 
-const Header = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar, closeSidebar }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const getRoutePath = useRoutePath();
@@ -87,7 +87,10 @@ const Header = ({ toggleSidebar }) => {
               {/* User dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setShowDropdown(!showDropdown)}
+                  onClick={() => {
+                    setShowDropdown(!showDropdown);
+                    if (closeSidebar) closeSidebar();
+                  }}
                   className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                 >
                   <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">

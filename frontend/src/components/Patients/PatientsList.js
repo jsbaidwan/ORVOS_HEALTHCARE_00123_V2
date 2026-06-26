@@ -397,33 +397,31 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       sortValue: (row) =>
         `${row?.first_name || ''} ${row?.last_name || ''}`.trim().toLowerCase(),
       render: (row) => (
-        <div className="w-auto">
-          <div className="flex items-center">
-
-            <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">
-                {row.first_name?.charAt(0)?.toUpperCase()}
-              </span>
-            </div>
-
-            <div className="min-w-0 lg:min-w-full">
-              <div className="text-sm font-medium text-gray-900 break-words">
-                {row?.first_name} {row?.last_name}
-              </div>
-
-              <div className="text-sm text-gray-500">
-                <Link
-                  to={getRoutePath(`/patients/view/${row.id}`)}
-                  className="text-primary hover:text-primary-700 break-words"
-                  target="_blank"
-                >
-                  {row?.p_code || "-"}
-                </Link>
-              </div>
-            </div>
-
-          </div>
+        <div className="flex items-center min-w-0">
+        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+          <span className="text-gray-500 text-sm font-medium">
+            {row.first_name?.charAt(0)?.toUpperCase()}
+          </span>
         </div>
+      
+        <div className="min-w-0 flex-1">
+          <div
+            className="text-sm font-medium text-gray-900 truncate"
+            title={`${row?.first_name} ${row?.last_name}`}
+          >
+            {row?.first_name} {row?.last_name}
+          </div>
+      
+          <Link
+            to={getRoutePath(`/patients/view/${row.id}`)}
+            className="block text-sm text-primary hover:text-primary-700 truncate"
+            target="_blank"
+            title={row?.p_code}
+          >
+            {row?.p_code || "-"}
+          </Link>
+        </div>
+      </div>
       ),
     },
 
