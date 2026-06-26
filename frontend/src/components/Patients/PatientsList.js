@@ -539,6 +539,42 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       ),
     },
     {
+      header: 'Posted By',
+      accessor: 'user_id',
+      render: (row) => (
+        <div>
+          {row?.user ? (
+            <span className="text-green-600 font-medium">
+              <Link to={getRoutePath(`/users/view/${row?.user?.id}`)} target="_blank" className="text-primary hover:text-primary-700 underline">
+                {row?.user?.first_name || ''} {row?.user?.last_name || ''}
+              </Link>
+            </span>
+          ) : (
+            <span className="text-gray-500 font-medium">-</span>
+          )}
+        </div>
+      ),
+    },
+
+    {
+      header: 'Remark By',
+      accessor: 'remark_by',
+      render: (row) => (
+        <div>
+          {row?.remark_by ? (
+          <span className="text-green-600 font-medium">
+            <Link to={getRoutePath(`/users/view/${row?.remark_by?.id}`)} target="_blank" className="underline">
+              {row?.remark_by?.first_name || ''} {row?.remark_by?.last_name || ''} ({row?.remark_by?.role?.name || ''})
+            </Link>
+            </span>
+          ) : (
+            <span className="text-gray-500 font-medium">-</span>
+          )}
+        </div>
+      ),
+    },
+    
+    {
       header: 'Created At',
       accessor: 'created_at',
       sortValue: (row) => row?.formated_created_at,

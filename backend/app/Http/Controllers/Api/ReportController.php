@@ -54,6 +54,7 @@ class ReportController extends Controller
 
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 		$data = $this->getClinicPatientData($input);
+		
 		$patientsUploaded = $data['patientsUploaded'];
 		$totalSummary = $data['totalSummary'];
 		$monthlyBilling = $data['monthlyBilling'];
@@ -137,9 +138,9 @@ class ReportController extends Controller
 				$boldRows[] = count($rows);
 			}
 		}
-
+		  
 		$month = $input['month'] ?? ($input['from_date'] ?? 'all') . '_to_' . ($input['to_date'] ?? 'all');
-		$filename = 'clinic_patient_report_' . str_replace(['/', ' ', '-'], '_', $month) . '.xlsx';
+		$filename = 'clinic_patient_report_' . str_replace(['/', ' ', '-'], '_', $month) . '_'.time().'.xlsx';
 
 		$filePath = 'exports/' . $filename;
 
@@ -210,12 +211,12 @@ class ReportController extends Controller
 			$filePath,
 			'public'
 		);
-
+	 
 		return response()->json([
 			'success' => true,
 			'message' => 'Report generated successfully.',
 			'filename' => $filename,
-			'url' => asset('storage/' . $filePath),
+			'url' => \Storage::disk('public')->url($filePath),
 		], 200);
 	}
 	
@@ -486,7 +487,7 @@ class ReportController extends Controller
 		}
 
 		$month = $input['month'] ?? ($input['from_date'] ?? 'all') . '_to_' . ($input['to_date'] ?? 'all');
-		$filename = 'orvos_doctor_review_report_' . str_replace(['/', ' ', '-'], '_', $month) . '.xlsx';
+		$filename = 'orvos_doctor_review_report_' . str_replace(['/', ' ', '-'], '_', $month) . '_'.time().'.xlsx';
 
 		$filePath = 'exports/' . $filename;
 

@@ -765,7 +765,7 @@ class PatientController extends Controller
         // Export the data using the PatientsExport class
 		$pStatus = \Helper::getPatientDiagnosisStatusById($input['diagnosis_status'])['pStatus']['name'] ?? '';
 
-		$fileName = 'patients_' . ($pStatus ?: 'all') . '.xlsx';
+		$fileName = 'patients_' . ($pStatus ?: 'all') . '_'. time() .'.xlsx';
 
 		// Generate Excel file here
 		$path = 'excels/patients/' . $fileName;

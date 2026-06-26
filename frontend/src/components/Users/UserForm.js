@@ -287,6 +287,17 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   }, [uId, getClinics, additionalData, getUserById, hideLoader, reset, setError]);
 
   useEffect(() => {
+    if (!id && userData) {
+      // Transition from Edit -> Create
+      setUserData(null);
+      setExistingDocs([]);
+      setTimeout(() => {
+        reset(buildDefaults(null));
+      }, 10);
+    }
+  }, [id, userData, reset]);
+
+  useEffect(() => {
     const existingUser = getExistingUser(id);
 
     if (existingUser && !userData) {

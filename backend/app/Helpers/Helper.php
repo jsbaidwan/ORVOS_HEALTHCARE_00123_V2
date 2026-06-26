@@ -379,7 +379,7 @@ class Helper{
 				//$query->where('state_id',\Auth::user()->state_id);
 				 
 			} else{
-				
+				 
 				$query->whereIn('clinic_id', \Auth::user()->clinicUsers()->pluck('clinic_id'));
 				// if(isset($filters['clinic_ids'])){
 			 
