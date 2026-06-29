@@ -55,9 +55,9 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
       <>
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
 
-          <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center justify-between px-4 py-2 md:px-6 md:py-3">
             {/* Left side - Menu button & Logo */}
-            <div className="flex items-center space-x-4 ">
+            <div className="flex items-center space-x-4">
 
               <button
                 onClick={toggleSidebar}
@@ -75,7 +75,7 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
             </div>
 
             {/* Right side - Notifications & User menu */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               {/* Notifications */}
               {/* <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,14 +91,14 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
                     setShowDropdown(!showDropdown);
                     if (closeSidebar) closeSidebar();
                   }}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                  className="flex items-center space-x-2 md:space-x-3 p-1 md:p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                 >
-                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-full flex items-center justify-center">
                     {userData?.display_avatar?.status === 200 ? (
-                      <div className="w-full h-full  rounded-full">
+                      <div className="w-full h-full rounded-full">
                         <PreviewImage
                           preview={userData?.display_avatar?.src}
-                          hasCustomClass="h-10 w-10  rounded-full"
+                          hasCustomClass="h-8 w-8 md:h-10 md:w-10 rounded-full"
                           hasRemoveButton={false}
                           hasViewButton={false}
                           index={0}

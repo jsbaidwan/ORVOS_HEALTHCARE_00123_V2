@@ -2571,20 +2571,71 @@ class Helper{
 	{
 		return preg_replace_callback('/<img[^>]+src="([^"]+)"/i', function ($matches) {
 			$src = $matches[1];
+			$localPath = self::resolvePdfImageLocalPath($src);
 
-			// Only handle uploads from your editor folder
-			if (strpos($src, '/uploads/editor/') !== false) {
-				$path = parse_url($src, PHP_URL_PATH);
-				$filename = basename($path);
-				$fullPath = public_path('uploads/editor/' . $filename);
+			if (!$localPath || !file_exists($localPath)) {
+				return $matches[0];
+			}
 
-				if (file_exists($fullPath)) {
-					return str_replace($src, $fullPath, $matches[0]);
-				}
+			$pdfPath = self::getPdfCompatibleImagePath($localPath);
+
+			if ($pdfPath) {
+				return str_replace($src, $pdfPath, $matches[0]);
 			}
 
 			return $matches[0];
 		}, $html);
+	}
+
+	public static function resolvePdfImageLocalPath($src)
+	{
+		$srcPath = parse_url($src, PHP_URL_PATH);
+
+		if (empty($srcPath)) {
+			return null;
+		}
+
+		if (preg_match('#/storage/uploads/(.+)$#i', $srcPath, $matches)) {
+			return storage_path('app/public/uploads/' . $matches[1]);
+		}
+
+		if (preg_match('#/uploads/(.+)$#i', $srcPath, $matches)) {
+			return storage_path('app/public/uploads/' . $matches[1]);
+		}
+
+		return null;
+	}
+
+	public static function getPdfCompatibleImagePath($fullPath)
+	{
+		$extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+		if ($extension !== 'webp') {
+			return $fullPath;
+		}
+
+		$tempDir = storage_path('app/temp/pdf-images');
+
+		if (!is_dir($tempDir)) {
+			mkdir($tempDir, 0755, true);
+		}
+
+		$cacheKey = md5($fullPath . filemtime($fullPath));
+		$tempPath = $tempDir . '/' . $cacheKey . '.png';
+
+		if (file_exists($tempPath)) {
+			return $tempPath;
+		}
+
+		try {
+			$manager = new ImageManager(new Driver());
+			$image = $manager->read($fullPath);
+			$image->toPng()->save($tempPath);
+
+			return $tempPath;
+		} catch (\Exception $e) {
+			return $fullPath;
+		}
 	}
 
 	/*
