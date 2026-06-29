@@ -123,6 +123,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
   const [previews, setPreviews] = useState([]);
 
   const handleDrag = (e) => {
+     
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -133,6 +134,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
   };
 
   const handleDrop = (e) => {
+   
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -143,6 +145,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
   };
 
   const handleChange = (e) => {
+    
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       handleFiles(e.target.files);
@@ -150,12 +153,35 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
   };
 
   const handleFiles = (files) => {
+    
+    const size = 10;
+    const maxSize = size * 1024 * 1024; // ${size}MB
+
+    const invalidFiles = [];
     const validFiles = Array.from(files).filter((file) => {
-      const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type);
-      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+      const isValidType = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp'
+      ].includes(file.type);
+    
+      const isValidSize = file.size <= maxSize;
+    
+      if (!isValidType) {
+        invalidFiles.push(`${file.name}: Invalid file type`);
+      } else if (!isValidSize) {
+        invalidFiles.push(`${file.name}: File size exceeds ${size}MB`);
+      }
+    
       return isValidType && isValidSize;
     });
-
+    
+    if (validFiles.length === 0) {
+      alert(invalidFiles.join('\n') || 'Please select valid image files.');
+      return;
+    }
+    
     if (validFiles.length > 0) {
       // Create preview URLs
       const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
