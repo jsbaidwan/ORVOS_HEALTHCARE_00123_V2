@@ -104,7 +104,21 @@ class ClinicController extends Controller
 		if (!empty($input['image'])) {
 
 			$image = $input['image'];
+			
+			$path = 'uploads/clinics/' . $input['slug'] . '/logo';
+
+			$ext = config('image.ext') ?: $image->getClientOriginalExtension();
+
+			$convertImage = \Helper::convertImages(
+				$image,
+				$path,
+				config('image.quality'),
+				$ext
+			);
+
+			$input['image'] = $convertImage['fileName'];
  
+			/*
 			// Generate filename
 			$imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
 
@@ -114,6 +128,7 @@ class ClinicController extends Controller
 			$image->storeAs($path, $imageName, 'public');
 			 
 			$input['image'] = $imageName;
+			*/
   
 		}
 		
@@ -286,14 +301,25 @@ class ClinicController extends Controller
 			}
 
 			// Generate filename
-			$imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
+			//$imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
 
 			// Store image
 			$path = 'uploads/clinics/' .$input['slug'].'/logo';
+			
+			$ext = config('image.ext') ?: $image->getClientOriginalExtension();
 
-			$image->storeAs($path, $imageName, 'public');
+			$convertImage = \Helper::convertImages(
+				$image,
+				$path,
+				config('image.quality'),
+				$ext
+			);
 
-			$input['image'] = $imageName;
+			$input['image'] = $convertImage['fileName'];
+
+			/*$image->storeAs($path, $imageName, 'public');
+
+			$input['image'] = $imageName;*/
 		}
 
 		// Handle file removals

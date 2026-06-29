@@ -108,6 +108,21 @@ class UserController extends Controller
        
         if ($request->hasFile('image')) {
 			$file = $request->file('image');
+			
+			$folder = 'uploads/users/' . $input['user_name'];
+
+			$ext = config('image.ext') ?: $file->getClientOriginalExtension();
+
+			$convertImage = \Helper::convertImages(
+				$file,
+				$folder,
+				config('image.quality'),
+				$ext
+			);
+
+			$input['image'] = $convertImage['fileName'];
+			 
+			/*
 
 			// Generate filename
 			$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
@@ -122,6 +137,7 @@ class UserController extends Controller
 			$input['image'] = $filename; 
 			// OR
 			// $input['image'] = $path;
+			*/
 		}
 		
 		$input['code'] = \Helper::genUserCode($input['role_id'])['code'];
@@ -500,8 +516,16 @@ class UserController extends Controller
 		} elseif ($request->hasFile('image')) {
 
 			$file = $request->file('image');
-			$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+			
+			$convertImage = \Helper::convertImages(
+				$file,
+				$newFolder,
+				config('image.quality'),
+				config('image.ext')
+			);
 
+			$input['image'] = $convertImage['fileName'];
+ 
 			// Delete old image
 			if (!empty($user->image)) {
 				$oldPath = $oldFolder . '/' . $user->image;
@@ -510,11 +534,14 @@ class UserController extends Controller
 					Storage::disk('public')->delete($oldPath);
 				}
 			}
+			
+			
+			/*$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
 			// Store new image
 			$file->storeAs($newFolder, $filename, 'public');
 
-			$input['image'] = $filename;
+			$input['image'] = $filename;*/
 
 		} else {
 
