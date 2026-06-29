@@ -341,28 +341,29 @@ Route::get('patients/guest/verify/{id}',function(Request $request, $id){
 })->name('patients.guest.verify');
  
 Route::get('/file/{token}', function ($token, Request $request) {
-   
-    // 1️⃣ Decode the token
-    $decoded = base64_decode(strtr($token, '-_', '+/'));
-	$data = json_decode(gzuncompress($decoded), true);
-	
-	if(!empty($data['hasSigned']) && $data['hasSigned']){
-		 
-		if (! $request->hasValidSignature()) {
-			abort(403, 'Unauthorized or expired link');
-		}	
-	}
-	
-    if (!$data || !isset($data['path'])) {
-        abort(403, 'Invalid link');
+
+    try {
+        $data = json_decode(
+            \Crypt::decryptString($token),
+            true
+        );
+		
+    } catch (\Exception $e) {
+        abort(403, 'Invalid token');
     }
-	  
-    // 4️⃣ Check file exists
+ 
+    if (!empty($data['hasSigned']) && $data['hasSigned']) {
+
+        if (!$request->hasValidSignature()) {
+            abort(403, 'Unauthorized or expired link');
+        }
+    }
+
     if (!Storage::disk('public')->exists($data['path'])) {
         abort(404, 'File not found');
     }
- 
-    // 5️⃣ Serve the file
-    return response()->file(storage_path('app/public/' . $data['path']));
 
+    return response()->file(
+        storage_path('app/public/' . $data['path'])
+    );
 })->name('file.serve');

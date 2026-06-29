@@ -2968,14 +2968,13 @@ class Helper{
 	 
 	public static function  fileTokenGen($path,$file,$hasSigned = true)
 	{
-		return  rtrim(strtr(
-			base64_encode(gzcompress(json_encode([
+		return \Crypt::encryptString(
+			json_encode([
 				'path' => $path,
 				'filename' => $file,
 				'hasSigned' => $hasSigned
-			]))),
-			'+/', '-_'
-		), '=');
+			])
+		);
 		
 	}
 	
@@ -2993,12 +2992,15 @@ class Helper{
 	 
 	public static function fileSignedRoute($token,$hasSigned = true)
 	{
-		if($hasSigned){
-			return $signedUrl = \URL::signedRoute('file.serve', [
+		$params = [
 			'token' => $token,
-			], now()->addSeconds(10));
+			'v' => time(),
+		];
+		 
+		if($hasSigned){
+			return $signedUrl = \URL::signedRoute('file.serve', $params, now()->addSeconds(10));
 		}else{
-			return $signedUrl = route('file.serve', ['token' => $token]);
+			return $signedUrl = route('file.serve', $params);
 		}
 		  
 	}
