@@ -47,7 +47,7 @@ class UpdateDicomDataJob implements ShouldQueue
 			? json_decode($patient['r_eye_images'], true)
 			: [];
 			
-		  
+		$ext = \config('image.ext');  
 		if($input['l_eye']){
 			 	
 			$leftEyeInstances = array_values(array_filter(
@@ -59,7 +59,8 @@ class UpdateDicomDataJob implements ShouldQueue
 			
 			if(count($leftEyeInstances) != count($lEyeImages)){
 				
-				$destinationPath = public_path('uploads/patients/' . $patient['slug']);
+				//$destinationPath = public_path('uploads/patients/' . $patient['slug']);
+				$destinationPath = storage_path('app/public/uploads/patients/' . $patient['slug']);
 				if (!file_exists($destinationPath)) {
 					mkdir($destinationPath, 0755, true);
 				}
@@ -76,14 +77,24 @@ class UpdateDicomDataJob implements ShouldQueue
 				foreach($leftEyeInstances as $lInstance){
 					 
 					$imageData = $client->getRaw("/instances/{$lInstance['ID']}/preview");
+					 
+					$convertImage = \Helper::convertImages(
+						$imageData,
+						$destinationPath,
+						\config('image.quality'),
+						$ext,
+						uniqid() . '-' . $lInstance['ID'] . '.'.$ext,
+					);
+					
+					$uLeftEyeFiles[] = $convertImage['fileName'];
 					  
 				 
-					$lEfilename = uniqid().'-'.$lInstance['ID'].'.png';
+					// $lEfilename = uniqid().'-'.$lInstance['ID'].'.png';
 					 
-					$path = $destinationPath.'/'.$lEfilename;
-					file_put_contents($path, $imageData);
+					// $path = $destinationPath.'/'.$lEfilename;
+					// file_put_contents($path, $imageData);
 					
-					$uLeftEyeFiles[] = $lEfilename;
+					// $uLeftEyeFiles[] = $lEfilename;
 					
 				}
 				$input['l_eye_images'] = json_encode($uLeftEyeFiles);
@@ -101,7 +112,8 @@ class UpdateDicomDataJob implements ShouldQueue
 			$uRightEyeFiles = [];
 			if(count($rightEyeInstances) != count($rEyeImages)){
 				
-				$destinationPath = public_path('uploads/patients/' . $patient['slug']);
+				//$destinationPath = public_path('uploads/patients/' . $patient['slug']);
+				$destinationPath = storage_path('app/public/uploads/patients/' . $patient['slug']);
 				if (!file_exists($destinationPath)) {
 					mkdir($destinationPath, 0755, true);
 				}
@@ -114,17 +126,26 @@ class UpdateDicomDataJob implements ShouldQueue
 						}
 					}
 				}
-				 
+				
 				foreach($rightEyeInstances as $rInstance){
 					 
 					$imageData = $client->getRaw("/instances/{$rInstance['ID']}/preview");
-					  
-					$rEfilename = uniqid().'-'.$rInstance['ID'].'.png';
-					 
-					$path = $destinationPath.'/'.$rEfilename;
-					file_put_contents($path, $imageData);
+					$convertImage = \Helper::convertImages(
+						$imageData,
+						$destinationPath,
+						\config('image.quality'),
+						$ext,
+						uniqid() . '-' . $rInstance['ID'] . '.'.$ext,
+					);
 					
-					$uRightEyeFiles[] = $rEfilename;
+					$uLeftEyeFiles[] = $convertImage['fileName'];
+					  
+					// $rEfilename = uniqid().'-'.$rInstance['ID'].'.png';
+					 
+					// $path = $destinationPath.'/'.$rEfilename;
+					// file_put_contents($path, $imageData);
+					
+					// $uRightEyeFiles[] = $rEfilename;
 				}
 				$input['r_eye_images'] = json_encode($uRightEyeFiles);
 			}

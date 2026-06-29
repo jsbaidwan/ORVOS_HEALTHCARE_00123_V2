@@ -94,15 +94,24 @@ class InsertDicomDataJob implements ShouldQueue
 			foreach ($leftEyeInstances as $lInstance) {
 
 				$imageData = $client->getRaw("/instances/{$lInstance['ID']}/preview");
-
-				$lEfilename = uniqid() . '-' . $lInstance['ID'] . '.png';
-
-				Storage::put(
-					'public/' . $path . '/' . $lEfilename,
-					$imageData
+				
+				$convertImage = \Helper::convertImages(
+					$imageData,
+					$path,
+					\config('image.quality'),
+					\config('image.ext')
 				);
+				
+				$uLeftEyeFiles[] = $convertImage['fileName'];
 
-				$uLeftEyeFiles[] = $lEfilename;
+				// $lEfilename = uniqid() . '-' . $lInstance['ID'] . '.png';
+
+				// Storage::put(
+					// 'public/' . $path . '/' . $lEfilename,
+					// $imageData
+				// );
+
+				// $uLeftEyeFiles[] = $lEfilename;
 			}
 
 			$input['l_eye_images'] = json_encode($uLeftEyeFiles);
@@ -121,15 +130,24 @@ class InsertDicomDataJob implements ShouldQueue
 			foreach ($rightEyeInstances as $rInstance) {
 
 				$imageData = $client->getRaw("/instances/{$rInstance['ID']}/preview");
-
-				$rEfilename = uniqid() . '-' . $rInstance['ID'] . '.png';
-
-				Storage::put(
-					'public/' . $path . '/' . $rEfilename,
-					$imageData
+				
+				$convertImage = \Helper::convertImages(
+					$imageData,
+					$path,
+					\config('image.quality'),
+					\config('image.ext')
 				);
+				
+				$uRightEyeFiles[] = $convertImage['fileName'];
 
-				$uRightEyeFiles[] = $rEfilename;
+				// $rEfilename = uniqid() . '-' . $rInstance['ID'] . '.png';
+
+				// Storage::put(
+					// 'public/' . $path . '/' . $rEfilename,
+					// $imageData
+				// );
+
+				// $uRightEyeFiles[] = $rEfilename;
 			}
 
 			$input['r_eye_images'] = json_encode($uRightEyeFiles);

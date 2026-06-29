@@ -116,19 +116,17 @@ class PatientController extends Controller
 			$uLeftEyeFiles = [];
 
 			foreach ($lEyeImgs as $lFile) {
-				if ($lFile instanceof \Illuminate\Http\UploadedFile) {
-
-					// Generate unique filename
-					$lEfilename = time() . '_' . uniqid() . '.' . $lFile->getClientOriginalExtension();
-
-					// Define path inside storage/app/public
+				if ($lFile instanceof \Illuminate\Http\UploadedFile) 
+				{
 					$path = 'uploads/patients/' . $input['slug'];
-
-					// Store file
-					$lFile->storeAs('public/' . $path, $lEfilename);
-
-					// Save only relative path (important)
-					$uLeftEyeFiles[] = $lEfilename;
+					$convertImage = \Helper::convertImages(
+						$lFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+					
+					$uLeftEyeFiles[] = $convertImage['fileName'];
 				}
 			}
 
@@ -141,19 +139,18 @@ class PatientController extends Controller
 			$uRightEyeFiles = [];
 
 			foreach ($rEyeImgs as $rFile) {
-				if ($rFile instanceof \Illuminate\Http\UploadedFile) {
-
-					// Generate unique filename
-					$rEfilename = time() . '_' . uniqid() . '.' . $rFile->getClientOriginalExtension();
-
-					// Define storage path
+				
+				if ($rFile instanceof \Illuminate\Http\UploadedFile) 
+				{
 					$path = 'uploads/patients/' . $input['slug'];
-
-					// Store file in storage/app/public
-					$rFile->storeAs('public/' . $path, $rEfilename);
-
-					// Save relative path
-					$uRightEyeFiles[] = $rEfilename;
+					$convertImage = \Helper::convertImages(
+						$rFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+					
+					$uRightEyeFiles[] = $convertImage['fileName'];
 				}
 			}
 
@@ -337,20 +334,20 @@ class PatientController extends Controller
 			
 			foreach ($lEyeImgs as $lFile) {
 
-				if ($lFile instanceof \Illuminate\Http\UploadedFile) {
-
-					// Generate unique filename
-					$lEfilename = time() . '_' . uniqid() . '.' . $lFile->getClientOriginalExtension();
-
-					// Define path
+				if ($lFile instanceof \Illuminate\Http\UploadedFile)
+				{					
 					$path = 'uploads/patients/' . $patient['slug'];
-
-					// Store file in storage/app/public
-					$lFile->storeAs('public/' . $path, $lEfilename);
-
-					// Save relative path
-					$uLeftEyeFiles[] = $lEfilename;
+					$convertImage = \Helper::convertImages(
+						$lFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+					
+					$uLeftEyeFiles[] = $convertImage['fileName'];
 				}
+ 
+				 
 			}
 
 			// Store JSON
@@ -361,20 +358,21 @@ class PatientController extends Controller
 			$rEyeImgs = $input['r_eye_images'];
 			 
 			foreach ($rEyeImgs as $rFile) {
-				if ($rFile instanceof \Illuminate\Http\UploadedFile) {
-
-					// Generate unique filename
-					$rEfilename = time() . '_' . uniqid() . '.' . $rFile->getClientOriginalExtension();
-
-					// Define path
+				
+				if ($rFile instanceof \Illuminate\Http\UploadedFile)
+				{
 					$path = 'uploads/patients/' . $patient['slug'];
-
-					// Store file
-					$rFile->storeAs('public/' . $path, $rEfilename);
-
-					// Save relative path
-					$uRightEyeFiles[] = $rEfilename;
+					$convertImage = \Helper::convertImages(
+						$rFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+					
+					$uRightEyeFiles[] = $convertImage['fileName'];
 				}
+				 
+				 
 			}
 
 			// Store JSON

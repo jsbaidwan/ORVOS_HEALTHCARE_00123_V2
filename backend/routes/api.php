@@ -343,18 +343,15 @@ Route::get('patients/guest/verify/{id}',function(Request $request, $id){
 Route::get('/file/{token}', function ($token, Request $request) {
 
     try {
-        $data = json_decode(
-            \Crypt::decryptString($token),
-            true
-        );
-		
+        $data = \Crypt::decrypt($token);
+        
     } catch (\Exception $e) {
         abort(403, 'Invalid token');
     }
  
     if (!empty($data['hasSigned']) && $data['hasSigned']) {
-
-        if (!$request->hasValidSignature()) {
+ 
+        if (! $request->hasValidSignatureWhileIgnoring(['v'])) {
             abort(403, 'Unauthorized or expired link');
         }
     }
@@ -363,7 +360,12 @@ Route::get('/file/{token}', function ($token, Request $request) {
         abort(404, 'File not found');
     }
 
-    return response()->file(
-        storage_path('app/public/' . $data['path'])
-    );
+   return response()->file(
+		storage_path('app/public/' . $data['path']),
+		[
+			'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0',
+			'Pragma' => 'no-cache',
+			'Expires' => '0',
+		]
+	);
 })->name('file.serve');

@@ -22,6 +22,8 @@ use App\Models\PdfTemplate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class Helper{
 	 
@@ -2546,11 +2548,11 @@ class Helper{
 					break;
 					
 				case '{Patient:Gender}':
-					$replacements[$tag] = ucwords(\Helper::getGenderById($data->gender)['gender']['name'])  ?? '' ;
+					$replacements[$tag] = !empty($data['gender']) ? ucwords(\Helper::getGenderById($data['gender'])['gender']['name']) : '' ;
 					break;
 					
 				case '{Patient:Notes}':
-					$replacements[$tag] = $data->note ?? '';
+					$replacements[$tag] = $data['note'] ?? '';
 					break;
 					 
 			}
@@ -2968,13 +2970,11 @@ class Helper{
 	 
 	public static function  fileTokenGen($path,$file,$hasSigned = true)
 	{
-		return \Crypt::encryptString(
-			json_encode([
-				'path' => $path,
-				'filename' => $file,
-				'hasSigned' => $hasSigned
-			])
-		);
+		return \Crypt::encrypt([
+			'path' => $path,
+			'filename' => $file,
+			'hasSigned' => $hasSigned
+		]);
 		
 	}
 	
@@ -2990,19 +2990,24 @@ class Helper{
 	 * 
 	 */
 	 
-	public static function fileSignedRoute($token,$hasSigned = true)
+	public static function fileSignedRoute($token, $hasSigned = true)
 	{
-		$params = [
-			'token' => $token,
-			'v' => time(),
-		];
-		 
-		if($hasSigned){
-			return $signedUrl = \URL::signedRoute('file.serve', $params, now()->addSeconds(10));
-		}else{
-			return $signedUrl = route('file.serve', $params);
+		if ($hasSigned) {
+
+			$url = \URL::temporarySignedRoute(
+				'file.serve',
+				now()->addSeconds(60),
+				[
+					'token' => $token,
+				]
+			);
+
+			return $url;
 		}
-		  
+
+		return route('file.serve', [
+			'token' => $token,
+		]);
 	}
 	
 	/*
@@ -3421,7 +3426,63 @@ class Helper{
 	| End: Ghostscript Compress
 	|--------------------------------------------------------------------------
 	*/
-	 
+	
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Convert Images
+	|--------------------------------------------------------------------------
+	*/
+	
+	public static function convertImages($file, $path, $quality = 85, $ext = 'webp')
+	{
+		$fullPath = storage_path('app/public/' . $path);
+
+		if (!file_exists($fullPath)) {
+			mkdir($fullPath, 0755, true);
+		}
+
+		$filename = time() . '_' . uniqid() . '.' . $ext;
+
+		$manager = new \Intervention\Image\ImageManager(
+			new \Intervention\Image\Drivers\Gd\Driver()
+		);
+		
+		if ($file instanceof \Illuminate\Http\UploadedFile) {
+			$image = $manager->read($file->getRealPath());
+		} else {
+			$image = $manager->read($file);
+		}
+
+		switch (strtolower($ext)) {
+			case 'webp':
+				$image->toWebp($quality)->save($fullPath . '/' . $filename);
+				break;
+
+			case 'jpg':
+			case 'jpeg':
+				$image->toJpeg($quality)->save($fullPath . '/' . $filename);
+				break;
+
+			case 'png':
+				$image->toPng()->save($fullPath . '/' . $filename);
+				break;
+
+			default:
+				throw new \Exception("Unsupported image format: {$ext}");
+		}
+
+		return [
+			'fileName' => $filename,
+			'path' => $path . '/' . $filename,
+		];
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| End: Convert Images
+	|--------------------------------------------------------------------------
+	*/
 }
 
 	
