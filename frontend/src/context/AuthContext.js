@@ -76,6 +76,45 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Impersonate another user (super admin only).
+   */
+  const loginAsUser = async (userId) => {
+    const formData = new FormData();
+    formData.append('user_id', userId);
+
+    const response = await api.call(`impersonate`, 'POST', formData, true);
+
+    if (response?.status === 200) {
+      const auth = response.data.auth;
+      setUser(auth);
+      localStorage.setItem('auth', JSON.stringify(auth));
+      return { status: 200, message: response?.data?.message };
+    }
+
+    return handleApiError(response.error, logout);
+  };
+
+  const logoutImpUser = async () => {
+    try {
+   
+    const formData = new FormData();
+    formData.append('user_id', user?.prev_auth_id);
+    const response = await api.call(`stop-impersonate`, 'POST', formData, true);
+    if (response?.status === 200) {
+       
+        setUser(response.data.auth);
+        localStorage.setItem('auth', JSON.stringify(response.data.auth));
+        return { status: 200, message: response?.data?.message };
+      }
+     
+      return handleApiError(response.error, logout);
+    } catch (error) {
+      
+      return handleApiError(error, logout);
+    }
+  };
+
+  /**
    * Clear user session and redirect based on role.
    */
   const logout = () => {
@@ -90,6 +129,7 @@ export const AuthProvider = ({ children }) => {
    */
   const updateUser = (updatedUser) => {
     updatedUser.token = getToken();
+    updatedUser.prev_auth_id = user?.prev_auth_id;
     setUser(updatedUser);
     localStorage.setItem('auth', JSON.stringify(updatedUser));
   };
@@ -103,6 +143,8 @@ export const AuthProvider = ({ children }) => {
    * Check if current user is Super Admin.
    */
   const isSuperAdmin = () => user?.role_id === 1;
+
+  const isImpersonated = () => user?.prev_auth_id ? true : false;
 
   /**
    * Retrieve current user's token.
@@ -128,6 +170,7 @@ export const AuthProvider = ({ children }) => {
         user,
         updateUser,
         login,
+        loginAsUser,
         logout,
         isAuthenticated,
         isSuperAdmin,
@@ -135,6 +178,8 @@ export const AuthProvider = ({ children }) => {
         api,
         loading,
         googleMapApiKey,
+        isImpersonated,
+        logoutImpUser,
       }}
     >
       {children}

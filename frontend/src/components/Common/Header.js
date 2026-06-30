@@ -7,14 +7,17 @@ import OrvosBanner from '../../assets/images/orvos_background.jpeg';
 import OrvosBannerLogo from '../../assets/images/OrvosTransparentLogo1.png';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUser } from '../../context/UserContext';
-
+import { IdentificationIcon } from '@heroicons/react/24/solid';
+import { useLoader } from '../../context/LoaderContext';
+ 
 const Header = ({ toggleSidebar, closeSidebar }) => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isImpersonated ,logoutImpUser} = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const getRoutePath = useRoutePath();
   const dropdownRef = useRef(null);
   const [userData, setUserData] = useState(user);
   const { getUserById } = useUser();
+  const { showLoader, hideLoader } = useLoader();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -48,13 +51,41 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
     }
   }, [user, getUserById]);
 
+    const logoutImpersonation = async () => {
+
+      showLoader()
+      await logoutImpUser();
+      hideLoader()
+      
+    };
 
   return (
 
     isAuthenticated() ? (
       <>
+          
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+          
+        {isImpersonated() && (
+          <div className="bg-amber-500 text-white">
+            <div className="relative flex items-center justify-between sm:justify-center px-4 py-2">
 
+              <span className="flex items-center gap-1 text-xs sm:text-sm font-medium">
+                <IdentificationIcon className="w-4 h-4 text-white shrink-0" />
+                You are impersonating another user
+              </span>
+
+              <button
+                onClick={logoutImpersonation}
+                className="sm:absolute sm:right-4 bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm"
+              >
+                Exit Account
+              </button>
+
+            </div>
+          </div>
+        )}
+          
           <div className="flex items-center justify-between px-4 py-2 md:px-6 md:py-3">
             {/* Left side - Menu button & Logo */}
             <div className="flex items-center space-x-4">
@@ -83,7 +114,7 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
             </svg>
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button> */}
-
+ 
               {/* User dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -154,8 +185,7 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
                       </div>
 
                     </Link>
-
-
+ 
                     <Link
                       to={getRoutePath('/support')}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors duration-200"

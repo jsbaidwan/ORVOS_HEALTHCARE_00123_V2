@@ -16,6 +16,7 @@ import {
   ChevronRightIcon,
   Bars3Icon,
   BuildingOfficeIcon,
+  IdentificationIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -23,7 +24,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const getRoutePath = useRoutePath();
   const { permission } = usePermissions();
   const userRoleSlugs = useUserRoleSlugs();
-  const { user } = useAuth();
+  const { user, isImpersonated } = useAuth();
   let menuItems = [
     { title: 'Dashboard', basePath: '/dashboard', icon: <HomeIcon className="w-5 h-5" />, module_id: true }, // No module for dashboard
     { title: 'Clinic Groups', basePath: '/clinic-groups', icon: <BuildingOfficeIcon className="w-5 h-5" />, module_id: 8 },
@@ -74,6 +75,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         // { title: 'Email Templates', basePath: '/settings/email-templates', module_id: true },
       ]
     },
+    {
+      title: 'Impersonate User',
+      basePath: '/impersonate-user',
+      icon: <IdentificationIcon className="w-5 h-5" />,
+      module_id: true,
+    },
     { title: 'Support', basePath: '/support', icon: <LifebuoyIcon className="w-5 h-5" />, module_id: true },
   ];
 
@@ -91,6 +98,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       }
       return item;
     });
+    menuItems = menuItems.filter(item => item.basePath !== '/impersonate-user');
   }
 
   const filteredMenuItems = menuItems
@@ -168,8 +176,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="px-4 py-6 scrollbar-thin overflow-y-auto h-[calc(100vh-88px)]">
-          <ul className="space-y-2">
+        <nav
+          className={`px-4 py-6 scrollbar-thin overflow-y-auto h-[calc(100vh-88px)] ${
+            isImpersonated() ? 'mt-5 sm:mt-0' : ''
+          }`}
+        >
+          <ul
+            className={`space-y-2 ${
+              isImpersonated() ? 'mt-5 sm:mt-0' : ''
+            }`}
+          >
             {menuItemsWithPaths.map((item, index) => (
               <li key={index}>
                 {item.subItems ? (

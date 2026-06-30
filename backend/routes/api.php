@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Api\LoginController;
   
 $PRFIX_SUPER_ADMIN = \Helper::prefix('1')['prefix'];
 $PRFIX_ORVOS_USER = \Helper::prefix('2')['prefix'];
@@ -69,6 +70,42 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('get-permissions', function(Request $request){
 		return \Helper::permission();
 	});
+	
+	Route::post('/impersonate', function(Request $request){
+		 
+		 return impersonateFunc($request);
+	});
+	
+	Route::post('/stop-impersonate', function(Request $request){
+		
+		$request->merge([
+			'stop' => true
+		]);
+		
+		return impersonateFunc($request);
+	});
+	
+	function impersonateFunc(Request $request)
+	{
+		$input = $request->all();
+		if(empty($input['user_id'])){
+			return json_encode(['status' => 422,'message' => 'The user_id is required.']);
+		}
+		
+		$user = \Helper::getUserById($input['user_id'])['user'];
+		
+		$loginController = app(LoginController::class);
+		$jsonUserData = $loginController->impersonateLoginResponse($request,\Auth::user());
+		$jsonContent = $jsonUserData->getContent();
+		
+		$prevAuthData = json_decode($jsonContent,true);
+		if (empty($input['stop'])) {
+			$user['prev_auth_id'] = $prevAuthData['auth']['id'];
+		}
+	 
+		return $loginController->impersonateLoginResponse($request,$user);
+	}
+	 
 	
 	Route::post('/get-pdf-temp-category', function (Request $request) {
 		$input =  $request->all();

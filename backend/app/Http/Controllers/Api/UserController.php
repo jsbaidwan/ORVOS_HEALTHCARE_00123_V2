@@ -305,7 +305,7 @@ class UserController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all(); 
-		 
+		  
 		$insurance = $request->input('insurance_carriers_ids', []);
 		
 		$insurance = array_map(function($row) {

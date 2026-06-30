@@ -235,6 +235,15 @@ class LoginController extends Controller
 		  
 		return $user;
 	}
+	
+	public function impersonateLoginResponse(Request $request,$user)
+    {
+		$input = $request->all();
+		$userData = $this->user($user, $input);
+		$data = array('status' => 200,'message' => 'Login Successfully!','auth' => $userData,'redirect_url' => redirect()->intended()->getTargetUrl());
+		return response()->json($data,200,[],JSON_UNESCAPED_SLASHES);		
+       
+    }
 
     /**
      * The user has been authenticated.

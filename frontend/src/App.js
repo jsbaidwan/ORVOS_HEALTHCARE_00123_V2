@@ -25,6 +25,7 @@ import UserLogin from './components/Auth/UserLogin';
 import SuperAdminLogin from './components/Auth/SuperAdminLogin';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
+import ImpersonateUserLogin from './components/Auth/ImpersonateUserLogin';
 
 // Main Components
 import Dashboard from './components/Dashboard/Dashboard';
@@ -435,6 +436,16 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path={`${basePath}/impersonate-user`}
+        element={
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
+            <MainLayout><ImpersonateUserLogin /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
     </>
   );
 };
@@ -515,7 +526,8 @@ const AppContent = () => {
           )
         }
       />
-
+  
+     
       {/* Guest Patient Form - Public Route */}
       <Route
         path="/patients/guest/create"
