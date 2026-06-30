@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { Link } from 'react-router-dom';
 import OrvosLogo from '../../assets/images/orvos-logos.png';
-import OrvosBanner from '../../assets/images/orvos_background.jpeg';
+import OrvosBanner from '../../assets/images/orvos_background2.webp';
 import OrvosBannerLogo from '../../assets/images/OrvosTransparentLogo1.png';
 import { PreviewImage } from '../Patients/EyeImageUploader';
 import { useUser } from '../../context/UserContext';
