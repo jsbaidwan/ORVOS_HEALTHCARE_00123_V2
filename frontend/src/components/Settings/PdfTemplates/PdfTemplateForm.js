@@ -22,6 +22,7 @@ import FroalaEditor from 'react-froala-wysiwyg';
 import 'froala-editor/css/froala_style.min.css';
 import 'froala-editor/css/froala_editor.pkgd.min.css';
 import 'froala-editor/js/plugins.pkgd.min.js';
+import { getFroalaConfig } from '../../../utils/froalaConfig';
 
 const schema = yup.object().shape({
   name: yup.string().required('Name is required'),
@@ -41,7 +42,7 @@ const PdfTemplateForm = () => {
   const { showLoader, hideLoader } = useLoader();
   const getRoutePath = useRoutePath();
   const { setPageTitle } = useTitle();
-
+ 
   const [showTagsModal, setShowTagsModal] = useState(false);
 
   const { register, handleSubmit, control, setValue, reset, setError,watch, formState: { errors, isSubmitting } } = useForm({
@@ -178,64 +179,9 @@ const PdfTemplateForm = () => {
       hideLoader();
     }
   };
-
-  const uploadUrl = `${process.env.REACT_APP_API_URL}/${process.env.REACT_APP_API_NAME}/api/ckeditor/upload`;
-
-  const froalaConfig = {
-    placeholderText: 'Type something',
-    charCounterCount: true,
-    toolbarButtons: {
-      moreText: {
-        buttons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', 'fontFamily', 'fontSize', 'textColor', 'backgroundColor', 'inlineClass', 'inlineStyle', 'clearFormatting'],
-      },
-      moreParagraph: {
-        buttons: ['alignLeft', 'alignCenter', 'alignRight', 'alignJustify', 'formatOLSimple', 'formatOL', 'formatUL', 'paragraphFormat', 'paragraphStyle', 'lineHeight', 'outdent', 'indent', 'quote'],
-      },
-      moreRich: {
-        buttons: ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons', 'fontAwesome', 'specialCharacters', 'embedly', 'insertFile', 'insertHR'],
-      },
-      moreMisc: {
-        buttons: ['undo', 'redo', 'fullscreen', 'print', 'getPDF', 'spellChecker', 'selectAll', 'html', 'help'],
-        align: 'right',
-        buttonsVisible: 2,
-      },
-    },
-    heightMin: 200,
-    heightMax: 400,
-    imageAllowedTypes: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'],
-
-    imageUploadURL: uploadUrl,
-    imageUploadParam: 'file',
-    imageUploadMethod: 'POST',
-    requestHeaders: { Authorization: `Bearer ${getToken()}` },
-
-    videoUploadURL: uploadUrl,
-    videoUploadParam: 'file',
-    videoUploadMethod: 'POST',
-
-    fileUploadURL: uploadUrl,
-    fileUploadParam: 'file',
-    fileUploadMethod: 'POST',
-
-    events: {
-      'image.uploaded': function (response) {
-        const json = JSON.parse(response);
-        this.image.insert(json.url, null, null, this.image.get());
-        return false;
-      },
-      'video.uploaded': function (response) {
-        const json = JSON.parse(response);
-        this.video.insert(`<video src="${json.url}" controls width="600"></video>`);
-        return false;
-      },
-      'file.uploaded': function (response) {
-        const json = JSON.parse(response);
-        this.file.insert(json.url, json.url.split('/').pop(), null);
-        return false;
-      },
-    },
-  };
-
+ 
+  const froalaConfig = getFroalaConfig(getToken);
+  
   const categories = additionalData?.pdfTempCategories || [];
 
   return (
@@ -327,7 +273,22 @@ const PdfTemplateForm = () => {
                     tag="textarea"
                     config={froalaConfig}
                     model={field.value}
-                    onModelChange={(content) => field.onChange(content)}
+                    onModelChange={(content) => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = content;
+                    
+                      tempDiv
+                        .querySelectorAll('p[data-f-id="pbf"]')
+                        .forEach((el) => el.remove());
+                    
+                      const cleanedContent = tempDiv.innerHTML;
+                    
+                      if (cleanedContent !== content) {
+                        field.onChange(cleanedContent);
+                      } else {
+                        field.onChange(content);
+                      }
+                    }}
                   />
                 )}
               />

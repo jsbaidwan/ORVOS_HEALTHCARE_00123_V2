@@ -17,6 +17,16 @@ const PdfTemplateView = () => {
 
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+  
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setPageTitle('View PDF Template');
@@ -145,13 +155,34 @@ const PdfTemplateView = () => {
 
             {/* Right Side - PDF */}
             <div className="lg:col-span-2">
+ 
               {template.pdfUrl ? (
-                <iframe
-                  src={`${template.pdfUrl}#view=FitH&toolbar=0`}
-                  title={`PDF Preview - ${template.name}`}
-                  className="w-full border rounded-lg"
-                  style={{ height: '80vh' }}
-                />
+                <>
+                  {isMobile ? (
+                    
+                    <div className="flex flex-col items-center justify-center min-h-[5vh] bg-black rounded-lg p-6 text-center sm:text-left">
+                      <p className="text-white text-center text-sm sm:text-base max-w-lg mb-4 border border-red-500 p-3">
+                        PDF preview is not available on some mobile browsers. Please open the PDF in a new tab to view or download the document.
+                      </p>
+
+                      <Link
+                        to={template.pdfUrl}
+                        target="_blank"
+                        className="btn-primary-light p-3 text-sm"
+                      >
+                        Open in New Tab
+                      </Link>
+                    </div>
+                     
+                  ) : (
+                    <iframe
+                      src={`${template.pdfUrl}#view=FitH&toolbar=0`}
+                      title={`PDF Preview - ${template.name}`}
+                      className="w-full border rounded-lg"
+                      style={{ height: '80vh' }}
+                    />
+                  )}
+              </>
               ) : (
                 <div className="flex items-center justify-center h-[80vh] text-gray-400 border rounded-lg">
                   <p>No preview available</p>

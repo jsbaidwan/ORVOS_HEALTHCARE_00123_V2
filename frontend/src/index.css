@@ -1978,3 +1978,7 @@ textarea.input-field:read-only {
 .pulse-once {
   animation: pulse 5s ease-in-out 1;
 }
+
+div[style*="z-index: 9999"] a[href*="froala.com"] {
+  display: none !important;
+}

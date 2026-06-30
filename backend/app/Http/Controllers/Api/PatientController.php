@@ -815,6 +815,16 @@ class PatientController extends Controller
 			'pdfTemplate' => $pdfTemplate,
 			
 		])->render();
+		
+		// Remove Froala branding
+		$html = preg_replace(
+			'/<a[^>]*href="[^"]*froala[^"]*"[^>]*>.*?<\/a>/is',
+			'',
+			$html
+		);
+
+		$html = preg_replace('/Powered\s+by\s+Froala\s+Editor/i', '', $html);
+		$html = preg_replace('/Powered\s+by/i', '', $html);
 
 		// Create mPDF instance
 		$mpdf = new Mpdf();
