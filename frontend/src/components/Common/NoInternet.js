@@ -5,7 +5,7 @@ import {
 
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import orvosBackground from "../../assets/images/orvos_background.jpeg";
+import orvosBackground from "../../assets/images/orvos_background2.webp"; 
 import orvosLogo from "../../assets/images/OrvosTransparentLogo1.png";
 
 function NoInternet() {
