@@ -5,7 +5,7 @@ import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import {
   ExclamationTriangleIcon,
-  IdentificationIcon,
+  
   MagnifyingGlassIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -17,6 +17,7 @@ import { useUser } from '../../context/UserContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import ErrorHandle from '../Common/ErrorHandle';
 import { errorsFormatted } from '../../utils/errorHandler';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const impersonateSchema = yup.object({
   user_id: yup
@@ -26,7 +27,8 @@ const impersonateSchema = yup.object({
 
 const getUserLabel = (user) => {
   const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
-  const role = user?.role?.name ? ` • ${user.role.name}` : '';
+  const roleName = typeof user?.role === 'string' ? user.role : user?.role?.name;
+  const role = roleName ? ` • ${roleName}` : '';
   return `${name || user?.email || `User #${user?.id}`}${role}`;
 };
 
@@ -66,7 +68,7 @@ const ImpersonateUserLogin = () => {
       setLoadingUsers(true);
 
       try {
-        const list = await getUsersList({ active: 1, is_archived: 0 });
+        const list = await getUsersList();
         const activeUsers = (Array.isArray(list) ? list : [])
           .filter((item) => item?.id !== currentUser?.id)
           .sort((a, b) => getUserLabel(a).localeCompare(getUserLabel(b)));
@@ -90,7 +92,8 @@ const ImpersonateUserLogin = () => {
     return users.filter((user) => {
       const label = getUserLabel(user).toLowerCase();
       const email = (user?.email || '').toLowerCase();
-      return label.includes(query) || email.includes(query);
+      const code = (user?.code || '').toLowerCase();
+      return label.includes(query) || email.includes(query) || code.includes(query);
     });
   }, [users, searchQuery]);
 
@@ -119,126 +122,368 @@ const ImpersonateUserLogin = () => {
 
   if (!isSuperAdmin()) {
     return (
-      <div className="min-h-[70vh] bg-white flex items-center justify-center px-4 py-8">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-            <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-          <p className="text-sm text-gray-600">
-            Only super administrators can impersonate another user account.
+      <>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            User Impersonation
+          </h1>
+
+          <p className="mt-2 text-gray-600">
+            Sign in as another user for support, troubleshooting, or testing.
+            All actions performed will be logged and attributed to the impersonated user.
           </p>
         </div>
-      </div>
+
+        <div className="min-h-[70vh] flex items-center justify-center">
+          
+          <div className="max-w-2xl w-full">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-10 text-center">
+
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-50 border border-red-100">
+                <ExclamationTriangleIcon className="h-10 w-10 text-red-500" />
+              </div>
+
+              <div className="mt-6">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Access Restricted
+                </h1>
+
+                <p className="mt-3 text-gray-600 max-w-lg mx-auto">
+                  You do not have permission to access the User Impersonation feature.
+                  This functionality is restricted to Super Administrators only for
+                  security and auditing purposes.
+                </p>
+              </div>
+
+              <div className="mt-8 rounded-xl border border-red-100 bg-red-50 p-4">
+                <div className="flex items-start gap-3 text-left">
+                  
+                  <div>
+                    <h3 className="font-semibold text-red-900">
+                      Permission Required
+                    </h3>
+
+                    <p className="text-sm text-red-700 mt-1">
+                      To impersonate another user, your account must have the
+                      <strong> Super Admin </strong>
+                      role. Contact your system administrator if you believe this is an
+                      error.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-center gap-3">
+                <button
+                  onClick={() => navigate(getRoutePath('/dashboard'))}
+                  className="px-5 py-3 rounded-xl bg-primary text-white font-medium hover:opacity-90 transition"
+                >
+                  Return to Dashboard
+                </button>
+
+                <button
+                  onClick={() => navigate(-1)}
+                  className="px-5 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  Go Back
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-[70vh] bg-white flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3">
-              <IdentificationIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Impersonate User</h2>
-              <p className="text-sm text-gray-500">Sign in as another user for support or testing</p>
-            </div>
+    <div className="p-3">
+      <div className="max-w-10xl mx-auto">
+  
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            User Impersonation
+          </h1>
+  
+          <p className="mt-2 text-gray-600">
+            Sign in as another user for support, troubleshooting, or testing.
+            All actions performed will be logged and attributed to the impersonated user.
+          </p>
+        </div>
+  
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border p-5">
+            <p className="text-sm text-gray-500">Available Users</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {filteredUsers.length}
+            </p>
           </div>
-
-          <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-            <div className="flex items-start gap-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-800">
-                Actions performed while impersonating a user will appear as that user. Use this feature responsibly.
-              </p>
-            </div>
+  
+          <div className="bg-white rounded-xl shadow-sm border p-5">
+            <p className="text-sm text-gray-500">Selected User</p>
+            <p className="text-3xl font-bold text-primary">
+              {selectedUser ? "1" : "0"}
+            </p>
           </div>
-
-          <ErrorHandle errors={errors} title="Unable to switch user" />
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <label htmlFor="user-search" className="block text-sm font-semibold text-gray-700 mb-2">
-                Search Users
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
+  
+          <div className="bg-white rounded-xl shadow-sm border p-5">
+            <p className="text-sm text-gray-500">Access Level</p>
+            <p className="text-lg font-semibold text-green-600">
+              Super Admin
+            </p>
+          </div>
+        </div>
+  
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+  
+          {/* Left Side */}
+          <div className="xl:col-span-2">
+  
+            <div className="bg-white rounded-2xl border shadow-sm p-6">
+  
+              {/* Warning */}
+              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-start gap-3">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-amber-600 shrink-0" />
+  
+                  <div>
+                    <h3 className="font-semibold text-amber-900">
+                      Security Notice
+                    </h3>
+  
+                    <p className="text-sm text-amber-800 mt-1">
+                      Actions performed while impersonating a user will appear as
+                      that user. Use this feature responsibly and only for support
+                      or testing purposes.
+                    </p>
+                  </div>
                 </div>
-                <input
-                  id="user-search"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search by name, email, or role"
-                  className="pl-10 text-black input-field"
-                  disabled={loadingUsers}
-                />
               </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="user_id" className="block text-sm font-semibold text-gray-700">
-                  Select User
-                </label>
-                <span className="text-xs text-gray-500">
-                  {loadingUsers ? 'Loading...' : `${filteredUsers.length} available`}
-                </span>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserCircleIcon className="w-5 h-5 text-gray-400" />
+  
+              <ErrorHandle
+                errors={errors}
+                title="Unable to switch user"
+              />
+  
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+  
+                {/* Search */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Search Users
+                  </label>
+  
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+  
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(event) =>
+                        setSearchQuery(event.target.value)
+                      }
+                      placeholder="Search by name, email, role..."
+                      className="input-field pl-10 text-black"
+                      disabled={loadingUsers}
+                    />
+                  </div>
                 </div>
-                <select
-                  id="user_id"
-                  {...register('user_id')}
-                  disabled={loadingUsers || filteredUsers.length === 0}
-                  className={`pl-10 text-black input-field appearance-none ${
-                    errors?.user_id ? 'border-red-500 focus:border-red-500' : ''
-                  }`}
+  
+                {/* Select User */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label
+                      htmlFor="user_id"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Select User
+                    </label>
+  
+                    <span className="text-xs text-gray-500">
+                      {loadingUsers
+                        ? "Loading..."
+                        : `${filteredUsers.length} users`}
+                    </span>
+                  </div>
+  
+                  <div className="relative">
+                    <UserCircleIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+  
+                    <select
+                      id="user_id"
+                      {...register("user_id")}
+                      disabled={
+                        loadingUsers ||
+                        filteredUsers.length === 0
+                      }
+                      className={`input-field pl-10 appearance-none text-black ${
+                        errors?.user_id
+                          ? "border-red-500"
+                          : ""
+                      }`}
+                    >
+                      <option value="">
+                        {loadingUsers
+                          ? "Loading users..."
+                          : filteredUsers.length === 0
+                          ? "No users found"
+                          : "Choose a user"}
+                      </option>
+  
+                      {filteredUsers.map((user) => (
+                        <option
+                          key={user.id}
+                          value={user.id}
+                        >
+                          {getUserLabel(user)} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+  
+                  {errors?.user_id && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.user_id.message}
+                    </p>
+                  )}
+                </div>
+  
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    loadingUsers ||
+                    !selectedUserId
+                  }
+                  className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50"
                 >
-                  <option value="">
-                    {loadingUsers
-                      ? 'Loading users...'
-                      : filteredUsers.length === 0
-                        ? 'No users found'
-                        : 'Choose a user'}
-                  </option>
-                  {filteredUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {getUserLabel(user)} ({user.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {errors?.user_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.user_id.message}</p>
-              )}
+                  {isSubmitting
+                    ? "Switching User..."
+                    : "Switch User"}
+                </button>
+              </form>
             </div>
+          </div>
+  
+          {/* Right Side */}
+          <div>
+  
+            <div className="bg-white rounded-2xl border shadow-sm p-6 sticky top-6">
+  
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                User Preview
+              </h3>
+  
+              {selectedUser ? (
+                <>
+                  <div className="flex items-center mb-5">
+                    <div className="h-10 w-10 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
+                      {selectedUser?.display_avatar?.status === 200 ? (
+                        <div className="w-full h-full object-cover">
+                          <PreviewImage
+                            preview={selectedUser.display_avatar.src}
+                            hasCustomClass="h-10 w-10 object-cover"
+                            hasRemoveButton={false}
+                            hasViewButton={false}
+                            index={0}
+                            key={0}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">
+                          {selectedUser?.first_name?.charAt(0)?.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+  
+                    <div className="ml-4">
+                      <h4 className="font-semibold text-gray-900">
+                        {getUserLabel(selectedUser)}
+                      </h4>
+  
+                      <p className="text-sm text-gray-500">
+                        {selectedUser?.email}
+                      </p>
+                    </div>
+                  </div>
+  
+                  <div className="space-y-3">
+  
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-gray-500">
+                        User ID
+                      </span>
+  
+                      <span className="font-medium">
+                        #{selectedUser?.code}
+                      </span>
+                    </div>
+  
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-gray-500">
+                        Email
+                      </span>
+  
+                      <span className="font-medium">
+                        {selectedUser?.email}
+                      </span>
+                    </div>
+  
+                    {selectedUser.role && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-gray-500">
+                          Role
+                        </span>
+  
+                        <span className="font-medium">
+                          {typeof selectedUser.role === 'string'
+                            ? selectedUser.role
+                            : selectedUser.role?.name}
+                        </span>
+                      </div>
+                    )}
 
-            {selectedUser && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                  Selected User
-                </p>
-                <p className="text-sm font-semibold text-gray-900">{getUserLabel(selectedUser)}</p>
-                <p className="text-sm text-gray-600">{selectedUser.email}</p>
-              </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={isSubmitting || loadingUsers || !selectedUserId}
-              className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Switching User...' : 'Switch User'}
-            </button>
-          </form>
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-gray-500">
+                        Status
+                      </span>
+                      
+                      <span className={`font-medium ${selectedUser?.is_active_status?.class} px-3 py-1 rounded-full text-xs font-semibold`}>
+                        {selectedUser?.is_active_status?.name.charAt(0).toUpperCase() + selectedUser?.is_active_status?.name.slice(1)}
+                      </span>
+                    </div>
+  
+                  </div>
+  
+                  <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
+                    <p className="text-sm text-blue-800">
+                      You are about to access this user's account.
+                      All permissions and restrictions of the selected
+                      user will apply during the impersonation session.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-10">
+                  <UserCircleIcon className="h-16 w-16 mx-auto text-gray-300" />
+  
+                  <p className="mt-4 text-gray-500">
+                    Select a user to view details
+                  </p>
+                </div>
+              )}
+  
+            </div>
+          </div>
+  
         </div>
       </div>
     </div>

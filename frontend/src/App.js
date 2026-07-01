@@ -373,7 +373,7 @@ const createProtectedRoutes = (prefix, roleId, permission, userRoleSlugs = []) =
       <Route
         path={`${basePath}/settings/change-password`}
         element={
-          <ProtectedRoute permission={permission(7, 'read')} requiredRole={roleId}>
+          <ProtectedRoute permission={permission(true, 'read')} requiredRole={roleId}>
             <MainLayout><Settings /></MainLayout>
           </ProtectedRoute>
         }

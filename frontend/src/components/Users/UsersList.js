@@ -378,14 +378,9 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
       sortable: false,
       render: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 1
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-            }`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${row?.is_active_status?.class}`}
         >
-          {row.is_active_status?.name
-            ? row.is_active_status.name.charAt(0).toUpperCase() + row.is_active_status.name.slice(1)
-            : row.active === 1 ? 'Active' : 'Inactive'}
+          {row.is_active_status.name.charAt(0).toUpperCase() + row.is_active_status.name.slice(1)}
         </span>
       ),
     },

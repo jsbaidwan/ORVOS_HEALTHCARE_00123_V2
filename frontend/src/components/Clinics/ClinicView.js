@@ -5,14 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon, UserIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
-import useBlobUrl from '../../hooks/useBlobUrl';
 import BlobFileItem from '../UI/BlobFileItem';
 import PageLoader from '../Common/PageLoader';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const ClinicView = () => {
   const { id } = useParams();
@@ -128,10 +128,7 @@ const ClinicView = () => {
 
   }, [id, getClinicById, getExistingClinic]);
 
-
-  const { blobUrl } = useBlobUrl(clinic?.display_image?.src || '');
-  const imgBlobUrl = blobUrl
-
+  
   const handleRunDicomFetchCron = async () => {
     let progressInterval;
     let startTime;
@@ -311,21 +308,28 @@ const ClinicView = () => {
               <>
 
                 {/* Top Section */}
-                <div className="flex items-center gap-6 p-6 border-b">
-
+                <div className="flex items-center gap-3 p-6 border-b">
+ 
                   {/* Logo */}
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {!imgBlobUrl ? (
-                      <UserIcon className="w-10 h-10 text-gray-400" />
+                  <div className="h-24 w-24 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
+                    {clinic?.display_image?.status === 200 ? (
+                      <div className="w-full h-full object-cover">
+                        <PreviewImage
+                          preview={clinic.display_image.src}
+                          hasCustomClass="h-24 w-24 object-cover"
+                          hasRemoveButton={false}
+                          hasViewButton={false}
+                          index={0}
+                          key={0}
+                        />
+                      </div>
                     ) : (
-                      <img
-                        src={imgBlobUrl}
-                        alt=""
-                        className="w-full h-full object-contain"
-                      />
-                    )}
-                  </div>
-
+                      <span className="text-gray-500 text-2xl">
+                        {clinic.name?.charAt(0)?.toUpperCase()}
+                      </span>
+                  )}
+                </div>
+              
                   {/* Basic Info */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">

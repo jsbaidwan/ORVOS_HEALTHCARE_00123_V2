@@ -2917,8 +2917,8 @@ class Helper{
 	public static function  getIsActiveStatus()
 	{
 		return [
-			0 => ['name' => 'inactive'],
-			1 => ['name' => 'active'],
+			0 => ['name' => 'inactive','class' => 'text-danger bg-red-100'],
+			1 => ['name' => 'active','class' => 'text-green-800  bg-green-100'],
 		];
 	}	
 	 /*

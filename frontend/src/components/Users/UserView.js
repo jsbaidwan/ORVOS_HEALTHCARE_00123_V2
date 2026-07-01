@@ -4,12 +4,12 @@ import { useUser } from '../../context/UserContext';
 import Breadcrumb from '../Common/Breadcrumb';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon, UserIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
-import useBlobUrl from '../../hooks/useBlobUrl';
 import BlobFileItem from '../UI/BlobFileItem';
 import PageLoader from '../Common/PageLoader';
+import { PreviewImage } from '../Patients/EyeImageUploader';
 
 const UserView = ({ roleSlug = null }) => {
   const { id } = useParams();
@@ -68,10 +68,7 @@ const UserView = ({ roleSlug = null }) => {
 
   }, [id, getUserById, getExistingUser]);
 
-
-  const { blobUrl } = useBlobUrl(user?.display_avatar?.src || '');
-  const imgBlobUrl = blobUrl
-
+  
   return (
     <div className="py-6  mx-auto">
       <Breadcrumb />
@@ -111,21 +108,28 @@ const UserView = ({ roleSlug = null }) => {
         {user ? (
 
           <>  {/* Top Section */}
-            <div className="flex items-center gap-6 p-6 border-b">
-
-              {/* Logo */}
-              <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                {!imgBlobUrl ? (
-                  <UserIcon className="w-10 h-10 text-gray-400" />
-                ) : (
-                  <img
-                    src={imgBlobUrl}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+            <div className="flex items-center gap-3 p-6 border-b">
+  
+                {/* Logo */}
+                <div className="h-24 w-24 min-w-10 shrink-0 rounded-full bg-gray-200 mr-3 flex items-center justify-center overflow-hidden">
+                  {user?.display_avatar?.status === 200 ? (
+                    <div className="w-full h-full object-cover">
+                      <PreviewImage
+                        preview={user.display_avatar.src}
+                        hasCustomClass="h-24 w-24 object-cover"
+                        hasRemoveButton={false}
+                        hasViewButton={false}
+                        index={0}
+                        key={0}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-2xl">
+                      {user.first_name?.charAt(0)?.toUpperCase()}
+                    </span>
                 )}
               </div>
-
+             
               {/* Basic Info */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -140,7 +144,7 @@ const UserView = ({ roleSlug = null }) => {
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
                     }`}>
-                    {user?.is_active_status?.name || 'Unknown'}
+                    {user?.is_active_status?.name.charAt(0).toUpperCase() + user?.is_active_status?.name.slice(1)}
                   </span>
                 </div>
               </div>
