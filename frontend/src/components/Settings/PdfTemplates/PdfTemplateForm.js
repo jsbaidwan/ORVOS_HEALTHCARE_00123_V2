@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -180,8 +180,10 @@ const PdfTemplateForm = () => {
     }
   };
  
-  const froalaConfig = getFroalaConfig(getToken);
-  
+  const froalaConfig = useMemo(() => {
+    return getFroalaConfig(getToken);
+  }, [getToken]);
+   
   const categories = additionalData?.pdfTempCategories || [];
 
   return (
@@ -272,7 +274,7 @@ const PdfTemplateForm = () => {
                   <FroalaEditor
                     tag="textarea"
                     config={froalaConfig}
-                    model={field.value}
+                    model={field.value ?? ''}
                     onModelChange={(content) => {
                       const tempDiv = document.createElement('div');
                       tempDiv.innerHTML = content;

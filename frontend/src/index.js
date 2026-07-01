@@ -11,18 +11,21 @@ import { LoaderProvider } from './context/LoaderContext';
 import { ToastProvider } from './context/ToastContext';
 import { Toaster } from 'sonner';
 import { TitleProvider } from "./context/TitleContext";
+import ErrorBoundary from './components/Common/ErrorBoundary';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
-  <LoaderProvider>
-    <ToastProvider>
-      <TitleProvider>
-        <Toaster position="top-right" richColors closeButton animation="zoom" />
-        <App />
-      </TitleProvider>
-    </ToastProvider>
-  </LoaderProvider>
+    <ErrorBoundary>
+    <LoaderProvider>
+      <ToastProvider>
+        <TitleProvider>
+          <Toaster position="top-right" richColors closeButton animation="zoom" />
+          <App />
+        </TitleProvider>
+      </ToastProvider>
+    </LoaderProvider>
+    </ErrorBoundary>
   // </React.StrictMode>
 
 );
