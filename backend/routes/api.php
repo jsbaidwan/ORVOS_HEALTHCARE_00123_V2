@@ -318,6 +318,7 @@ Route::get('additional-data', function(Request $request){
 		'google_map_api_key' => \Helper::googleMapApiKey()['google_map_api_key'],
 		'pdfTempCategories' => \Helper::getPdfTempCategories()['pdfTempCategories'],
 		'tempBodyTags' => \Helper::tempBodyTags(),
+		'screeningTypes' => \Helper::screeningTypes(),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);

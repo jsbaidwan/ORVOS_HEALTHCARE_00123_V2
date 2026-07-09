@@ -22,7 +22,7 @@ class Clinic extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'clinic_group_id','image','name','slug','code','poc_email','phone','address','city','state_id','zip','description','status','doi','files','latitude','longitude','device_ids','device_type_id','is_patient_report_email_enabled','is_fax_enabled','fax_number','is_dicom_enabled','is_stow_enabled','stow_url','stow_username','stow_password','stow_get','stow_post','is_archived'
+        'clinic_group_id','image','name','slug','code','poc_email','phone','address','city','state_id','zip','description','status','doi','files','latitude','longitude','device_ids','device_type_id','is_patient_report_email_enabled','is_fax_enabled','fax_number','is_dicom_enabled','is_stow_enabled','stow_url','stow_username','stow_password','stow_get','stow_post','screening_type_id','is_archived'
     ];
 	
 	public static $rules = array(

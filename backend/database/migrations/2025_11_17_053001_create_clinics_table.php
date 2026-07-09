@@ -44,6 +44,7 @@ return new class extends Migration
 			$table->string('stow_password')->nullable();
 			$table->string('stow_get')->nullable();
 			$table->string('stow_post')->nullable();
+			 $table->integer('screening_type_id')->default(0)->comment('1 => Diabetic Retinopathy,2 => Thyroid Eye Disease,3 => both');
 			$table->boolean('is_archived')->default(0);
             $table->timestamps();
         });

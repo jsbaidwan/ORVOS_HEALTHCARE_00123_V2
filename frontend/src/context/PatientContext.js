@@ -219,16 +219,16 @@ export const PatientProvider = ({ children }) => {
     return patients.find(p => p.id === Number(id)) || null;
   };
 
-  const getPendingPatients = async () => {
+  const getPendingPatients = async (filters = {}) => {
 
-    const pateints = await getPatients(0, { 'diagnosis_status': 0, 'active': 1 }, false);
+    const pateints = await getPatients(0, { 'diagnosis_status': 0, 'active': 1, ...filters }, false);
     setPendingPatients(pateints);
     return pateints;
 
   };
 
-  const getCompletedPatients = async () => {
-    const pateints = await getPatients(0, { 'diagnosis_status': 1, 'active': 1 }, false);
+  const getCompletedPatients = async (filters = {}) => {
+    const pateints = await getPatients(0, { 'diagnosis_status': 1, 'active': 1, ...filters }, false);
     setCompletedPatients(pateints);
     return pateints;
   };

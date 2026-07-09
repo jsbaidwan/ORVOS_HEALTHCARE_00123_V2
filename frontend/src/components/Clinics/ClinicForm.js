@@ -60,6 +60,7 @@ const clinicSchema = yup.object({
     then: (schema) => schema.required('Fax Number is required'),
     otherwise: (schema) => schema.notRequired(),
   }),
+  screening_type_id: yup.string().required('Screening Type is required'),
   is_stow_enabled: yup.boolean(),
   stow_url: yup.string().when('is_stow_enabled', {
     is: true,
@@ -121,6 +122,7 @@ const buildDefaults = (data) => ({
   is_patient_report_email_enabled: data?.is_patient_report_email_enabled || false,
   is_fax_enabled: data?.is_fax_enabled || false,
   fax_number: data?.fax_number || '',
+  screening_type_id: data?.screening_type_id || '',
   is_stow_enabled: data?.is_stow_enabled || false,
   stow_url: data?.stow_url || '',
   stow_username: data?.stow_username || '',
@@ -138,6 +140,7 @@ const ClinicForm = ({ clinic, onClose }) => {
   const { additionalData } = useAdditionalData();
   const [deviceTypes, setDeviceTypes] = useState([]);
   const [states, setStates] = useState([]);
+  const [screeningTypes, setScreeningTypes] = useState([]);
   const [files, setFiles] = useState(clinic?.display_files || []);
   const [removedFiles, setRemovedFiles] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
@@ -173,7 +176,9 @@ const ClinicForm = ({ clinic, onClose }) => {
 
   useGoogleAutocomplete({
     setValue,
-    standaloneFields: { address: 'address', city: 'city', state_id: 'state_id' },
+    standaloneFields: { address: 'address', city: 'city', state: 'state_id', zip: 'zip' },
+    states,
+    addressStreetOnly: true,
   });
 
   const handleRemoveFile = (index) => {
@@ -204,6 +209,7 @@ const ClinicForm = ({ clinic, onClose }) => {
 
       setDeviceTypes(additionalData?.deviceTypes || []);
       setStates(additionalData?.states || []);
+      setScreeningTypes(additionalData?.screeningTypes || []);
 
       const results = await Promise.all(promises);
 
@@ -269,6 +275,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     formData.append('is_patient_report_email_enabled', data.is_patient_report_email_enabled ? 1 : 0);
     formData.append('is_fax_enabled', data.is_fax_enabled ? 1 : 0);
     formData.append('fax_number', data.fax_number || '');
+    formData.append('screening_type_id', data.screening_type_id || '');
     formData.append('is_stow_enabled', data.is_stow_enabled ? 1 : 0);
     formData.append('stow_url', data.stow_url || '');
     formData.append('stow_username', data.stow_username || '');
@@ -755,6 +762,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                 />
               </div>
 
+              
               {isFaxEnabled && (
                 <>
                   <div className="border-t border-gray-200 pt-4">
@@ -780,6 +788,21 @@ const ClinicForm = ({ clinic, onClose }) => {
                   </div>
                 </>
               )}
+
+              <div className="border-t border-gray-200 pt-4">
+                <FormField
+                  label="Screening Type"
+                  name="screening_type_id"
+                  type="select"
+                  registration={register('screening_type_id')}
+                  options={screeningTypes?.map(screeningType => ({
+                    value: screeningType.id,
+                    label: screeningType.name,
+                  }))}
+                  required
+                  error={errors.screening_type_id?.message}
+                />
+              </div>
 
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

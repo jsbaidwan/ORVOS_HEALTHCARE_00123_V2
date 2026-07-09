@@ -9,6 +9,7 @@ import { useUser } from '../../context/UserContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { PreviewImage } from '../Patients/EyeImageUploader';
+import { useState } from 'react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const Dashboard = () => {
   const { setPageTitle } = useTitle();
   const getRoutePath = useRoutePath();
   const { user } = useAuth();
+  const [totalPatients, setTotalPatients] = useState([]);
+  const [totalCompletedPatientsCurrentVise, setTotalCompletedPatientsCurrentVise] = useState([]);
 
   const orvosDoctors = users?.filter(user => user.role_id === 2) || [];
 
@@ -37,15 +40,55 @@ const Dashboard = () => {
 
   }, [getPendingPatients]);
 
+
+  /* ── helpers ────────────────────────────────── */
+  const formatMonthLabel = (ym) => {
+    const [y, m] = ym.split('-');
+    return `${m}-${y}`;
+  };
+
+   
   const lc = useRef(false);
   useEffect(() => {
 
     if (!lc.current) {
+      
       getCompletedPatients();
       lc.current = true;
     }
+    
 
   }, [getCompletedPatients]);
+
+  const tlc = useRef(false);
+  useEffect(() => {
+ 
+    if (!tlc.current) {
+      const currentMonth = new Date();
+      currentMonth.setMonth(currentMonth.getMonth());
+      
+      const totalCompletedPatientsCurrentVise = (completedPatients ?? []).filter(
+        (patient) => {
+          const date = new Date(patient.created_at);
+          return (
+            date.getMonth() === currentMonth.getMonth() &&
+            date.getFullYear() === currentMonth.getFullYear()
+          );
+        }
+      );
+      setTotalCompletedPatientsCurrentVise(totalCompletedPatientsCurrentVise);
+      tlc.current = true;
+    }
+
+  }, [completedPatients]);
+
+   
+  useEffect(() => {
+ 
+      const totalPatients = (pendingPatients ?? []).concat(completedPatients ?? []);
+      setTotalPatients(totalPatients);
+         
+  }, [pendingPatients, completedPatients]);
 
 
   useEffect(() => {
@@ -135,35 +178,37 @@ const Dashboard = () => {
   }, [setPageTitle]);
 
   let stats = [
-    {
-      title: 'Total Clinics',
-      value: clinics?.length || 0,
-      accessor: 'total_clinics',
-      icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      ),
-      color: 'bg-gradient-to-br from-blue-500 to-blue-600',
-      textColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Orvos Doctors',
-      value: orvosDoctors?.length || 0,
-      accessor: 'total_orvos_doctors',
-      icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-      color: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
-      textColor: 'text-cyan-600',
-      bgColor: 'bg-cyan-50',
-    },
+    // {
+    //   title: 'Total Clinics',
+    //   value: clinics?.length || 0,
+    //   accessor: 'total_clinics',
+    //   icon: (
+    //     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    //     </svg>
+    //   ),
+    //   color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+    //   textColor: 'text-blue-600',
+    //   bgColor: 'bg-blue-50',
+    // },
+    // {
+    //   title: 'Orvos Doctors',
+    //   value: orvosDoctors?.length || 0,
+    //   accessor: 'total_orvos_doctors',
+    //   icon: (
+    //     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    //     </svg>
+    //   ),
+    //   color: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
+    //   textColor: 'text-cyan-600',
+    //   bgColor: 'bg-cyan-50',
+    // },
     {
       title: 'Pending Patients',
       value: pendingPatients?.length,
+      description: `Total pending patients`,
+      link: getRoutePath('/patients/pending'),
       accessor: 'pending_patients',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,8 +221,10 @@ const Dashboard = () => {
     },
     {
       title: 'Completed Patients',
+      description: `Completed patients in the current month: ${formatMonthLabel(new Date().toISOString())}`,
       accessor: 'completed_patients',
-      value: completedPatients?.length,
+      link: getRoutePath(`/reports/clinic-patients?month=${formatMonthLabel(new Date().toISOString())}`),
+      value: totalCompletedPatientsCurrentVise?.length || 0,
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -189,7 +236,9 @@ const Dashboard = () => {
     },
     {
       title: 'Total Patients',
-      value: pendingPatients?.length + completedPatients?.length,
+      description: `Total patients in the current year: ${new Date().getFullYear()}`,
+      value: totalPatients?.length || 0,
+      link: getRoutePath(`/reports/clinic-patients?from_date=01-01-${new Date().getFullYear()}&to_date=${`${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}-${new Date().getFullYear()}`}`),
       accessor: 'total_patients',
       icon: (
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
