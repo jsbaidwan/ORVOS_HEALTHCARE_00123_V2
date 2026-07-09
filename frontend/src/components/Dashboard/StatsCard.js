@@ -13,7 +13,7 @@ const StatsCard = ({
   const Card = (
     <div
       className={`group bg-white rounded-xl border border-gray-200 p-5 h-full transition-all duration-300
-      ${link ? "cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:border-blue-300" : "shadow-sm"}`}
+      ${link ? "cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:border-primary" : "shadow-sm"}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
@@ -25,13 +25,13 @@ const StatsCard = ({
           )}
         </div>
 
-        <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${bgColor}`}>
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${bgColor}`}>
           <div className={textColor}>{icon}</div>
         </div>
       </div>
 
       {/* Stats */}
-      <div>
+      <div className="mt-3">
         <h3 className="text-sm text-gray-500 font-medium">
           {title}
         </h3>
@@ -43,7 +43,7 @@ const StatsCard = ({
 
       {/* Footer */}
       {link && (
-        <div className="mt-6 flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+        <div className="mt-6 flex items-center text-primary font-medium text-sm group-hover:translate-x-1 transition-transform">
           View Details
           <ChevronRightIcon className="w-4 h-4 ml-1" />
         </div>
