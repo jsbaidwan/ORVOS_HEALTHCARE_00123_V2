@@ -794,6 +794,7 @@ const ClinicForm = ({ clinic, onClose }) => {
                   label="Screening Type"
                   name="screening_type_id"
                   type="select"
+                  inputClassName="w-full lg:w-1/2"
                   registration={register('screening_type_id')}
                   options={screeningTypes?.map(screeningType => ({
                     value: screeningType.id,

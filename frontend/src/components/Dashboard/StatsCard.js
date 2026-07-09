@@ -25,7 +25,7 @@ const StatsCard = ({
           )}
         </div>
 
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bgColor}`}>
+        <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${bgColor}`}>
           <div className={textColor}>{icon}</div>
         </div>
       </div>
