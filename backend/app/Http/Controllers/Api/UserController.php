@@ -42,12 +42,26 @@ class UserController extends Controller
 		$messages = User::$messages;
 		
 		$insurance = $request->input('insurance_carriers_ids', []);
-		$insurance = array_map(function($row) {
-			return array_filter($row, function($carrier, $key) {
-				if (!is_array($carrier)) return true;
+		$insurance = array_map(function ($row) {
+
+			// If $row is not an array, try to decode it
+			if (!is_array($row)) {
+				$row = json_decode($row, true);
+			}
+
+			// If decoding failed, return an empty array
+			if (!is_array($row)) {
+				return [];
+			}
+
+			return array_filter($row, function ($carrier) {
+				if (!is_array($carrier)) {
+					return true;
+				}
+
 				return !empty(array_filter($carrier));
-				return false;
-			}, ARRAY_FILTER_USE_BOTH);
+			});
+
 		}, $insurance);
 
 		  
@@ -69,12 +83,12 @@ class UserController extends Controller
 			foreach($input['insurance_carriers_ids'] as $iKey => $subArray){
 				// If carrier 6 exists in this sub-array, require 'medicare'
 				
-				if (in_array(6,$subArray)) {
+				if (array_key_exists(6, $subArray)) {
 					$rules["insurance_carriers_ids.$iKey.6.medicare"] = 'required|string';
 				}
 
 				// If carrier 9 exists, require 'other' field
-				if (in_array(9,$subArray)) {
+				if (array_key_exists(9, $subArray)) {
 					$rules["insurance_carriers_ids.$iKey.9.other"] = 'required|string';
 				}
 			} 
@@ -307,13 +321,27 @@ class UserController extends Controller
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all(); 
 		  
 		$insurance = $request->input('insurance_carriers_ids', []);
-		
-		$insurance = array_map(function($row) {
-			return array_filter($row, function($carrier, $key) {
-				if (!is_array($carrier)) return true;
+		 
+		$insurance = array_map(function ($row) {
+
+			// If $row is not an array, try to decode it
+			if (!is_array($row)) {
+				$row = json_decode($row, true);
+			}
+
+			// If decoding failed, return an empty array
+			if (!is_array($row)) {
+				return [];
+			}
+
+			return array_filter($row, function ($carrier) {
+				if (!is_array($carrier)) {
+					return true;
+				}
+
 				return !empty(array_filter($carrier));
-				return false;
-			}, ARRAY_FILTER_USE_BOTH);
+			});
+
 		}, $insurance);
 		
 		 
@@ -366,12 +394,12 @@ class UserController extends Controller
 			foreach($input['insurance_carriers_ids'] as $iKey => $subArray){
 				// If carrier 6 exists in this sub-array, require 'medicare'
 				
-				if (in_array(6,$subArray)) {
+				if (array_key_exists(6, $subArray)) {
 					$rules["insurance_carriers_ids.$iKey.6.medicare"] = 'required|string';
 				}
 
 				// If carrier 9 exists, require 'other' field
-				if (in_array(9,$subArray)) {
+				if (array_key_exists(9, $subArray)) {
 					$rules["insurance_carriers_ids.$iKey.9.other"] = 'required|string';
 				}
 			} 

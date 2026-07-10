@@ -99,7 +99,9 @@ const createUserSchema = (isEdit, skipRoleAndClinic = false) =>
   });
 
 const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
-  const defaults = {};
+  const defaults = {
+    insurance_enabled: false,
+  };
   const list = insuranceCarriersList || [];
   list.forEach((c) => {
     const key = String(c.id);
@@ -110,6 +112,11 @@ const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
   });
 
   if (carriersData && typeof carriersData === 'object') {
+    // Extract insurance_enabled if present
+    if (carriersData.insurance_enabled !== undefined) {
+      defaults.insurance_enabled = carriersData.insurance_enabled;
+    }
+
     if (Array.isArray(carriersData)) {
       carriersData.forEach((val) => {
         if (typeof val === 'object' && val !== null) {
@@ -129,6 +136,7 @@ const buildInsuranceDefaults = (carriersData, insuranceCarriersList) => {
       });
     } else {
       Object.keys(carriersData).forEach((k) => {
+        if (k === 'insurance_enabled') return; // Skip insurance_enabled key
         if (defaults[k]) {
           defaults[k].checked = true;
           const v = carriersData[k];
@@ -389,18 +397,27 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
           );
 
           const carriers = l.insurance_carriers || {};
-          Object.keys(carriers).forEach((carrierId) => {
-            const entry = carriers[carrierId];
+          // Include insurance_enabled in the JSON
+          const carriersJson = { ...carriers };
+          Object.keys(carriersJson).forEach((carrierId) => {
+            const entry = carriersJson[carrierId];
+            if (carrierId === 'insurance_enabled') {
+              // Keep insurance_enabled as is
+              return;
+            }
             if (entry?.checked) {
-              formData.append(`insurance_carriers_ids[${index}][]`, carrierId);
               if (carrierId === '6' && entry.other) {
-                formData.append(`insurance_carriers_ids[${index}][6][medicare]`, entry.other);
+                carriersJson[carrierId] = { medicare: entry.other };
+              } else if (carrierId === '9' && entry.other) {
+                carriersJson[carrierId] = { other: entry.other };
+              } else {
+                carriersJson[carrierId] = carrierId;
               }
-              if (carrierId === '9' && entry.other) {
-                formData.append(`insurance_carriers_ids[${index}][9][other]`, entry.other);
-              }
+            } else {
+              delete carriersJson[carrierId];
             }
           });
+          formData.append(`insurance_carriers_ids[${index}]`, JSON.stringify(carriersJson));
         });
 
         if (data.signature?.length) {
@@ -717,42 +734,61 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                             />
                           </div>
 
-                          {/* Insurance Carriers per licence */}
+                          {/* Insurance Enabled Toggle */}
                           <div className="mt-4 pt-3 border-t border-gray-200">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-
-                              {insuranceCarriers?.map((carrier) => {
-                                const key = String(carrier.id);
-
-                                const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
-                                const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
-
-                                return (
-                                  <div key={carrier.id} className="border border-gray-200 rounded-md p-2 bg-white">
-                                    <label className="flex items-center cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        {...register(`licences.${index}.insurance_carriers.${key}.checked`)}
-                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
-                                      />
-                                      <span className="ml-2 text-xs font-medium text-gray-700">{carrier.name}</span>
-                                    </label>
-                                    {needsInput && isChecked && (
-                                      <div className="mt-1.5">
-                                        <input
-                                          type="text"
-                                          {...register(`licences.${index}.insurance_carriers.${key}.other`)}
-                                          placeholder={carrier.name === 'Other' ? 'Specify carrier name' : `Enter ${carrier.name} details`}
-                                          className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                            <div className="flex items-center space-x-2">
+                              <label htmlFor={`licences.${index}.insurance_carriers.insurance_enabled`} className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  id={`licences.${index}.insurance_carriers.insurance_enabled`}
+                                  {...register(`licences.${index}.insurance_carriers.insurance_enabled`)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
+                                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
+                              </label>
+                              <span className="text-sm font-medium text-gray-700">Insurance Enabled</span>
                             </div>
                           </div>
+
+                          {/* Insurance Carriers per licence */}
+                          {watch(`licences.${index}.insurance_carriers.insurance_enabled`) && (
+                            <div className="mt-4 pt-3 border-t border-gray-200">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-3">Insurance Carriers</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+
+                                {insuranceCarriers?.map((carrier) => {
+                                  const key = String(carrier.id);
+
+                                  const isChecked = watch(`licences.${index}.insurance_carriers.${key}.checked`);
+                                  const needsInput = carrier.name === 'Medicare' || carrier.name === 'Other';
+
+                                  return (
+                                    <div key={carrier.id} className="border border-gray-200 rounded-md p-2 bg-white">
+                                      <label className="flex items-center cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          {...register(`licences.${index}.insurance_carriers.${key}.checked`)}
+                                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                                        />
+                                        <span className="ml-2 text-xs font-medium text-gray-700">{carrier.name}</span>
+                                      </label>
+                                      {needsInput && isChecked && (
+                                        <div className="mt-1.5">
+                                          <input
+                                            type="text"
+                                            {...register(`licences.${index}.insurance_carriers.${key}.other`)}
+                                            placeholder={carrier.name === 'Other' ? 'Specify carrier name' : `Enter ${carrier.name} details`}
+                                            className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
 
                           {licenceFields.length > 1 && (
                             <div className="flex justify-end mt-3">
