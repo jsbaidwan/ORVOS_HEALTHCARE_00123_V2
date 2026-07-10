@@ -259,6 +259,37 @@ const Dashboard = () => {
     stats = stats.filter(c => !['total_orvos_doctors'].includes(c.accessor));
   }
 
+ if (user?.role_id !== 1) {
+  stats = stats.map(item => {
+     if (item.accessor === 'pending_patients') {
+      return {
+        ...item,
+        title: '',
+        description: 'Pending patients',
+      };
+    }
+    if (item.accessor === 'completed_patients') {
+      return {
+        ...item,
+        title: '',
+        description: 'Completed patients',
+        link: getRoutePath('/patients/completed'),
+        value: completedPatients?.length || 0,
+      };
+    }
+     if (item.accessor === 'total_patients') {
+      return {
+        ...item,
+        title: '',
+        description: 'Total patients',
+        link: getRoutePath(`/patients`),
+        value: totalPatients?.length || 0,
+      };
+     }
+    return item;
+  });
+}
+
   const doctorColumns = [
     {
       header: 'User',
