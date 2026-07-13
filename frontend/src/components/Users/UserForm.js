@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate,Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { useClinic } from '../../context/ClinicContext';
 import FormField from '../UI/FormField';
@@ -14,7 +14,7 @@ import ErrorHandle from '../Common/ErrorHandle';
 import { useLoader } from '../../context/LoaderContext';
 import { toast } from 'sonner';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, UserIcon, DocumentIcon, PhotoIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import useBlobUrl from '../../hooks/useBlobUrl';
 import { errorsFormatted } from '../../utils/errorHandler';
@@ -23,6 +23,8 @@ import { useAdditionalData } from '../../context/AdditionalDataContext';
 import { useAuth } from '../../context/AuthContext';
 import BlobFileItem from '../UI/BlobFileItem';
 import { useTitle } from '../../context/TitleContext';
+import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 
 const createUserSchema = (isEdit, skipRoleAndClinic = false) =>
   yup.object({
@@ -191,7 +193,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   const { id: idParam } = useParams();
   const navigate = useNavigate();
   const getRoutePath = useRoutePath();
-  const { addUser, updateUser, getUserById, getExistingUser } = useUser();
+  const { addUser, updateUser, getUserById, getExistingUser,importLicences } = useUser();
   const { clinics, getClinics } = useClinic();
   const { showLoader, hideLoader } = useLoader();
   const { additionalData } = useAdditionalData();
@@ -268,7 +270,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
       if (uId) {
         promises.push(getUserById(uId));
       }
-
+ 
       setStates(additionalData?.states || []);
       setRoles(additionalData?.roles || []);
       setInsuranceCarriers(additionalData?.insuranceCarriers || []);
@@ -463,6 +465,224 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
     } finally {
       hideLoader();
     }
+  };
+
+  // Turn various backend error shapes into a readable HTML string for Swal.
+  // Handles: string, array of strings, array of { message }, or an object
+  // keyed by field name whose values are strings/arrays (Laravel-style).
+  const formatImportErrors = (errors) => {
+    if (!errors) return '';
+    if (typeof errors === 'string') return errors;
+
+    const collect = (val) => {
+      if (!val) return [];
+      if (typeof val === 'string') return [val];
+      if (Array.isArray(val)) return val.flatMap(collect);
+      if (typeof val === 'object') return collect(val.message ?? Object.values(val));
+      return [String(val)];
+    };
+
+    const messages = collect(errors).filter(Boolean);
+    return messages.join('<br>');
+  };
+
+ const handleImportLicences = async () => {
+    await Swal.fire({
+      title: 'Import Licenses',
+      html: `
+        <div class="swal2-file-upload">
+          <p class="text-sm text-gray-600 mb-4">Please upload a file (CSV, XLS, XLSX)</p>
+          <div class="relative">
+            <input type="file" id="swal-file-input" accept=".csv,.xls,.xlsx" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all duration-200" />
+          </div>
+          <div id="swal-file-info" class="mt-3 text-sm text-gray-500 min-h-[20px]"></div>
+          <div id="swal-validation-error" class="mt-1 text-sm text-red-500 min-h-[20px]"></div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Upload',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      confirmButtonColor: '#009efb',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showLoaderOnConfirm: true,
+      didOpen: () => {
+        const fileInput = document.getElementById('swal-file-input');
+        const fileInfo = document.getElementById('swal-file-info');
+        const validationError = document.getElementById('swal-validation-error');
+        const confirmButton = Swal.getConfirmButton();
+
+        // Initially disable upload button
+        confirmButton.disabled = true;
+        confirmButton.style.opacity = '0.5';
+
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          validationError.textContent = '';
+          fileInfo.textContent = '';
+
+          if (!file) {
+            confirmButton.disabled = true;
+            confirmButton.style.opacity = '0.5';
+            return;
+          }
+
+          // Validate file extension
+          const validExtensions = ['.csv', '.xls', '.xlsx'];
+          const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+          
+          if (!validExtensions.includes(fileExtension)) {
+            validationError.innerHTML = '<div class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">Invalid file type. Please upload CSV, XLS, or XLSX file.</div>';
+            confirmButton.disabled = true;
+            confirmButton.style.opacity = '0.5';
+            return;
+          }
+
+          fileInfo.textContent = `Selected: ${file.name}`;
+
+          // Read and validate file headers
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+             
+            if (jsonData.length === 0) {
+              validationError.textContent = 'File is empty.';
+              confirmButton.disabled = true;
+              confirmButton.style.opacity = '0.5';
+              return;
+            }
+             
+            const headers = jsonData[0].map(h => String(h).trim());
+            const requiredHeaders = ['Licence Number', 'State', 'Expiry Date'];
+            
+            const missingHeaders = requiredHeaders.filter(
+              required => !headers.some(header => header.toLowerCase() === required.toLowerCase())
+            );
+
+            if (missingHeaders.length > 0) {
+              validationError.textContent = `Missing required headers: ${missingHeaders.join(', ')}`;
+              confirmButton.disabled = true;
+              confirmButton.style.opacity = '0.5';
+              return;
+            }
+
+            // File is valid
+            fileInfo.innerHTML = `<div class="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">✓ Valid file: ${file.name}</div>`;
+            fileInfo.className = 'mt-3 text-sm text-green-600 font-medium min-h-[20px]';
+            confirmButton.disabled = false;
+            confirmButton.style.opacity = '1';
+
+          } catch (error) {
+            validationError.textContent = 'Error reading file. Please ensure it\'s a valid Excel or CSV file.';
+            confirmButton.disabled = true;
+            confirmButton.style.opacity = '0.5';
+          }
+        });
+      },
+      preConfirm: async () => {
+        const fileInput = document.getElementById('swal-file-input');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+          Swal.showValidationMessage('Please select a file');
+          return false;
+        }
+
+        try {
+          // Parse file to JSON data.
+          // cellDates + raw:false makes SheetJS emit real dates instead of the raw
+          // Excel serial number (e.g. 34636), formatted via dateNF as Y-m-d.
+          const arrayBuffer = await file.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'yyyy-mm-dd' });
+
+          // Normalize any date value into Y-m-d (YYYY-MM-DD) regardless of the
+          // sheet's original format (serial number, Date object, or text string).
+          const toYmd = (value) => {
+            if (value === null || value === undefined || value === '') return value;
+
+            let date;
+            if (value instanceof Date) {
+              date = value;
+            } else if (typeof value === 'number') {
+              // Excel serial date number -> JS Date
+              const parsed = XLSX.SSF ? XLSX.SSF.parse_date_code(value) : null;
+              date = parsed ? new Date(parsed.y, parsed.m - 1, parsed.d) : null;
+            } else {
+              const str = String(value).trim();
+              // Already Y-m-d
+              if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+              // m/d/y or m-d-y (and d/m/y ambiguity resolved as month-first)
+              const m = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+              if (m) {
+                let [, mm, dd, yy] = m;
+                if (yy.length === 2) yy = (Number(yy) < 50 ? '20' : '19') + yy;
+                date = new Date(Number(yy), Number(mm) - 1, Number(dd));
+              } else {
+                const d = new Date(str);
+                date = isNaN(d.getTime()) ? null : d;
+              }
+            }
+
+            if (!date || isNaN(date.getTime())) return value;
+            const y = date.getFullYear();
+            const mo = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${mo}-${d}`;
+          };
+
+          // Transform headers to lowercase with underscores
+          const transformedData = jsonData.map(item => {
+            const transformed = {};
+            Object.keys(item).forEach(key => {
+              const newKey = key.toLowerCase().replace(/\s+/g, '_');
+              transformed[newKey] = item[key];
+            });
+            if ('expiry_date' in transformed) {
+              transformed.expiry_date = toYmd(transformed.expiry_date);
+            }
+            return transformed;
+          });
+
+          const response = await importLicences(id, file, transformedData);
+           
+          if (response.status === 200) {
+            return response;
+          } else {
+            
+            Swal.showValidationMessage(formatImportErrors(response.errors) || response.message || 'Failed to import licences');
+            return false;
+          }
+        } catch (error) {
+          
+          Swal.showValidationMessage(formatImportErrors(error?.errors) || error.message || 'Failed to import licences');
+          return false;
+        }
+      },
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+ 
+      if (result.value?.status === 200) {
+         Swal.fire({
+          title: 'Success!',
+          text: result.value?.message || 'Licences imported successfully',
+          icon: 'success',
+          confirmButtonColor: '#009efb',
+          timer: 2000,
+          timerProgressBar: true,
+        }).then(() => {
+          loadData()
+            
+        });
+      }
+      
+    });
   };
 
   const dbPreview = userData?.display_avatar?.status === 200 && !avatarRemoved ? userData.display_avatar.src : null;
@@ -808,8 +1028,13 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                         onClick={() => appendLicence({ id: null, licence_number: '', l_state_id: '', expiry_date: null, insurance_carriers: buildInsuranceDefaults(null, insuranceCarriers) })}
                         className="mt-2 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50"
                       >
-                        + Add Licence
+                        <PlusIcon name="import" className="w-3 h-3 mr-1" /> Add Licence
                       </button>
+
+                      <Link onClick={() => handleImportLicences()} className="mt-2 ml-3 inline-flex items-center px-3 py-1.5 border border-primary-600 text-xs font-medium rounded text-primary-600 hover:bg-primary-50">
+                        <ArrowUpTrayIcon name="import" className="w-3 h-3 mr-1" /> Import Licences 
+                      </Link>
+                      
                       {errors.licences?.message && (
                         <p className="mt-1 text-sm text-red-600">{errors.licences.message}</p>
                       )}

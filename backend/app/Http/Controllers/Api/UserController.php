@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ClinicUser;
 use App\Models\UserLicense;
+use App\Models\State;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -738,6 +739,61 @@ class UserController extends Controller
 		);
 		return response()->json(['message' => 'User deleted successfully.'], 200);
 		
+	}
+	
+	public function importLicences(Request $request)
+	{
+		$licences = $request->input('data') ? json_decode($request->input('data'), true) : []; 
+		if(!$request->input('id')){
+			return response()->json(['message' => 'The id field is required.'], 422);
+		}
+		
+		$id = $request->input('id');
+		
+		$errors = []; 
+		$countryId = 231;
+		$newLicenses = [];
+		foreach ($licences as $key => $lData) {
+			
+			$stateName = $lData['state'];
+			 
+			$state = State::where('country_id',$countryId)
+			->whereRaw('LOWER(name) = ?', [strtolower($stateName)])
+			->first();
+			  
+			if($state){
+				$lStateId = $state['id'];
+			}else{
+				
+				$state = State::create([
+					'name' => ucwords(strtolower($stateName)),
+					'country_id' => $countryId,
+				]);
+				
+				$lStateId = $state['id'];
+			}
+			 
+			
+			$lData['l_state_id'] = $lStateId;
+			
+			$isExist = UserLicense::with('getState')->where('user_id',$id)->where('licence_number',$lData['licence_number'])->first(); 
+			if($isExist){
+				$errors[] = ['message' => 'The licence number '.$lData['licence_number']. ' already exist in the state '.$isExist['getState']['name'].'.'];	
+			}
+			$lData['user_id'] = $id;
+			$newLicenses[] = $lData;
+		}
+		
+		if(count($errors) > 0){
+			return response()->json(['errors' => $errors], 422);
+		}
+		
+		foreach ($newLicenses as $key => $lData) {
+			UserLicense::create($lData);
+		}
+		
+		return response()->json(['message' => 'The licence number added successfully.'], 200);
+		 
 	}
 	
 }

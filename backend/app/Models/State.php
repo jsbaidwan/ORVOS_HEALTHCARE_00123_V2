@@ -14,7 +14,7 @@ class State extends Model
 	 
     protected $fillable = [
 	
-        'country_code','state','state_code' 
+        'name','country_id'
 	];
 	
 	protected $table = 'states';

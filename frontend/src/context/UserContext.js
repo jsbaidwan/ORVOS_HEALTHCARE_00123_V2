@@ -208,6 +208,32 @@ export const UserProvider = ({ children }) => {
     return users.find((u) => u.id === Number(id)) || null;
   };
 
+  const importLicences = async (id, file, data) => {
+    const api = Api(() => getToken());
+      if (!api) return;
+      try {
+      const formData = new FormData();
+      formData.append('id', id);
+      if (file) {
+        formData.append('file', file);
+      }
+      if (data) {
+        formData.append('data', JSON.stringify(data));
+      }
+
+      const response = await api.call('users/import-licences', 'POST', formData, true);
+ 
+      if (response.status === 200) {
+        return { status: response.status, message: response.data?.message || 'Licences Imported successfully' };
+      } else {
+        return handleApiError(response.error, logout);
+      }
+    } catch (err) {
+      return handleApiError(err, logout);
+    }
+
+  }
+
   const value = {
     users,
     setUsers,
@@ -220,7 +246,8 @@ export const UserProvider = ({ children }) => {
     archiveUser,
     unarchiveUser,
     getExistingUser,
-    deleteUser
+    deleteUser,
+    importLicences
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

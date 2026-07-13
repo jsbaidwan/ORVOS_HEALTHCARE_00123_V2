@@ -15,6 +15,7 @@ $PRFIX_ORVOS_USER = \Helper::prefix('2')['prefix'];
 
 Route::middleware('auth:api')->group(function () {
 	
+	Route::post('users/import-licences', 'App\Http\Controllers\Api\UserController@importLicences')->name('users.import-licences');
 	Route::resource('users','App\Http\Controllers\Api\UserController');
 	Route::post('users/{id}', 'App\Http\Controllers\Api\UserController@update');
 	Route::resource('change-password', 'App\Http\Controllers\Api\ChangePasswordController');
