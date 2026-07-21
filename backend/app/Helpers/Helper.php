@@ -3554,10 +3554,10 @@ class Helper{
 				'name' => 'Thyroid Eye Disease',
 				 
 			],
-			[
-				'id' => 3,
-				'name' => 'Both (Diabetic & TED)',
-			],
+			// [
+				// 'id' => 3,
+				// 'name' => 'Both (Diabetic & TED)',
+			// ],
 		];
 	}
 	
