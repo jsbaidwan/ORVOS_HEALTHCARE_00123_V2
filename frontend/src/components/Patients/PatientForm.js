@@ -22,7 +22,7 @@ import { useGoogleAutocomplete } from '../../hooks/useGoogleAutocomplete';
 import { useAdditionalData } from '../../context/AdditionalDataContext';
 import { useTitle } from '../../context/TitleContext';
 
-const buildPatientSchema = (fieldVisibility) => yup.object({
+const buildPatientSchema = (fieldVisibility, casQuestions = [], { lEyeChecked = false, rEyeChecked = false, existingLeftEyes = [], existingRightEyes = [], existingBothEyes = [] } = {}) => yup.object({
   clinic_id: yup.string().required('Clinic is required'),
   first_name: yup.string().required('First Name is required').trim(),
   last_name: yup.string().required('Last Name is required').trim(),
@@ -54,9 +54,60 @@ const buildPatientSchema = (fieldVisibility) => yup.object({
   s_insurance_name: yup.string().trim(),
   s_insurance_group_no: yup.string().trim(),
   s_insurance_member_no: yup.string().trim(),
-  medical_condition_id: fieldVisibility.showMedicalCondition
-    ? yup.string().required('Medical Condition is required')
+  screening_type_id: fieldVisibility.showMedicalCondition
+    ? yup.string().required('Screening Type is required')
     : yup.string().notRequired(),
+  medical_condition_id: yup.string().when('screening_type_id', {
+    is: (val) => fieldVisibility.showMedicalCondition && String(val) !== '2',
+    then: (s) => s.required('Medical Condition is required'),
+    otherwise: (s) => s.notRequired(),
+  }),
+  cas_questions: yup.mixed().test(
+    'cas-required',
+    'Please answer all CAS questions',
+    function (value) {
+      const screeningId = String(this.parent.screening_type_id);
+      if (screeningId !== '2' || !casQuestions.length) return true;
+
+      const answers = value || {};
+      const missing = casQuestions.filter((q) => {
+        const v = answers[q.id];
+        return v === undefined || v === null || v === '';
+      });
+
+      if (missing.length === 0) return true;
+
+      // Emit one error per unanswered question so each message renders
+      // directly below that question's radios.
+      return new yup.ValidationError(
+        missing.map((q) =>
+          this.createError({
+            path: `cas_questions.${q.id}`,
+            message: 'This question is required',
+          })
+        )
+      );
+    }
+  ),
+  l_eye_images: yup.array().test(
+    'min-if-left-checked',
+    'At least one Left Eye image is required',
+    (value) => !lEyeChecked || (Array.isArray(value) && value.length > 0) || existingLeftEyes.length > 0
+  ),
+  r_eye_images: yup.array().test(
+    'min-if-right-checked',
+    'At least one Right Eye image is required',
+    (value) => !rEyeChecked || (Array.isArray(value) && value.length > 0) || existingRightEyes.length > 0
+  ),
+  b_eye_images: yup.array().test(
+    'min-if-thyroid',
+    'At least one Both Eye image is required',
+    function (value) {
+      const screeningId = String(this.parent.screening_type_id);
+      if (screeningId !== '2') return true;
+      return (Array.isArray(value) && value.length > 0) || existingBothEyes.length > 0;
+    }
+  ),
   medical_history: yup.array().of(yup.string()),
 });
 
@@ -71,6 +122,20 @@ const parseMedicalHistory = (mh) => {
     }
   }
   return [];
+};
+
+const parseCasQuestions = (cq) => {
+  if (cq && typeof cq === 'object' && !Array.isArray(cq)) return cq;
+  if (Array.isArray(cq)) return { ...cq };
+  if (typeof cq === 'string') {
+    try {
+      const parsed = JSON.parse(cq);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  return {};
 };
 
 const buildDefaults = (data) => ({
@@ -91,7 +156,9 @@ const buildDefaults = (data) => ({
   s_insurance_name: data?.s_insurance_name || '',
   s_insurance_group_no: data?.s_insurance_group_no || '',
   s_insurance_member_no: data?.s_insurance_member_no || '',
+  screening_type_id: data?.screening_type_id || '',
   medical_condition_id: data?.medical_condition_id || '',
+  cas_questions: parseCasQuestions(data?.cas_questions),
   medical_history: parseMedicalHistory(data?.medical_history),
   note: data?.note || '',
 });
@@ -112,8 +179,10 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   const { setPageTitle } = useTitle();
   const [existingLeftEyes, setExistingLeftEyes] = useState([]);
   const [existingRightEyes, setExistingRightEyes] = useState([]);
+  const [existingBothEyes, setExistingBothEyes] = useState([]);
   const [removedLeftEyeFiles, setRemovedLeftEyeFiles] = useState([]);
   const [removedRightEyeFiles, setRemovedRightEyeFiles] = useState([]);
+  const [removedBothEyeFiles, setRemovedBothEyeFiles] = useState([]);
 
   const isCompleted = patientData?.diagnosis_status === 1;
 
@@ -124,7 +193,9 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     showMedicalCondition: true,
   });
 
-  const schema = useMemo(() => buildPatientSchema(fieldVisibility), [fieldVisibility]);
+  const casQuestions = useMemo(() => additionalData?.casQuestions || [], [additionalData]);
+
+  const schema = useMemo(() => buildPatientSchema(fieldVisibility, casQuestions, { lEyeChecked, rEyeChecked, existingLeftEyes, existingRightEyes, existingBothEyes }), [fieldVisibility, casQuestions, lEyeChecked, rEyeChecked, existingLeftEyes, existingRightEyes, existingBothEyes]);
 
   const {
     register,
@@ -133,8 +204,10 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     setValue,
     getValues,
     setError,
+    clearErrors,
     watch,
     reset,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
@@ -186,6 +259,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
 
         setExistingLeftEyes(fresh?.patient?.display_left_eye_images || []);
         setExistingRightEyes(fresh?.patient?.display_right_eye_images || []);
+        setExistingBothEyes(fresh?.patient?.display_both_eye_images || []);
 
         // Auto-check eye checkboxes if patient already has eye images
         if (fresh?.patient?.l_eye_images?.length > 0) setLEyeChecked(true);
@@ -209,8 +283,10 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
       setPatientData(null);
       setExistingLeftEyes([]);
       setExistingRightEyes([]);
+      setExistingBothEyes([]);
       setRemovedLeftEyeFiles([]);
       setRemovedRightEyeFiles([]);
+      setRemovedBothEyeFiles([]);
       reset(buildDefaults(null));
     } else if (id && (!patientData || String(patientData.id) !== String(id))) {
       // Transition from Create -> Edit, or Edit A -> Edit B
@@ -219,6 +295,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
         setPatientData(existingPatient);
         setExistingLeftEyes(existingPatient?.display_left_eye_images || []);
         setExistingRightEyes(existingPatient?.display_right_eye_images || []);
+        setExistingBothEyes(existingPatient?.display_both_eye_images || []);
         setTimeout(() => {
           reset(buildDefaults(existingPatient));
         }, 10);
@@ -242,6 +319,11 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
   const handleRemoveExistingRightEye = (imgObj) => {
     if (imgObj?.name) setRemovedRightEyeFiles(prev => [...prev, imgObj.name]);
     setExistingRightEyes(prev => prev.filter(item => item.name !== imgObj.name));
+  };
+
+  const handleRemoveExistingBothEye = (imgObj) => {
+    if (imgObj?.name) setRemovedBothEyeFiles(prev => [...prev, imgObj.name]);
+    setExistingBothEyes(prev => prev.filter(item => item.name !== imgObj.name));
   };
 
   const watchedClinicId = watch('clinic_id');
@@ -296,6 +378,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     formData.append('s_insurance_name', data.s_insurance_name?.trim() || '');
     formData.append('s_insurance_group_no', data.s_insurance_group_no?.trim() || '');
     formData.append('s_insurance_member_no', data.s_insurance_member_no?.trim() || '');
+    formData.append('screening_type_id', data.screening_type_id || '');
     formData.append('medical_condition_id', data.medical_condition_id || '');
     formData.append('note', data?.note || '');
     formData.append('l_eye', lEyeChecked ? '1' : '0');
@@ -328,11 +411,37 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
       formData.append('r_eye_images[]', 'existing');
     }
 
+    // Both Eye images - only relevant for Thyroid Eye Disease (screening_type_id === 2)
+    if (String(data.screening_type_id) === '2') {
+      let hasBothNew = false;
+      if (data.b_eye_images && data.b_eye_images.length > 0) {
+        data.b_eye_images.forEach((file) => {
+          formData.append('b_eye_images[]', file);
+        });
+        hasBothNew = true;
+      }
+
+      // Add dummy array item to satisfy backend validation
+      if (!hasBothNew && existingBothEyes?.length > 0) {
+        formData.append('b_eye_images[]', 'existing');
+      }
+    }
+
     removedLeftEyeFiles.forEach(name => formData.append('removed_leftEyePreview_files[]', name));
     removedRightEyeFiles.forEach(name => formData.append('removed_rightEyePreview_files[]', name));
+    removedBothEyeFiles.forEach(name => formData.append('removed_bothEyePreview_files[]', name));
 
     const medicalHistory = data.medical_history || [];
     medicalHistory.forEach(item => formData.append('medical_history[]', item));
+
+    if (String(data.screening_type_id) === '2') {
+      const casAnswers = data.cas_questions || {};
+      Object.entries(casAnswers).forEach(([qid, val]) => {
+        if (val !== undefined && val !== '' && val !== null) {
+          formData.append(`cas_questions[${qid}]`, val);
+        }
+      });
+    }
 
     try {
       showLoader();
@@ -662,6 +771,72 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                 </div>
               )}
 
+               <FormField
+                  label="Screening Type"
+                  name="screening_type_id"
+                  type="select"
+                  registration={register('screening_type_id')}
+                  options={additionalData?.screeningTypes?.map((item) => {
+                    return {
+                      value: item.id,
+                      label: item.name,
+                    }
+                  })}
+                  required
+                  disabled={isCompleted}
+                  error={errors.screening_type_id?.message}
+                />
+
+              <hr className="my-6" />
+
+              {/* CAS Questions - shown for Thyroid Eye Disease */}
+              {String(watch('screening_type_id')) === '2' && casQuestions.length > 0 && (
+                <div className={`border-b border-gray-200 pb-6 ${isCompleted ? 'opacity-60 pointer-events-none' : ''}`}>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    CAS Questions <span className="text-red-500">*</span>
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {casQuestions.map((q, index) => (
+                      <div key={q.id} className={`border rounded-lg p-4 bg-gray-50 ${errors.cas_questions?.[q.id] ? 'border-red-500' : 'border-gray-200'}`}>
+                        <p className="text-sm font-medium text-gray-800 mb-3">
+                          {index + 1}. {q.question}
+                        </p>
+                        <Controller
+                          name={`cas_questions.${q.id}`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="flex items-center gap-6">
+                              {Object.entries(q.options || {}).map(([optKey, optLabel]) => (
+                                <label key={optKey} className="inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    value={optKey}
+                                    checked={String(field.value) === String(optKey)}
+                                    onChange={() => {
+                                      field.onChange(optKey);
+                                      clearErrors(`cas_questions.${q.id}`);
+                                    }}
+                                    disabled={isCompleted}
+                                    className="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">{optLabel}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        />
+                        {errors.cas_questions?.[q.id] && (
+                          <p className="mt-2 text-sm text-red-500">{errors.cas_questions[q.id].message}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {errors.cas_questions?.message && (
+                    <p className="mt-2 text-sm text-red-500">{errors.cas_questions.message}</p>
+                  )}
+                </div>
+              )}
+
               {/* Eye Images */}
               <div className={`border-b border-gray-200 pb-6 ${isCompleted ? 'opacity-60 pointer-events-none' : ''}`}>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Eye Images</h2>
@@ -677,6 +852,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                           const checked = e.target.checked;
                           setLEyeChecked(checked);
                           if (!checked) setValue('l_eye_images', []);
+                          setTimeout(() => trigger('l_eye_images'), 0);
                         }}
                         className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                       />
@@ -693,6 +869,8 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         eyeType="left"
                         existingImages={existingLeftEyes}
                         onRemoveExisting={handleRemoveExistingLeftEye}
+                        trigger={trigger}
+                        error={errors.l_eye_images?.message}
                       />
                     )}
                   </div>
@@ -708,6 +886,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                           const checked = e.target.checked;
                           setREyeChecked(checked);
                           if (!checked) setValue('r_eye_images', []);
+                          setTimeout(() => trigger('r_eye_images'), 0);
                         }}
                         className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                       />
@@ -724,17 +903,40 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         eyeType="right"
                         existingImages={existingRightEyes}
                         onRemoveExisting={handleRemoveExistingRightEye}
+                        trigger={trigger}
+                        error={errors.r_eye_images?.message}
                       />
                     )}
                   </div>
                 </div>
+
+                {/* Both Eye - shown for Thyroid Eye Disease */}
+                {String(watch('screening_type_id')) === '2' && (
+                  <div className="mt-6">
+                    <span className="block text-sm font-medium text-gray-700 mb-3">Both Eye</span>
+                    <EyeImageUploader
+                      label="Both Eye Images"
+                      name="b_eye_images"
+                      setValue={setValue}
+                      getValues={getValues}
+                      onChange={(e) => { }}
+                      required
+                      eyeType="both"
+                      existingImages={existingBothEyes}
+                      onRemoveExisting={handleRemoveExistingBothEye}
+                      trigger={trigger}
+                      error={errors.b_eye_images?.message}
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Medical Information - Hidden when DICOM is enabled */}
-              {fieldVisibility.showMedicalCondition && (
+              {/* Medical Information - Hidden when DICOM is enabled or Thyroid Eye Disease */}
+              {fieldVisibility.showMedicalCondition && String(watch('screening_type_id')) !== '2' && (
                 <div className={`border-b border-gray-200 pb-6 ${isCompleted ? 'opacity-60 pointer-events-none' : ''}`}>
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Medical Information</h2>
 
+                  
                   <FormField
                     label="Medical Condition"
                     name="medical_condition_id"

@@ -3644,6 +3644,80 @@ class Helper{
 	| End: Get Thyroid Eye Disease By Id
 	|--------------------------------------------------------------------------
 	*/
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Get CAS Questions
+	|--------------------------------------------------------------------------
+	*/
+	
+	public static function casQuestions()
+	{
+		return [
+			[
+				'id' => 1,
+				'question' => 'Have you experienced pain or aching behind either eye while at rest?',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+				 
+			],
+			[
+				'id' => 2,
+				'question' => 'Do your eyes hurt when moving them in any direction?​',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+				 
+			],
+			[
+				'id' => 3,
+				'question' => 'Have you noticed redness of your eyelids?​',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+			],
+			[
+				'id' => 4,
+				'question' => 'Have you noticed redness in the white part of either eye?​​',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+			],
+			[
+				'id' => 5,
+				'question' => 'Have you noticed swelling or puffiness of your eyelids?​',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+			],
+			[
+				'id' => 6,
+				'question' => 'Have you noticed swelling or a puffy appearance over the white part of either eye?​',
+				'options' =>  [1 => 'Yes',2 => 'No'],
+			],
+		];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| End: Get CAS Questions
+	|--------------------------------------------------------------------------
+	*/
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Get CAS Question By Id
+	|--------------------------------------------------------------------------
+	*/
+	
+	public static function getCasQuestionById($id)
+	{
+		$casQuestions = self::casQuestions();
+		foreach($casQuestions as $val)
+		{
+			if($val['id'] == $id){
+				return ['status' => 200,'casQuestion' => $val];
+			}
+		}
+		return ['status' => 422];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| End: Get CAS Question By Id
+	|--------------------------------------------------------------------------
+	*/
 }
 
 	

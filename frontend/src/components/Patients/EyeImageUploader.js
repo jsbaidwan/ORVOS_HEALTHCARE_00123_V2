@@ -77,7 +77,7 @@ export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor,
 
         {eyeType && (
           <div className={`absolute bottom-2 left-2 bg-${eyeColor}-600 text-white text-xs px-2 py-1 rounded z-20 shadow-sm pointer-events-none`}>
-            {eyeType === 'left' ? 'L' : 'R'} {index + 1}
+            {eyeType === 'left' ? 'L' : eyeType === 'right' ? 'R' : 'B'} {index + 1}
           </div>
         )}
 
@@ -118,7 +118,7 @@ export const PreviewImage = ({ preview, index, eyeType, removePreview, eyeColor,
   );
 };
 
-const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', setValue, getValues, existingImages = [], onRemoveExisting }) => {
+const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', setValue, getValues, existingImages = [], onRemoveExisting, error, trigger }) => {
   const [dragActive, setDragActive] = useState(false);
   const [previews, setPreviews] = useState([]);
 
@@ -189,6 +189,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
 
       const prevFiles = getValues(name) || [];
       setValue(name, [...prevFiles, ...validFiles], { shouldValidate: true });
+      if (trigger) trigger(name);
     }
   };
 
@@ -198,9 +199,10 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
 
     const prevFiles = getValues(name) || [];
     setValue(name, prevFiles.filter((_, i) => i !== index), { shouldValidate: true });
+    if (trigger) trigger(name);
   };
 
-  const eyeColor = eyeType === 'left' ? 'blue' : 'green';
+  const eyeColor = eyeType === 'left' ? 'blue' : eyeType === 'right' ? 'green' : 'blue';
 
   return (
     <div className="mb-4">
@@ -256,7 +258,7 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
               </svg>
             </div>
             <p className="text-sm font-medium text-gray-700 mb-1">
-              {eyeType === 'left' ? 'Left' : 'Right'} Eye Images
+              {eyeType === 'left' ? 'Left' : eyeType === 'right' ? 'Right' : 'Both'} Eye Images
             </p>
             <p className="text-xs text-gray-500">
               Drag & Drop or Click to Upload
@@ -308,6 +310,10 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
             ))}
           </div>
         </div>
+      )}
+
+      {error && (
+        <p className="mt-2 text-sm text-red-500">{error}</p>
       )}
 
       <p className="text-xs text-gray-500 mt-2">

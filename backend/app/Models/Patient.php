@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data','dicom_file_status_data','follow_up_data','display_remark_at'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','display_both_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data','dicom_file_status_data','follow_up_data','display_remark_at'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -22,8 +22,8 @@ class Patient extends Authenticatable
 	protected $fillable = [
 		'slug','study_id','p_code','user_id', 'dob', 'gender', 'phone', 'clinic_id', 'ehr', 'address', 'city', 'state_id', 'zip', 
 		'p_insurance_name', 'p_insurance_group_no', 'p_insurance_member_no', 's_insurance_name', 's_insurance_group_no', 
-		's_insurance_member_no', 'l_eye', 'r_eye', 'l_eye_images', 'r_eye_images','medical_condition_id','medical_history', 'note','last_name','first_name',
-		'latitude','longitude','diagnosis_status','remark_by','remark_status','remark_result','remark_at', 'email','follow_up','is_pdf_report_downloaded','pdf_report_downloaded_by','dicom_json','is_report_sent','report_sent_by','report_sent_at','fax_status','fax_job_id','fax_sent_by','fax_sent_at','fax_json','dos','is_dicom_file_send','dicom_file_sent_at','dicom_file_status','created_at'
+		's_insurance_member_no', 'l_eye', 'r_eye', 'l_eye_images', 'r_eye_images','b_eye_images','medical_condition_id','medical_history', 'note','last_name','first_name',
+		'latitude','longitude','diagnosis_status','remark_by','remark_status','remark_result','remark_at', 'email','follow_up','is_pdf_report_downloaded','pdf_report_downloaded_by','dicom_json','is_report_sent','report_sent_by','report_sent_at','fax_status','fax_job_id','fax_sent_by','fax_sent_at','fax_json','dos','is_dicom_file_send','dicom_file_sent_at','dicom_file_status','cas_questions','screening_type_id','created_at'
 	];
 	
 	
@@ -50,8 +50,11 @@ class Patient extends Authenticatable
 		'r_eye' => 'nullable|integer',
 		'l_eye_images' => 'required_if:l_eye,1|array',
 		'r_eye_images' => 'required_if:r_eye,1|array',
+		'b_eye_images' => 'required_if:screening_type_id,2|array',
+		'cas_questions' => 'required_if:screening_type_id,2|array',
 		//'medical_condition_id' => 'required',
 		//'medical_history' => 'required|array',
+		'screening_type_id' => 'required',
 		'note' => 'nullable|string',
 		 
     );
@@ -113,6 +116,35 @@ class Patient extends Authenticatable
 	public function getDisplayRightEyeImagesAttribute()
 	{
 		$value = $this->attributes['r_eye_images'];
+		$arrFiles = !empty($value) ? json_decode($value, true) : [];
+		$files = [];
+
+		if (!empty($arrFiles)) {
+
+			$files = collect($arrFiles)->map(function ($file) {
+
+				$path = 'uploads/patients/' . $this->slug . '/' . $file;
+				$exists = !empty($file) && \Storage::disk('public')->exists($path);
+				$status = $exists ? 200 : 422;
+				 
+				$token = \Helper::fileTokenGen($path,$file,\Helper::hasSigned());
+				$signedUrl = \Helper::fileSignedRoute($token,\Helper::hasSigned());
+				$src = $signedUrl;
+				
+				return [
+					'status' => $status,
+					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'name' => $file
+				];
+			})->values()->toArray(); // reset index (important)
+		}
+
+		return $files;
+	}
+	
+	public function getDisplayBothEyeImagesAttribute()
+	{
+		$value = $this->attributes['b_eye_images'];
 		$arrFiles = !empty($value) ? json_decode($value, true) : [];
 		$files = [];
 

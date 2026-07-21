@@ -48,6 +48,7 @@ return new class extends Migration
 			$table->text('l_eye_images')->nullable();
 			$table->string('r_eye')->default(0)->comment('0 => no,1 => yes');
 			$table->text('r_eye_images')->nullable();
+			$table->text('b_eye_images')->nullable();
 			$table->integer('medical_condition_id')->nullable();
 			$table->text('medical_history')->nullable();
 			$table->string('note')->nullable();
@@ -72,6 +73,8 @@ return new class extends Migration
 			$table->integer('is_dicom_file_send')->default(0)->comment('0 => pending,1 => sending , 2 => sent , 3 => failed');
 			$table->dateTime('dicom_file_sent_at')->nullable();
 			$table->text('dicom_file_status')->nullable();
+			$table->text('cas_questions')->nullable();
+			$table->integer('screening_type_id')->default(0)->comment('1 => Diabetic Retinopathy,2 => Thyroid Eye Disease,3 => both');
 			$table->timestamps();
         });
     }

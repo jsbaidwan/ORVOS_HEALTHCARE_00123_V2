@@ -157,8 +157,36 @@ class PatientController extends Controller
 			// Store JSON
 			$input['r_eye_images'] = json_encode($uRightEyeFiles);
 		}
+		
+		if (!empty($input['b_eye_images'])) {
+			$bEyeImgs = $input['b_eye_images'];
+			$uBothEyeFiles = [];
+
+			foreach ($bEyeImgs as $bFile) {
+
+				if ($bFile instanceof \Illuminate\Http\UploadedFile)
+				{
+					$path = 'uploads/patients/' . $input['slug'];
+					$convertImage = \Helper::convertImages(
+						$bFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+
+					$uBothEyeFiles[] = $convertImage['fileName'];
+				}
+			}
+
+			// Ensure flat array of non-empty string filenames
+			$uBothEyeFiles = array_values(array_filter($uBothEyeFiles, fn($f) => is_string($f) && !empty($f)));
+
+			// Store as JSON
+			$input['b_eye_images'] = json_encode($uBothEyeFiles);
+		}
 		 
         $input['medical_history'] = !empty($input['medical_history']) ? json_encode($input['medical_history']) : json_encode([]);
+		$input['cas_questions'] = !empty($input['cas_questions']) ? json_encode($input['cas_questions']) : json_encode([]);
 		$input['p_code'] = \Helper::genPatientCode()['code'];
 			
 		$input['l_eye'] = !empty($input['l_eye']) ? $input['l_eye'] : 0;
@@ -322,12 +350,52 @@ class PatientController extends Controller
 			$patient->save();
 		}
 		
-		$uLeftEyeFiles = json_decode($patient->l_eye_images, true);
-		$uRightEyeFiles = json_decode($patient->r_eye_images, true);
+		if (!empty($input['removed_bothEyePreview_files']) && $patient->b_eye_images) {
+
+			$bExistingFiles = json_decode($patient->b_eye_images, true);
+
+			foreach ($input['removed_bothEyePreview_files'] as $bImgFile) {
+
+				if ($bImgFile) {
+					// Delete from storage
+					$path = 'uploads/patients/' . $patient['slug'];
+					// File path inside storage
+					$filePath = $path .'/'. $bImgFile;
+
+					// Delete if exists
+					if (Storage::disk('public')->exists($filePath)) {
+						Storage::disk('public')->delete($filePath); 
+					}
+						 
+					// Remove from array
+					$bExistingFiles = array_filter($bExistingFiles, fn($file) => $file !== $bImgFile);
+				}
+			}
+
+			// Reindex + save once
+			$patient->b_eye_images = json_encode(array_values($bExistingFiles));
+			$patient->save();
+		}
+		
+		$uLeftEyeFiles = json_decode($patient->l_eye_images, true) ?? [];
+		$uRightEyeFiles = json_decode($patient->r_eye_images, true) ?? [];
+		$uBothEyeFiles = array_values(array_filter(
+			json_decode($patient->b_eye_images, true) ?? [],
+			fn($f) => is_string($f) && !empty($f)
+		));
 		
 		$input['medical_history'] = !empty($input['medical_history']) ? json_encode($input['medical_history']) : json_encode([]);
+		$input['cas_questions'] = !empty($input['cas_questions']) ? json_encode($input['cas_questions']) : json_encode([]);
 		$input['l_eye'] = !empty($input['l_eye']) ? $input['l_eye'] : 0;
 		$input['r_eye'] = !empty($input['r_eye']) ? $input['r_eye'] : 0;
+		
+		if(!empty($uLeftEyeFiles) && count($uLeftEyeFiles) > 0 ){
+			$input['l_eye'] = 1; 
+		} 
+		
+		if(!empty($uRightEyeFiles) && count($uRightEyeFiles) > 0 ){
+			$input['r_eye'] = 1; 
+		}
 		
 		if (!empty($input['l_eye_images'])) {
 			$lEyeImgs = $input['l_eye_images']; 
@@ -378,6 +446,34 @@ class PatientController extends Controller
 			// Store JSON
 			$input['r_eye_images'] = json_encode($uRightEyeFiles);
 		}
+		
+		if (!empty($input['b_eye_images'])) {
+			$bEyeImgs = $input['b_eye_images'];
+			 
+			foreach ($bEyeImgs as $bFile) {
+				
+				if ($bFile instanceof \Illuminate\Http\UploadedFile)
+				{
+					$path = 'uploads/patients/' . $patient['slug'];
+					$convertImage = \Helper::convertImages(
+						$bFile,
+						$path,
+						\config('image.quality'),
+						\config('image.ext')
+					);
+					
+					$uBothEyeFiles[] = $convertImage['fileName'];
+				}
+				 
+				 
+			}
+
+			// Ensure flat array of non-empty string filenames
+			$uBothEyeFiles = array_values(array_filter($uBothEyeFiles, fn($f) => is_string($f) && !empty($f)));
+
+			// Store JSON
+			$input['b_eye_images'] = json_encode($uBothEyeFiles);
+		}
 		  
 		if(empty($input['l_eye'])){
 			 
@@ -425,6 +521,31 @@ class PatientController extends Controller
 
 				// Reset input
 				$input['r_eye_images'] = [];
+			}
+		}
+		
+		if (!empty($input['screening_type_id']) && $input['screening_type_id'] != 2) {
+			// unlink existing both eye files when not Thyroid Eye Disease
+			if ($patient->b_eye_images) {
+				$bExistingFiles = json_decode($patient->b_eye_images, true);
+
+				foreach ($bExistingFiles as $file) {
+					if (!empty($file)) {
+
+						// Path inside storage
+						$path = 'uploads/patients/' . $patient['slug'];
+						// File path inside storage
+						$filePath = $path .'/'. $file;
+
+						// Delete file
+						if (Storage::disk('public')->exists($filePath)) {
+							Storage::disk('public')->delete($filePath); 
+						}
+					}
+				}
+
+				// Reset input
+				$input['b_eye_images'] = [];
 			}
 		}
 		

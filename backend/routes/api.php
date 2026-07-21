@@ -320,7 +320,8 @@ Route::get('additional-data', function(Request $request){
 		'pdfTempCategories' => \Helper::getPdfTempCategories()['pdfTempCategories'],
 		'tempBodyTags' => \Helper::tempBodyTags(),
 		'screeningTypes' => \Helper::screeningTypes(),
-		'tedDisease'  => \Helper::tedDisease(),
+		'tedDisease' => \Helper::tedDisease(),
+		'casQuestions' => \Helper::casQuestions(),
 	];
 	
 	return response()->json(['additionalData' => $additionalData],200,[],JSON_UNESCAPED_SLASHES);
