@@ -21,6 +21,7 @@ return new class extends Migration
 			$table->bigInteger('pdf_template_category_id')->nullable();
 			$table->integer('status')->default(1)->nullable();
 			$table->longText('body')->nullable();
+			$table->integer('screening_type_id')->default(0)->comment('1 => Diabetic Retinopathy,2 => Thyroid Eye Disease,3 => both');
             $table->timestamps();
         });
     }

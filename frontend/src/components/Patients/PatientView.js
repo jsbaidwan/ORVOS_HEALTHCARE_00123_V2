@@ -40,6 +40,8 @@ const PatientView = () => {
     const [formData, setFormData] = useState({
         rightEyeSelections: [],
         leftEyeSelections: [],
+        rightEyeTed: '',
+        leftEyeTed: '',
         remark: '',
         follow_up: ''
     });
@@ -54,6 +56,13 @@ const PatientView = () => {
             : patient?.medical_condition_id === 2
                 ? additionalData?.examTypes2
                 : additionalData?.examTypes;
+
+    // Thyroid Eye Disease screening uses a single radio result per eye
+    // (from additionalData.tedDisease) instead of multi-select exam types.
+    const isTed = String(patient?.screening_type_id) === '2';
+    const TED_OPTIONS = useMemo(() => additionalData?.tedDisease || [], [additionalData]);
+    const tedName = (val) =>
+        TED_OPTIONS.find((o) => String(o.id) === String(val))?.name || '-';
 
     useEffect(() => {
         setPageTitle('Patient Details');
@@ -120,13 +129,19 @@ const PatientView = () => {
     const currentStepName = steps[currentStep];
 
     const handleNext = () => {
-        if (currentStepName === 'RIGHT_EYE' && formData.rightEyeSelections.length === 0) {
-            setFormErrors({ rightEye: 'Please select at least one option.' });
-            return;
+        if (currentStepName === 'RIGHT_EYE') {
+            const invalid = isTed ? !formData.rightEyeTed : formData.rightEyeSelections.length === 0;
+            if (invalid) {
+                setFormErrors({ rightEye: isTed ? 'Please select an option.' : 'Please select at least one option.' });
+                return;
+            }
         }
-        if (currentStepName === 'LEFT_EYE' && formData.leftEyeSelections.length === 0) {
-            setFormErrors({ leftEye: 'Please select at least one option.' });
-            return;
+        if (currentStepName === 'LEFT_EYE') {
+            const invalid = isTed ? !formData.leftEyeTed : formData.leftEyeSelections.length === 0;
+            if (invalid) {
+                setFormErrors({ leftEye: isTed ? 'Please select an option.' : 'Please select at least one option.' });
+                return;
+            }
         }
         setFormErrors({});
         setCurrentStep(prev => prev + 1);
@@ -147,15 +162,20 @@ const PatientView = () => {
 
         data.append('remark', formData.remark);
 
-        // Left Eye
-        formData.leftEyeSelections.forEach((item, index) => {
-            data.append(`exam_data[leftEye][${index}][exam_type]`, item);
-        });
-        // Right Eye
-
-        formData.rightEyeSelections.forEach((item, index) => {
-            data.append(`exam_data[rightEye][${index}][exam_type]`, item);
-        });
+        if (isTed) {
+            // TED: single scalar result per eye -> exam_data: { rightEye: "1", leftEye: "2" }
+            if (formData.rightEyeTed) data.append('exam_data[rightEye]', formData.rightEyeTed);
+            if (formData.leftEyeTed) data.append('exam_data[leftEye]', formData.leftEyeTed);
+        } else {
+            // Left Eye
+            formData.leftEyeSelections.forEach((item, index) => {
+                data.append(`exam_data[leftEye][${index}][exam_type]`, item);
+            });
+            // Right Eye
+            formData.rightEyeSelections.forEach((item, index) => {
+                data.append(`exam_data[rightEye][${index}][exam_type]`, item);
+            });
+        }
 
         data.append('follow_up', formData.follow_up);
 
@@ -178,6 +198,8 @@ const PatientView = () => {
                 setFormData({
                     rightEyeSelections: [],
                     leftEyeSelections: [],
+                    rightEyeTed: '',
+                    leftEyeTed: '',
                     remark: '',
                     follow_up: ''
                 });
@@ -231,6 +253,23 @@ const PatientView = () => {
         ))
     ) : (
         <div className="col-span-full h-[150px] bg-gray-100 flex items-center justify-center text-sm text-gray-400 rounded border border-gray-200">No Left Eye Images</div>
+    );
+
+    const bothEyeImages = patient?.display_both_eye_images?.length > 0 ? (
+        patient.display_both_eye_images.map((img, i) => (
+            <div key={i} className="relative rounded border border-gray-200 overflow-hidden shadow-sm">
+                <PreviewImage
+                    preview={img?.src || img}
+                    index={i}
+                    eyeType="both"
+                    eyeColor="purple"
+                    hasRemoveButton={false}
+                    fullSize={true}
+                />
+            </div>
+        ))
+    ) : (
+        <div className="col-span-full h-[150px] bg-gray-100 flex items-center justify-center text-sm text-gray-400 rounded border border-gray-200">No Both Eye Images</div>
     );
 
 
@@ -773,7 +812,7 @@ const PatientView = () => {
                                 </div>
 
                                 {/* 2. DIAGNOSIS STEPPER FORM (Below the top summary grid) */}
-                                <div className="pt-4 w-full max-w-5xl">
+                                <div className={`pt-4 w-full ${isTed ? 'max-w-6xl' : 'max-w-5xl'}`}>
                                     <div className="mb-4">
 
                                         <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
@@ -796,89 +835,185 @@ const PatientView = () => {
                                         </div>
 
                                         <div className={currentStepName === 'COMMENTS' ? 'block' : 'hidden'}>
-                                            <div className="space-y-2 max-w-2xl">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Comments</label>
-                                                    <FormField
-                                                        type="textarea"
-                                                        name="remark"
-                                                        value={formData.remark}
-                                                        onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                                                        placeholder="Enter remark here"
-                                                        rows="4"
-                                                        className="w-full border border-gray-300 rounded-md p-3 text-sm  focus:ring-primary focus:border-primary shadow-sm"
-                                                    />
+                                            {isTed ? (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                    {/* Left: Both Eyes Images */}
+                                                    <div>
+                                                        <div className="text-xs font-medium text-gray-700 mb-2">Both Eyes Images</div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            {bothEyeImages}
+                                                        </div>
+                                                    </div>
+                                                    {/* Right: Doctor's Comments + Follow Up */}
+                                                    <div className="space-y-2">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Comments</label>
+                                                            <FormField
+                                                                type="textarea"
+                                                                name="remark"
+                                                                value={formData.remark}
+                                                                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                                                                placeholder="Enter remark here"
+                                                                rows="4"
+                                                                className="w-full border border-gray-300 rounded-md p-3 text-sm  focus:ring-primary focus:border-primary shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">Follow Up <span className="text-red-500">*</span></label>
+                                                            <FormField
+                                                                type="select"
+                                                                name="follow_up"
+                                                                value={formData.follow_up}
+                                                                onChange={(e) => setFormData({ ...formData, follow_up: e.target.value })}
+                                                                options={additionalData?.followUps?.map((item) => ({ value: item?.id, label: item?.name }))}
+                                                                error={formErrors.follow_up}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Follow Up <span className="text-red-500">*</span></label>
-                                                    <FormField
-                                                        type="select"
-                                                        name="follow_up"
-                                                        value={formData.follow_up}
-                                                        onChange={(e) => setFormData({ ...formData, follow_up: e.target.value })}
-                                                        options={additionalData?.followUps?.map((item) => ({ value: item?.id, label: item?.name }))}
-                                                        error={formErrors.follow_up}
-
-                                                    />
-
+                                            ) : (
+                                                <div className="space-y-2 max-w-2xl">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Comments</label>
+                                                        <FormField
+                                                            type="textarea"
+                                                            name="remark"
+                                                            value={formData.remark}
+                                                            onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                                                            placeholder="Enter remark here"
+                                                            rows="4"
+                                                            className="w-full border border-gray-300 rounded-md p-3 text-sm  focus:ring-primary focus:border-primary shadow-sm"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Follow Up <span className="text-red-500">*</span></label>
+                                                        <FormField
+                                                            type="select"
+                                                            name="follow_up"
+                                                            value={formData.follow_up}
+                                                            onChange={(e) => setFormData({ ...formData, follow_up: e.target.value })}
+                                                            options={additionalData?.followUps?.map((item) => ({ value: item?.id, label: item?.name }))}
+                                                            error={formErrors.follow_up}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
 
                                     </div>
 
-                                    {/* 3. STEP SPECIFIC BOTTOM SECTIONS (Checkboxes) & BUTTONS */}
+                                    {/* 3. STEP SPECIFIC BOTTOM SECTIONS (TED radios OR exam checkboxes) & BUTTONS */}
                                     <div className={currentStepName === 'RIGHT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
-                                            <div className="text-xs font-semibold mb-2 text-gray-800">Right Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
-                                                {DIAGNOSIS_OPTIONS?.rightEye?.map((opt, i) => (
-                                                    <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
-                                                        <input type="checkbox"
-                                                            className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
-                                                            checked={formData.rightEyeSelections.includes(opt?.id)}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                setFormData(prev => ({
-                                                                    ...prev,
-                                                                    rightEyeSelections: checked
-                                                                        ? [...prev.rightEyeSelections, opt?.id]
-                                                                        : prev.rightEyeSelections.filter(x => x !== opt?.id)
-                                                                }));
-                                                            }}
-                                                        />
-                                                        <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
-                                                    </label>
-                                                ))}
+                                            <div className="text-xs font-semibold mb-2 text-gray-800">
+                                                {isTed
+                                                    ? 'Right Eye'
+                                                    : `Right Eye (${patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})`}
                                             </div>
-                                            {formErrors.rightEye && <p className="text-red-500 text-sm mt-3 font-medium">Please select at least one option.</p>}
+                                            {isTed ? (
+                                                <div className="grid grid-cols-1 gap-[0.08rem] max-w-md">
+                                                    {TED_OPTIONS.map((opt) => (
+                                                        <label
+                                                            key={opt.id}
+                                                            className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors"
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="rightEyeTed"
+                                                                className="h-4 w-4 text-[#009efb] border-gray-300 focus:ring-[#009efb]"
+                                                                value={opt.id}
+                                                                checked={String(formData.rightEyeTed) === String(opt.id)}
+                                                                onChange={() => {
+                                                                    setFormData((prev) => ({ ...prev, rightEyeTed: String(opt.id) }));
+                                                                    setFormErrors((prev) => ({ ...prev, rightEye: undefined }));
+                                                                }}
+                                                            />
+                                                            <span className="text-xs">{opt.name}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
+                                                    {DIAGNOSIS_OPTIONS?.rightEye?.map((opt, i) => (
+                                                        <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
+                                                            <input type="checkbox"
+                                                                className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
+                                                                checked={formData.rightEyeSelections.includes(opt?.id)}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        rightEyeSelections: checked
+                                                                            ? [...prev.rightEyeSelections, opt?.id]
+                                                                            : prev.rightEyeSelections.filter(x => x !== opt?.id)
+                                                                    }));
+                                                                }}
+                                                            />
+                                                            <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {formErrors.rightEye && (
+                                                <p className="text-red-500 text-sm mt-3 font-medium">{formErrors.rightEye}</p>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className={currentStepName === 'LEFT_EYE' ? 'block' : 'hidden'}>
                                         <div className="mb-4 pt-4 border-t border-gray-100">
-                                            <div className="text-xs font-semibold mb-2 text-gray-800">Left Eye ({patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})</div>
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
-                                                {DIAGNOSIS_OPTIONS?.leftEye?.map((opt, i) => (
-                                                    <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
-                                                        <input type="checkbox"
-                                                            className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
-                                                            checked={formData.leftEyeSelections.includes(opt?.id)}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                setFormData(prev => ({
-                                                                    ...prev,
-                                                                    leftEyeSelections: checked
-                                                                        ? [...prev.leftEyeSelections, opt?.id]
-                                                                        : prev.leftEyeSelections.filter(x => x !== opt?.id)
-                                                                }));
-                                                            }}
-                                                        />
-                                                        <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
-                                                    </label>
-                                                ))}
+                                            <div className="text-xs font-semibold mb-2 text-gray-800">
+                                                {isTed
+                                                    ? 'Left Eye'
+                                                    : `Left Eye (${patient?.medical_condition?.name || patient?.medical_condition_data?.name || 'Condition'})`}
                                             </div>
-                                            {formErrors.leftEye && <p className="text-red-500 text-sm mt-3 font-medium">Please select at least one option.</p>}
+                                            {isTed ? (
+                                                <div className="grid grid-cols-1 gap-[0.08rem] max-w-md">
+                                                    {TED_OPTIONS.map((opt) => (
+                                                        <label
+                                                            key={opt.id}
+                                                            className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors"
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="leftEyeTed"
+                                                                className="h-4 w-4 text-[#009efb] border-gray-300 focus:ring-[#009efb]"
+                                                                value={opt.id}
+                                                                checked={String(formData.leftEyeTed) === String(opt.id)}
+                                                                onChange={() => {
+                                                                    setFormData((prev) => ({ ...prev, leftEyeTed: String(opt.id) }));
+                                                                    setFormErrors((prev) => ({ ...prev, leftEye: undefined }));
+                                                                }}
+                                                            />
+                                                            <span className="text-xs">{opt.name}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-[0.08rem]">
+                                                    {DIAGNOSIS_OPTIONS?.leftEye?.map((opt, i) => (
+                                                        <label key={i} className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors">
+                                                            <input type="checkbox"
+                                                                className="h-4 w-4 text-[#009efb] rounded border-gray-300 focus:ring-[#009efb]"
+                                                                checked={formData.leftEyeSelections.includes(opt?.id)}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        leftEyeSelections: checked
+                                                                            ? [...prev.leftEyeSelections, opt?.id]
+                                                                            : prev.leftEyeSelections.filter(x => x !== opt?.id)
+                                                                    }));
+                                                                }}
+                                                            />
+                                                            <span className="text-xs">{opt?.name} {opt?.code ? `(${opt?.code})` : ''}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {formErrors.leftEye && (
+                                                <p className="text-red-500 text-sm mt-3 font-medium">{formErrors.leftEye}</p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -931,10 +1066,10 @@ const PatientView = () => {
                             <>
                                 {/* COMPLETED VIEW DESIGN */}
                                 {/* Images Section */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                                <div className={`grid grid-cols-1 ${isTed ? 'md:grid-cols-2 xl:grid-cols-3' : 'lg:grid-cols-2'} gap-6 mb-10`}>
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-800 mb-4">Right Eye Images</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[120px]">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-3 min-h-[120px]">
                                             {patient?.display_right_eye_images?.length > 0 ? (
                                                 patient.display_right_eye_images.map((img, i) => (
                                                     <div key={i} className="relative rounded-lg overflow-hidden border">
@@ -955,7 +1090,7 @@ const PatientView = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-800 mb-4">Left Eye Images</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[120px]">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-3 min-h-[120px]">
                                             {patient?.display_left_eye_images?.length > 0 ? (
                                                 patient.display_left_eye_images.map((img, i) => (
                                                     <div key={i} className="relative rounded-lg overflow-hidden border">
@@ -974,6 +1109,29 @@ const PatientView = () => {
                                             )}
                                         </div>
                                     </div>
+                                    {isTed && (
+                                        <div className="md:col-span-2 xl:col-span-1">
+                                            <h3 className="text-sm font-semibold text-gray-800 mb-4">Both Eyes Images</h3>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-3 min-h-[120px]">
+                                                {patient?.display_both_eye_images?.length > 0 ? (
+                                                    patient.display_both_eye_images.map((img, i) => (
+                                                        <div key={i} className="relative rounded-lg overflow-hidden border">
+                                                            <PreviewImage
+                                                                preview={img.src ? img.src : img}
+                                                                index={i}
+                                                                eyeType="both"
+                                                                eyeColor="purple"
+                                                                hasRemoveButton={false}
+                                                                fullSize={true}
+                                                            />
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-sm text-gray-400 flex items-center col-span-full">No images</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Details Grid */}
@@ -991,7 +1149,9 @@ const PatientView = () => {
                                         <InfoItem label="Doctor's Comments" valueNode={<span className={`font-medium`}>{patient?.remark_result?.remark || '-'}</span>} />
 
                                         <InfoItem label="Left Eye Diagnosis Details" value={
-                                            patient?.remark_result?.exam_data?.leftEye?.length ? (
+                                            isTed ? (
+                                                tedName(patient?.remark_result?.exam_data?.leftEye)
+                                            ) : patient?.remark_result?.exam_data?.leftEye?.length ? (
                                                 patient.remark_result.exam_data.leftEye.map((item, index, arr) => (
                                                     <span key={index}>
                                                         {item.exam_type_arr?.examType?.name}
@@ -1035,7 +1195,9 @@ const PatientView = () => {
                                             valueNode={
                                                 <div className="space-y-2">
                                                     <div>{
-                                                        patient?.remark_result?.exam_data?.rightEye?.length ? (
+                                                        isTed ? (
+                                                            tedName(patient?.remark_result?.exam_data?.rightEye)
+                                                        ) : patient?.remark_result?.exam_data?.rightEye?.length ? (
                                                             patient.remark_result.exam_data.rightEye.map((item, index, arr) => (
                                                                 <span key={index}>
                                                                     {item.exam_type_arr?.examType?.name}

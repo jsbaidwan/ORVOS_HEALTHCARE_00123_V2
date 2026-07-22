@@ -21,7 +21,7 @@ class PdfTemplate extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name','user_id','clinic_id','pdf_template_category_id','status','body'
+        'name','user_id','clinic_id','pdf_template_category_id','status','body','screening_type_id'
     ];
 	
 	public static function rules($id = null,$userId = null)
@@ -30,7 +30,7 @@ class PdfTemplate extends Authenticatable
 			'name' => [
                 'required',
                 Rule::unique('pdf_templates')->ignore($id)->where(function ($query) use($userId) {
-                    return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
+                    return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
                 }),
             ],
             'clinic_id' => 'required', 
@@ -38,19 +38,21 @@ class PdfTemplate extends Authenticatable
                 'required',
                 Rule::unique('pdf_templates')->ignore($id)->where(function ($query) use($userId) {
 					if(\Auth::user()->role_id == 1){
-						return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'));
+						return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('screening_type_id', request('screening_type_id'))->where('pdf_template_category_id', request('pdf_template_category_id'));
 					}else{
-						return $query->where('clinic_id', request('clinic_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
+						return $query->where('status',1)->where('clinic_id', request('clinic_id'))->where('screening_type_id', request('screening_type_id'))->where('pdf_template_category_id', request('pdf_template_category_id'))->where('user_id', $userId);
 					}
                     
                 }),
             ],
             
             'body' => 'required|string',
+			'screening_type_id' => 'required',
             //'status' => 'required',
              
         ];
     }
+	
 	
 	public static function messages()
 	{
@@ -76,7 +78,11 @@ class PdfTemplate extends Authenticatable
 	{
 		$value = $this->attributes['pdf_template_category_id'] ?? null;
 
-		return \Helper::getPdfTempCategoryById($value)['pdfTempCategory'] ?? null;
+		return \Helper::getPdfTempCategoryById(
+			$value,
+			$this->attributes['clinic_id'] ?? null,
+			$this->attributes['screening_type_id'] ?? null
+		)['pdfTempCategory'] ?? null;
 	}
        
 }

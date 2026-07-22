@@ -186,6 +186,7 @@ class InsertDicomDataJob implements ShouldQueue
 		$input['user_id'] = 0;
 		$input['dicom_json'] = json_encode($study);
 		$input['medical_history'] = json_encode([]);
+		$input['screening_type_id'] = 1;
 		$input['p_code'] = \Helper::genPatientCode()['code'];
 		try { 
 			Patient::create($input);

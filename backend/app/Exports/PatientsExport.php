@@ -52,23 +52,31 @@ class PatientsExport implements FromCollection, WithHeadings, WithCustomCsvSetti
         return collect($this->patients)->map(function ($patient) {
 			
 			$examTest = $patient['remark_result'];
+			$isTed = (string) ($patient['screening_type_id'] ?? '') === '2';
 			$leftEyeDiagnosisDetails = '';
 			
 			if (!empty($examTest['exam_data']['leftEye']))
-			{		 
-				foreach($examTest['exam_data']['leftEye'] as $eKey => $eData)
-				{ 
-					$examTypeData = \Helper::getExamTypeById($patient['medical_condition_id'], $eData['exam_type'] ?? '','leftEye');
-					 
-					if($examTypeData['status'] === 200 && $examTypeData['examType'])
-					{
-						$leftEyeDiagnosisDetails .= htmlspecialchars($examTypeData['examType']['name']) 
-						 .':-' 
-						 . htmlspecialchars($examTypeData['examType']['code']) 
-						 . ",\r\n";
+			{
+				if ($isTed && !is_array($examTest['exam_data']['leftEye'])) {
+					$ted = \Helper::tedDiseaseById($examTest['exam_data']['leftEye']);
+					$leftEyeDiagnosisDetails = ($ted['status'] ?? null) === 200
+						? htmlspecialchars($ted['tedDisease']['name'])
+						: '-';
+				} else {
+					foreach($examTest['exam_data']['leftEye'] as $eKey => $eData)
+					{ 
+						$examTypeData = \Helper::getExamTypeById($patient['medical_condition_id'], $eData['exam_type'] ?? '','leftEye');
+						 
+						if($examTypeData['status'] === 200 && $examTypeData['examType'])
+						{
+							$leftEyeDiagnosisDetails .= htmlspecialchars($examTypeData['examType']['name']) 
+							 .':-' 
+							 . htmlspecialchars($examTypeData['examType']['code']) 
+							 . ",\r\n";
 
-					} 
-					 
+						} 
+						 
+					}
 				}
 			} else {
 				$leftEyeDiagnosisDetails .= '-'; 
@@ -77,20 +85,27 @@ class PatientsExport implements FromCollection, WithHeadings, WithCustomCsvSetti
 			$rightEyeDiagnosisDetails = '';
 			
 			if (!empty($examTest['exam_data']['rightEye']))
-			{		 
-				foreach($examTest['exam_data']['rightEye'] as $eKey => $eData)
-				{ 
-					$examTypeData = \Helper::getExamTypeById($patient['medical_condition_id'], $eData['exam_type'] ?? '','rightEye');
-					  
-					if($examTypeData['status'] === 200 && $examTypeData['examType'])
-					{
-						$rightEyeDiagnosisDetails .= htmlspecialchars($examTypeData['examType']['name']) 
-						 .':-'  
-						 . htmlspecialchars($examTypeData['examType']['code']) 
+			{
+				if ($isTed && !is_array($examTest['exam_data']['rightEye'])) {
+					$ted = \Helper::tedDiseaseById($examTest['exam_data']['rightEye']);
+					$rightEyeDiagnosisDetails = ($ted['status'] ?? null) === 200
+						? htmlspecialchars($ted['tedDisease']['name'])
+						: '-';
+				} else {
+					foreach($examTest['exam_data']['rightEye'] as $eKey => $eData)
+					{ 
+						$examTypeData = \Helper::getExamTypeById($patient['medical_condition_id'], $eData['exam_type'] ?? '','rightEye');
+						  
+						if($examTypeData['status'] === 200 && $examTypeData['examType'])
+						{
+							$rightEyeDiagnosisDetails .= htmlspecialchars($examTypeData['examType']['name']) 
+							 .':-'  
+							 . htmlspecialchars($examTypeData['examType']['code']) 
 						 . ",\r\n";
 
 					} 
 					 
+				}
 				}
 			} else {
 				$rightEyeDiagnosisDetails .= '-'; 

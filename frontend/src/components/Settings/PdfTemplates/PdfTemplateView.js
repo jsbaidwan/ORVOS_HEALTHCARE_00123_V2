@@ -7,11 +7,13 @@ import { toast } from 'sonner';
 import Breadcrumb from '../../Common/Breadcrumb';
 import PageLoader from '../../Common/PageLoader';
 import { PencilSquareIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useAdditionalData } from '../../../context/AdditionalDataContext';
 
 const PdfTemplateView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getPdfTemplateById } = usePdfTemplate();
+  const { additionalData } = useAdditionalData();
   const getRoutePath = useRoutePath();
   const { setPageTitle } = useTitle();
 
@@ -131,6 +133,15 @@ const PdfTemplateView = () => {
                   <span className="text-xs font-medium text-gray-400 uppercase">Category</span>
                   <p className="mt-1 text-sm font-medium text-gray-900">
                     {template.category?.name || template.category_name || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-medium text-gray-400 uppercase">Screening Type</span>
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {additionalData?.screeningTypes?.find(
+                      (s) => String(s.id) === String(template.screening_type_id)
+                    )?.name || '-'}
                   </p>
                 </div>
 

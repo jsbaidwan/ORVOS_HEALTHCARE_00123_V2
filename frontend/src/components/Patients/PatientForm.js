@@ -842,7 +842,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Eye Images</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="inline-flex items-center cursor-pointer mb-3">
+                   {/* <label className="inline-flex items-center cursor-pointer mb-3">
                       <input
                         type="checkbox"
                         name="l_eye"
@@ -857,7 +857,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700">Left Eye</span>
-                    </label>
+                    </label>*/}
                     {lEyeChecked && (
                       <EyeImageUploader
                         label="Left Eye Images"
@@ -876,7 +876,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                   </div>
 
                   <div>
-                    <label className="inline-flex items-center cursor-pointer mb-3">
+                   {/* <label className="inline-flex items-center cursor-pointer mb-3">
                       <input
                         type="checkbox"
                         name="r_eye"
@@ -891,7 +891,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
                         className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700">Right Eye</span>
-                    </label>
+                    </label>*/}
                     {rEyeChecked && (
                       <EyeImageUploader
                         label="Right Eye Images"

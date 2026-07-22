@@ -112,7 +112,8 @@ Route::middleware('auth:api')->group(function () {
 		$input =  $request->all();
 		if(!empty($input['pdf_temp_cat_id'])){
 			$clinicId = !empty($input['clinic_id']) ? $input['clinic_id'] : NULL;
-			$pdfTempCategory = \Helper::getPdfTempCategoryById($input['pdf_temp_cat_id'],$clinicId);
+			$screeningTypeId = !empty($input['screening_type_id']) ? $input['screening_type_id'] : NULL;
+			$pdfTempCategory = \Helper::getPdfTempCategoryById($input['pdf_temp_cat_id'],$clinicId,$screeningTypeId);
 			if($pdfTempCategory['status'] == 200){
 				return json_encode(['status' => 200,'pdfTempCategory' => $pdfTempCategory['pdfTempCategory']]);
 			}

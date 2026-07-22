@@ -28,6 +28,7 @@ const schema = yup.object().shape({
   name: yup.string().required('Name is required'),
   clinic_id: yup.string().required('Clinic is required'),
   category_id: yup.string().required('Category is required'),
+  screening_type_id: yup.string().required('Screening Type is required'),
   //status: yup.string().required('Status is required'),
   body: yup.string().required('Body is required'),
 });
@@ -51,18 +52,20 @@ const PdfTemplateForm = () => {
       name: '',
       clinic_id: '',
       category_id: '',
+      screening_type_id: '',
       //status: '1',
       body: '',
     },
   });
 
   const buildDefaults = (t) => {
-    if (!t) return { name: '', clinic_id: '', category_id: '', /*status: '1',*/ body: '' };
+    if (!t) return { name: '', clinic_id: '', category_id: '', screening_type_id: '', /*status: '1',*/ body: '' };
     const catId = t.pdf_template_category_id || t.category_id || '';
     return {
       name: t.name || '',
       clinic_id: t.clinic_id ? String(t.clinic_id) : '',
       category_id: catId ? String(catId) : '',
+      screening_type_id: t.screening_type_id ? String(t.screening_type_id) : '',
       /*status: t.status !== undefined ? String(t.status) : '1',*/
       body: t.body || '',
     };
@@ -116,8 +119,7 @@ const PdfTemplateForm = () => {
   const handleCategoryChange = (e) => {
     const value = e.target.value;
     setValue('category_id', value, { shouldValidate: true });
-    if (value) {
-
+    if (value && watch('clinic_id') && watch('screening_type_id')) {
       fetchCategoryTags(value);
     } else {
       setValue('body', '');
@@ -126,24 +128,40 @@ const PdfTemplateForm = () => {
 
   const handleClinicChange = (e) => {
     const value = e.target.value;
-    if (value) {
-
+    if (value && watch('category_id') && watch('screening_type_id')) {
       fetchCategoryTags(watch('category_id'));
     } else {
       setValue('body', '');
     }
-  }
+  };
+
+  const handleScreeningTypeChange = (e) => {
+    const value = e.target.value;
+    setValue('screening_type_id', value, { shouldValidate: true });
+    if (value && watch('clinic_id') && watch('category_id')) {
+      fetchCategoryTags(watch('category_id'));
+    } else {
+      setValue('body', '');
+    }
+  };
 
   const fetchCategoryTags = async (categoryId, skipTemplate = false) => {
+    const clinicId = watch('clinic_id');
+    const screeningTypeId = watch('screening_type_id');
+
+    // Only load body data when Clinic, Category, and Screening Type are all set
+    if (!clinicId || !categoryId || !screeningTypeId) {
+      if (!skipTemplate) setValue('body', '');
+      return;
+    }
+
     try {
-      const result = await getPdfTempCategory(categoryId,watch('clinic_id'));
+      const result = await getPdfTempCategory(categoryId, clinicId, screeningTypeId);
       if (result?.status === 200) {
         const catData = result.data?.pdfTempCategory || result.data || {};
         if (!skipTemplate) {
           const template = catData?.template || '';
-          if (template) {
-            setValue('body', template);
-          }
+          setValue('body', template);
         }
       }
     } catch (error) {
@@ -185,6 +203,10 @@ const PdfTemplateForm = () => {
   }, [getToken]);
    
   const categories = additionalData?.pdfTempCategories || [];
+  const watchedClinicId = watch('clinic_id');
+  const watchedCategoryId = watch('category_id');
+  const watchedScreeningTypeId = watch('screening_type_id');
+  const canShowBodyData = !!(watchedClinicId && watchedCategoryId && watchedScreeningTypeId);
 
   return (
     <div className="space-y-4">
@@ -243,6 +265,21 @@ const PdfTemplateForm = () => {
               error={errors.category_id?.message}
             />
 
+            <FormField
+              label="Screening Type"
+              name="screening_type_id"
+              type="select"
+              registration={register('screening_type_id', {
+                onChange: handleScreeningTypeChange,
+              })}
+              options={additionalData?.screeningTypes?.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+              required
+              error={errors.screening_type_id?.message}
+            />
+
             {/* <FormField
               label="Status"
               name="status"
@@ -274,8 +311,10 @@ const PdfTemplateForm = () => {
                   <FroalaEditor
                     tag="textarea"
                     config={froalaConfig}
-                    model={field.value ?? ''}
+                    model={canShowBodyData ? (field.value ?? '') : ''}
                     onModelChange={(content) => {
+                      if (!canShowBodyData) return;
+
                       const tempDiv = document.createElement('div');
                       tempDiv.innerHTML = content;
                     
@@ -294,6 +333,11 @@ const PdfTemplateForm = () => {
                   />
                 )}
               />
+              {!canShowBodyData && (
+                <p className="mt-2 text-sm text-gray-500">
+                  Select Clinic, Category, and Screening Type to load template body data.
+                </p>
+              )}
               {errors.body && (
                 <p className="mt-1 text-sm text-red-600">{errors.body.message}</p>
               )}

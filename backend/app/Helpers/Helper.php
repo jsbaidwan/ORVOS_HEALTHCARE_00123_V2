@@ -323,6 +323,11 @@ class Helper{
 			 
 			$query->where('ehr',$filters['ehr']);
 		}
+		
+		if(!empty($filters['fax_status'])){
+			 
+			$query->where('fax_status',$filters['fax_status']);
+		}
         
 		if (!empty($filters['orvos_doctors']) || !empty($filters['choose_state'])) {
 			
@@ -1503,8 +1508,25 @@ class Helper{
 		if (!$clinic || !$clinic->image) {
 			return ['status' => 422];
 		}
+
+		$path = "uploads/clinics/{$clinic->slug}/logo/{$clinic->image}";
+		$localPath = storage_path('app/public/' . $path);
+		$exists = \Storage::disk('public')->exists($path);
+		$status = $exists ? 200 : 422;
+
+		$pdfPath = null;
+		if ($status === 200 && file_exists($localPath)) {
+			$pdfPath = self::getPdfCompatibleImagePath($localPath);
+		}
 		  
-		return ['status' => $clinic['display_image']['status'] ?? 422,'image' => $clinic['display_image']['src'] ?? NULL,'name' => $clinic['display_image']['name'] ?? NULL, 'path' => $clinic['display_image']['src'] ?? NULL ];
+		return [
+			'status' => $status,
+			'image' => $clinic['display_image']['src'] ?? null,
+			'name' => $clinic->image,
+			'path' => $clinic['display_image']['src'] ?? null,
+			'local_path' => $exists ? $localPath : null,
+			'pdf_path' => $pdfPath,
+		];
 	}
 	
 	 /*
@@ -2131,9 +2153,9 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
-	public static function getPdfTempCategories($clinicId = null)
+	public static function getPdfTempCategories($clinicId = null, $screeningTypeId = null)
 	{ 
-		$clinic = self::getClinicById($clinicId)['clinic'];
+		$clinic = self::getClinicById($clinicId)['clinic'] ?? null;
 		
 		$logo = \Storage::disk('public')->url(
 			'uploads/editor/1757583915_1757501387_OrvosTransparentLogo1.png'
@@ -2150,6 +2172,15 @@ class Helper{
 				$logo = \Storage::disk('public')->url($path);
 				 
 			}
+		}
+ 
+		// Thyroid Eye Disease (screening_type_id = 2) uses a dedicated report layout
+		if(!empty($screeningTypeId) && (string) $screeningTypeId === '2'){
+			$pdfTempCategories = [
+				['id' => 1,'name' => 'Patient Diagnosis Report','template' => self::tedDiagnosisReportTemplate($logo, $footerLogo)],
+			];
+
+			return ['pdfTempCategories' => $pdfTempCategories];
 		}
 				 
 		$pdfTempCategories = [
@@ -2206,6 +2237,99 @@ class Helper{
 	 * End: PDF Templates Categories
 	 * -----------------------------------------
 	 */
+
+	/*
+	 *-----------------------------------------
+	 * Start: Thyroid Eye Disease Report Template
+	 * -----------------------------------------
+	 */
+	public static function tedDiagnosisReportTemplate($logo, $footerLogo)
+	{
+		return '<pre style="text-align:center;"><img src="'.$logo.'" style="width: 230px;" class="fr-fic fr-dib"></pre>
+<hr>
+
+<p data-pasted="true"><span style="font-size: 18px;" data-pasted="true"><strong><span style="font-family: Arial,Helvetica,sans-serif;">EHR:</span></strong><span style="font-family: Arial,Helvetica,sans-serif;"> {Patient:EHR}</span></span><span style="font-family: Arial,Helvetica,sans-serif;"><br></span><span style="font-size: 24px; font-family: Arial, Helvetica, sans-serif;"><strong>Patient Name:</strong> {Patient:FirstName} {Patient:LastName}</span></p><pre><span style="font-size: 12px;"><span data-pasted="true"><strong><span style="font-family: Arial, Helvetica, sans-serif;">Patient DOB:</span></strong></span><span data-pasted="true"><span style="font-family: Arial, Helvetica, sans-serif;"> {Patient:DOB}</span></span></span><span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+</span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;"><strong>Patient Gender:</strong> {Patient:Gender}</span><span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+</span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;"><strong>Patient Condition</strong>: </span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;" data-pasted="true">({Patient:MedicalCondition})</span><span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+</span><span style="font-size: 12px;"><span style="font-family: Arial, Helvetica, sans-serif;" data-pasted="true"><strong>Patient History:</strong> {Patient:History}</span></span><span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+</span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;"><strong>Patient Notes:</strong> {Patient:Notes}</span></pre>
+<hr>
+ 
+
+<table style="width: 100%; margin: auto; border-width: 1px; border-style: solid; border-color: rgb(0, 0, 0); height: 300px;" class="light-bordered">
+	<colgroup>
+		<col style="width: 79.9632%;">
+			<col style="width: 10.0066%;">
+				<col style="width: 10.0066%;">
+	</colgroup>
+	<tbody>
+		<tr style="height: 64px;">
+			<td class="padding " data-cell-padding="10" style="padding: 10px;">
+
+				<p style="font-size: 12px; font-family: Arial, Helvetica, sans-serif; margin-bottom: 4px;" data-pasted="true"><strong>Right Eye</strong></p>{Patient:RightEyeImages}</td>
+			<td rowspan="3" style="text-align: left; padding: 10px; vertical-align: top;" data-cell-padding="10">
+
+				<p style="font-size: 12px; font-family: Arial, Helvetica, sans-serif; margin: 8px 0 4px 0;" data-pasted="true"><strong>CAS Questions</strong></p>{Patient:CasQuestions}</td>
+			<td rowspan="3" style="text-align: left; padding: 10px; vertical-align: top;" data-cell-padding="10"><strong data-pasted="true"><span style="font-size: 12px;">Diagnosis Details</span></strong>
+				<br>
+				<br>
+
+				<table style="width: 100%; margin: auto;    border-color: rgb(0, 0, 0); height: 99px;">
+					<colgroup>
+						<col style="width: 100.0000%;">
+					</colgroup>
+					<tbody>
+						<tr style="height: 50px;">
+							<td class="padding" data-cell-padding="10" style="padding: 10px;"><span style="font-size: 12px;" data-pasted="true"><strong>Left Eye:-</strong><br>{Patient:LeftEyeRemarks}</span>
+								<br>
+							</td>
+						</tr>
+						<tr>
+							<td data-cell-padding="10" style="padding: 10px;"><span style="font-size: 12px;" data-pasted="true"><strong>Right Eye:-</strong><br>{Patient:RightEyeRemarks}</span>
+								<br>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<br><span style="font-size: 12px;"><br><br></span>
+				<br>
+			</td>
+		</tr>
+		<tr style="height: 30px;">
+			<td class="padding" data-cell-padding="10" style="padding: 10px;">
+
+				<p style="font-size: 12px; font-family: Arial, Helvetica, sans-serif; margin-bottom: 4px;" data-pasted="true"><strong>Left Eye</strong></p>{Patient:LeftEyeImages}</td>
+		</tr>
+		<tr style="height: 64px;">
+			<td data-cell-padding="10" style="padding: 10px;">
+
+				<p style="font-size: 12px; font-family: Arial, Helvetica, sans-serif; margin-bottom: 4px;" data-pasted="true"><strong>Both Eyes</strong></p>{Patient:BothEyeImages}</td>
+		</tr>
+	</tbody>
+</table>
+<hr>
+
+<p style="font-size:12px;">
+	<strong>Diagnosis Notes:</strong> {Patient:DiagnosisNote}
+</p>
+
+<p style="font-size:12px;">
+	<strong>Follow Up:</strong>
+	{Patient:FollowUp}
+</p>
+<p style="font-size:12px;">
+	<strong>Orvos Doctor:</strong>
+	{OrvosDoctor:Name}<br>
+
+	<strong>NPI Number:</strong>
+	{OrvosDoctor:NPINumber}<br><br>
+
+	<strong>Signature:</strong><br> {OrvosDoctor:Signature}
+</p>
+
+<p style="text-align: right;"><img src="'.$footerLogo.'" style="width: 230px;" class="fr-fic fr-dib fr-fir"></p>
+';
+	}
 	 
 	 
 	  /*
@@ -2214,9 +2338,9 @@ class Helper{
 	 * -----------------------------------------
 	 */
 	 
-	public static function getPdfTempCategoryById($id,$clinicId = null)
+	public static function getPdfTempCategoryById($id,$clinicId = null, $screeningTypeId = null)
 	{
-		$pdfTempCategories = self::getPdfTempCategories($clinicId)['pdfTempCategories'];
+		$pdfTempCategories = self::getPdfTempCategories($clinicId, $screeningTypeId)['pdfTempCategories'];
 		 
 		foreach ($pdfTempCategories as $category) {
 			if ($category['id'] == $id) {
@@ -2307,6 +2431,7 @@ class Helper{
 	{
 		$pdfTemplate = PdfTemplate::where('clinic_id', $clinicId)
 		->where('pdf_template_category_id',$pdfTemplateCategoryId)
+		->where('screening_type_id',$moduleData['screening_type_id'])
 		->where('status',1)
 		->first();
 		
@@ -2343,6 +2468,7 @@ class Helper{
 			'{Patient:LeftEyeImages}',
 			'{Patient:RightEyeStatus}',
 			'{Patient:RightEyeImages}',
+			'{Patient:BothEyeImages}',
 			'{Patient:RemarkBy}',
 			'{Patient:RemarkAt}',
 			'{Patient:DOS}',
@@ -2352,6 +2478,7 @@ class Helper{
 			'{Patient:FollowUp}',
 			'{Patient:DiagnosisNote}',
 			'{Patient:History}',
+			'{Patient:CasQuestions}',
 		];
 	}
 	 /*
@@ -2412,29 +2539,63 @@ class Helper{
 		}
 		
 		$rightEyes .= '</tr></table>';
+
+		$bothEyes = '<table width="100%" cellpadding="5" cellspacing="0" style="border:0px solid #eee;"><tr>';
+		if(!empty($data['b_eye_images'])){
+			$bothEyesArr = $data['display_both_eye_images'] ?? [];
+			if(count($bothEyesArr) == 1){
+				$bothEyes .= '<td style="border:0;"></td>';
+			}
+			foreach($bothEyesArr as $key => $file ){
+				$bUrl = $file['src'] ?? '';
+				$bothEyes .= '<td width="33%" align="center" valign="top">
+					<img src="'.$bUrl.'" width="100" height="100"><br>
+					<small>B ' . ($key + 1) . '</small>
+				  </td>';
+			}
+			if(count($bothEyesArr) == 1){
+				$bothEyes .= '<td style="border:0;"></td>';
+			}
+		}
+		$bothEyes .= '</tr></table>';
 		  
 		$leftEyeRemarks = NULL;
 		$rightEyeRemarks = NULL;
 		$note = NULL;
 		if(!empty($data['remark_result'])){
 			$examTest = $data['remark_result'];
+			$isTed = (string) ($data['screening_type_id'] ?? '') === '2';
 			
 			if(!empty($examTest['exam_data']['leftEye'])){
-				foreach($examTest['exam_data']['leftEye'] as $eKey => $eData){
-					
-					$examTypeData = \Helper::getExamTypeById($data['medical_condition_id'], $eData['exam_type'] ?? '','leftEye');
-					if($examTypeData['status'] === 200 && $examTypeData['examType']){
-						$leftEyeRemarks .= '<div style="margin-bottom: 10px;">'.$examTypeData['examType']['name'].' '.$examTypeData['examType']['code'].'</div>';
+				if ($isTed && !is_array($examTest['exam_data']['leftEye'])) {
+					$ted = \Helper::tedDiseaseById($examTest['exam_data']['leftEye']);
+					if (($ted['status'] ?? null) === 200) {
+						$leftEyeRemarks .= '<div style="margin-bottom: 10px;">'.$ted['tedDisease']['name'].'</div>';
 					}
-					 
+				} else {
+					foreach($examTest['exam_data']['leftEye'] as $eKey => $eData){
+						
+						$examTypeData = \Helper::getExamTypeById($data['medical_condition_id'], $eData['exam_type'] ?? '','leftEye');
+						if($examTypeData['status'] === 200 && $examTypeData['examType']){
+							$leftEyeRemarks .= '<div style="margin-bottom: 10px;">'.$examTypeData['examType']['name'].' '.$examTypeData['examType']['code'].'</div>';
+						}
+						 
+					}
 				}
 			}
 			
 			if(!empty($examTest['exam_data']['rightEye'])){
-				foreach($examTest['exam_data']['rightEye'] as $eKey => $eData){
-					$examTypeData = \Helper::getExamTypeById($data['medical_condition_id'], $eData['exam_type'] ?? '','rightEye');
-					if($examTypeData['status'] === 200 && $examTypeData['examType']){
-						$rightEyeRemarks .= '<div style="margin-bottom: 10px;">'.$examTypeData['examType']['name'].' '.$examTypeData['examType']['code'].'</div>'; 
+				if ($isTed && !is_array($examTest['exam_data']['rightEye'])) {
+					$ted = \Helper::tedDiseaseById($examTest['exam_data']['rightEye']);
+					if (($ted['status'] ?? null) === 200) {
+						$rightEyeRemarks .= '<div style="margin-bottom: 10px;">'.$ted['tedDisease']['name'].'</div>';
+					}
+				} else {
+					foreach($examTest['exam_data']['rightEye'] as $eKey => $eData){
+						$examTypeData = \Helper::getExamTypeById($data['medical_condition_id'], $eData['exam_type'] ?? '','rightEye');
+						if($examTypeData['status'] === 200 && $examTypeData['examType']){
+							$rightEyeRemarks .= '<div style="margin-bottom: 10px;">'.$examTypeData['examType']['name'].' '.$examTypeData['examType']['code'].'</div>'; 
+						}
 					}
 				}
 			}
@@ -2450,6 +2611,30 @@ class Helper{
 			foreach ($medicalHistories as $key => $value) {
 				// Add comma if not last, otherwise add period
 				$histories .= $value['name'] . ($key == $total - 1 ? '.' : ', ');
+			}
+		}
+
+		$casQuestions = NULL;
+		$rawCas = $data->cas_questions ?? ($data['cas_questions'] ?? null);
+		if (!empty($rawCas)) {
+			$casAnswers = is_array($rawCas) ? $rawCas : json_decode($rawCas, true);
+			if (!empty($casAnswers) && is_array($casAnswers)) {
+				$casQuestions = '<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border:1px solid #cccccc;">';
+				$casQuestions .= '<tr>
+						<td style="padding:6px; border:1px solid #cccccc; font-family:Arial,Helvetica,sans-serif; font-size:12px;"><strong>Question</strong></td>
+						<td style="padding:6px; border:1px solid #cccccc; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-align:center; width:90px;"><strong>Response</strong></td>
+					</tr>';
+				foreach (\Helper::casQuestions() as $q) {
+					if (!isset($casAnswers[$q['id']])) {
+						continue;
+					}
+					$answer = $q['options'][$casAnswers[$q['id']]] ?? '';
+					$casQuestions .= '<tr>
+						<td style="padding:6px; border:1px solid #cccccc; font-family:Arial,Helvetica,sans-serif; font-size:12px;">'.$q['question'].'</td>
+						<td style="padding:6px; border:1px solid #cccccc; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-align:center; white-space:nowrap;"><strong>'.$answer.'</strong></td>
+					</tr>';
+				}
+				$casQuestions .= '</table>';
 			}
 		}
  
@@ -2518,6 +2703,10 @@ class Helper{
 					$replacements[$tag] = $rightEyes ?? '';
 					break;
 
+				case '{Patient:BothEyeImages}':
+					$replacements[$tag] = $bothEyes ?? '';
+					break;
+
 				case '{Patient:RemarkBy}':
 					$replacements[$tag] = (($data->remarkBy->first_name ?? '') . ' ' . ($data->remarkBy->last_name ?? ''));
 					break;
@@ -2545,6 +2734,10 @@ class Helper{
 
 				case '{Patient:History}':
 					$replacements[$tag] = $histories ?? '';
+					break;
+
+				case '{Patient:CasQuestions}':
+					$replacements[$tag] = $casQuestions ?? '';
 					break;
 					
 				case '{Patient:Gender}':
@@ -3602,12 +3795,12 @@ class Helper{
 		return [
 			[
 				'id' => 1,
-				'name' => 'TED – Position',
+				'name' => 'TED - Positive',
 				 
 			],
 			[
 				'id' => 2,
-				'name' => 'TED – Negative',
+				'name' => 'TED - Negative',
 				 
 			],
 			 

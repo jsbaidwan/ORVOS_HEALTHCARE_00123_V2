@@ -29,6 +29,8 @@ class Kernel extends ConsoleKernel
          // ->dailyAt('08:00')
          // ->timezone(config('app.custom_timezone'))->withoutOverlapping()->runInBackground();
 		//$schedule->command('clinic-patient-reports:send-mail')->everyFourHours();
+		$schedule->command('fax:update')->everyThirtyMinutes();
+
     }
 
     /**

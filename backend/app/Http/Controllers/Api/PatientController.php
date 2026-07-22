@@ -662,15 +662,34 @@ class PatientController extends Controller
 		// Create validator instance
 		$validator = \Validator::make($request->all(), $rules);
  
-		// Custom validation: ensure at least one exam type selected from left or right eye
-		$validator->after(function ($validator) use ($input) {
-			 
+		// Custom validation: TED (screening_type_id = 2) uses a single scalar
+		// result per eye (e.g. exam_data[rightEye]=1). Standard exams use an
+		// array of { exam_type } objects per eye.
+		$validator->after(function ($validator) use ($input, $id) {
+			$patient = Patient::find($id);
+			$isTed = $patient && (string) $patient->screening_type_id === '2';
+
+			if ($isTed) {
+				$hasLeft = (string) $patient->l_eye === '1';
+				$hasRight = (string) $patient->r_eye === '1';
+				$leftVal = $input['exam_data']['leftEye'] ?? null;
+				$rightVal = $input['exam_data']['rightEye'] ?? null;
+
+				if ($hasLeft && ($leftVal === null || $leftVal === '')) {
+					$validator->errors()->add('exam_data', 'Please select an option for Left eye.');
+				}
+				if ($hasRight && ($rightVal === null || $rightVal === '')) {
+					$validator->errors()->add('exam_data', 'Please select an option for Right eye.');
+				}
+				return;
+			}
+
 			$leftSelected = isset($input['exam_data']['leftEye']) &&
 				collect($input['exam_data']['leftEye'])->contains(fn($e) => !empty($e['exam_type']));
 
 			$rightSelected = isset($input['exam_data']['rightEye']) &&
 				collect($input['exam_data']['rightEye'])->contains(fn($e) => !empty($e['exam_type']));
- 
+
 			if(isset($input['exam_data']['leftEye'])){
 				if(!$leftSelected){
 					
@@ -924,12 +943,12 @@ class PatientController extends Controller
 		
 		// Render Blade view to HTML
 		$hasPdfTempByCliniId = \Helper::getPdfTemplateByClinicId($patient->clinic_id,1,$patient);
-		
+		 
 		$pdfTemplate = NULL;
 		if($hasPdfTempByCliniId['status'] == true){
 			$pdfTemplate = $hasPdfTempByCliniId['pdfTemplate'];
 		}
-		 
+		
 		$html = \View::make('pdf.patient', [
 			'patient' => $patient,
 			'hasPdfTempByCliniId' => $hasPdfTempByCliniId['status'],

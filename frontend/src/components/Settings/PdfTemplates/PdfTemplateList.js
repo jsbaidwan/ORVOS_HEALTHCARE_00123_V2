@@ -16,6 +16,7 @@ import EllipsisMenu from '../../Common/EllipsisMenu';
 import { usePermissions } from '../../../context/PermissionsContext';
 import Swal from 'sweetalert2';
 import { TrashIcon } from '@heroicons/react/24/solid';
+import { useAdditionalData } from '../../../context/AdditionalDataContext';
 
 const PdfTemplateList = ({ archived = false }) => {
   const {
@@ -27,6 +28,7 @@ const PdfTemplateList = ({ archived = false }) => {
     unarchivePdfTemplate,
     deletePdfTemplate,
   } = usePdfTemplate();
+  const { additionalData } = useAdditionalData();
 
   const initialFilters = { q: '' };
   const [filterValues, setFilterValues] = useState(initialFilters);
@@ -297,6 +299,16 @@ const PdfTemplateList = ({ archived = false }) => {
       render: (row) => (
         <span className="text-gray-600">{row.category?.name || row.category_name || '-'}</span>
       ),
+    },
+    {
+      header: 'Screening Type',
+      accessor: 'screening_type_id',
+      render: (row) => {
+        const type = additionalData?.screeningTypes?.find(
+          (s) => String(s.id) === String(row.screening_type_id)
+        );
+        return <span className="text-gray-600">{type?.name || '-'}</span>;
+      },
     },
     {
       header: 'Clinic',

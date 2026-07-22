@@ -270,8 +270,18 @@ class Patient extends Authenticatable
 		foreach (['leftEye', 'rightEye'] as $eye) {
 
 			if (!empty($remarkResultArr['exam_data'][$eye])) {
+				$eyeData = $remarkResultArr['exam_data'][$eye];
 
-				foreach ($remarkResultArr['exam_data'][$eye] as $index => $item) {
+				// TED screening stores a scalar option id per eye (e.g. "1" / "2")
+				if (!is_array($eyeData)) {
+					$ted = \Helper::tedDiseaseById($eyeData);
+					if (($ted['status'] ?? null) === 200) {
+						$remarkResultArr['exam_data'][$eye . '_ted'] = $ted['tedDisease'];
+					}
+					continue;
+				}
+
+				foreach ($eyeData as $index => $item) {
 					
 					// optional example data:
 					$remarkResultArr['exam_data'][$eye][$index]['exam_type_arr'] = \Helper::getExamTypeById($this->attributes['medical_condition_id'],$item['exam_type'],$eye);
