@@ -1982,3 +1982,53 @@ textarea.input-field:read-only {
 div[style*="z-index: 9999"] a[href*="froala.com"] {
   display: none !important;
 }
+
+/* EyeImageSlider (Swiper) styling */
+.eye-slider {
+  --swiper-navigation-size: 16px;
+}
+
+.eye-slider .swiper-button-next,
+.eye-slider .swiper-button-prev {
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 9999px;
+  background: #009efb;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 20;
+}
+
+.eye-slider .swiper-button-next:hover,
+.eye-slider .swiper-button-prev:hover {
+  background: #0089db;
+  transform: scale(1.08);
+}
+
+.eye-slider .swiper-button-next::after,
+.eye-slider .swiper-button-prev::after {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.eye-slider .swiper-pagination-bullet {
+  background: #d1d5db;
+  opacity: 1;
+}
+
+.eye-slider .swiper-pagination-bullet-active {
+  background: #009efb;
+}
+
+/* Yellow-600 override for dynamically-built classes (bg-${eyeType}-600).
+   Kept OUTSIDE @layer so Tailwind's content-based purge does not drop it. */
+.bg-yellow-600 {
+  background-color: #f59e0b !important;
+}
+
+.focus\:bg-yellow-600:focus {
+  background-color: #f59e0b !important;
+}

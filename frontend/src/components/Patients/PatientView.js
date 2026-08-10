@@ -7,6 +7,7 @@ import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { PreviewImage } from './EyeImageUploader';
+import EyeImageSlider from './EyeImageSlider';
 import { useAuth } from '../../context/AuthContext';
 import FormField from '../UI/FormField';
 import PageLoader from '../Common/PageLoader';
@@ -63,6 +64,30 @@ const PatientView = () => {
     const TED_OPTIONS = useMemo(() => additionalData?.tedDisease || [], [additionalData]);
     const tedName = (val) =>
         TED_OPTIONS.find((o) => String(o.id) === String(val))?.name || '-';
+
+    // CAS questions definitions (from additional data) + patient's stored answers
+    const CAS_QUESTIONS = useMemo(() => additionalData?.casQuestions || [], [additionalData]);
+    const casAnswers = useMemo(() => {
+        const raw = patient?.cas_questions;
+        if (!raw) return {};
+        if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+        if (Array.isArray(raw)) return { ...raw };
+        if (typeof raw === 'string') {
+            try {
+                const parsed = JSON.parse(raw);
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch (e) {
+                return {};
+            }
+        }
+        return {};
+    }, [patient]);
+
+    const casAnswerLabel = (q) => {
+        const val = casAnswers?.[q.id];
+        if (val === undefined || val === null || val === '') return '-';
+        return q.options?.[val] ?? String(val);
+    };
 
     useEffect(() => {
         setPageTitle('Patient Details');
@@ -152,12 +177,31 @@ const PatientView = () => {
         setCurrentStep(prev => prev - 1);
     };
 
+    // Single-page validation + submit for Thyroid Eye Disease (screening_type_id === 2)
+    const handleTedSubmit = async () => {
+        const errs = {};
+        if (!formData.rightEyeTed) errs.rightEye = 'Please select an option.';
+        if (!formData.leftEyeTed) errs.leftEye = 'Please select an option.';
+        if (!formData.follow_up) errs.follow_up = 'Please choose a follow up.';
+
+        if (Object.keys(errs).length > 0) {
+            setFormErrors(errs);
+            return;
+        }
+        setFormErrors({});
+        await submitDiagnosis();
+    };
+
     const handleSubmit = async () => {
         if (!formData.follow_up && currentStepName === 'COMMENTS') {
             setFormErrors({ follow_up: 'Please choose a follow up.' });
             return;
         }
         setFormErrors({});
+        await submitDiagnosis();
+    };
+
+    const submitDiagnosis = async () => {
         const data = new FormData();
 
         data.append('remark', formData.remark);
@@ -262,7 +306,7 @@ const PatientView = () => {
                     preview={img?.src || img}
                     index={i}
                     eyeType="both"
-                    eyeColor="purple"
+                    eyeColor="yellow"
                     hasRemoveButton={false}
                     fullSize={true}
                 />
@@ -762,6 +806,237 @@ const PatientView = () => {
 
                         {/* CONDITIONAL RENDER BASED ON isPending */}
                         {isPending && isOrvosDoctor ? (
+                            isTed ? (
+                                <>
+                                    {/* TOP SUMMARY GRID */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200">
+                                        <div className="space-y-1">
+                                            <InfoItem label="Patient Name" value={`${patient?.first_name || ''} ${patient?.last_name || ''}`} />
+                                            <InfoItem label="#EHR" value={patient?.ehr} />
+                                            <InfoItem label="Medical History" value={Array.isArray(patient?.medical_history_data) ? patient.medical_history_data?.map((item) => item.name).join(', ') : '-'} />
+                                            <InfoItem label="Note" value={patient?.note} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <InfoItem
+                                                label="Patient Code"
+                                                valueNode={
+                                                    <div>
+                                                        <div>{patient?.p_code || '-'}</div>
+                                                        <div className="text-xs text-gray-500 mt-1">
+                                                            {patient?.created_at ? `(${new Date(patient.created_at).toLocaleDateString()})` : ''}
+                                                        </div>
+                                                    </div>
+                                                }
+                                            />
+                                            <InfoItem label="DOB" value={patient?.date_of_birth} />
+                                            <InfoItem label="Gender" value={patient?.gender_data?.name} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <InfoItem label="Clinic Name" value={patient?.clinic?.name} />
+                                            <InfoItem label="Clinic Note" value={patient?.clinic_note || patient?.clinic?.note} />
+                                            <InfoItem label="Medical Condition" value={patient?.medical_condition?.name || patient?.medical_condition_data?.name} />
+                                        </div>
+                                    </div>
+
+                                    
+                                    {/* EYE IMAGES SLIDERS + TED RESULTS */}
+                                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-3">
+
+                                        {/* col-md-3 */}
+                                        <div className="md:col-span-2 space-y-6">
+                                            <EyeImageSlider
+                                                label="Right Eye"
+                                                images={patient?.display_right_eye_images || []}
+                                                eyeType="right"
+                                                widthClass="w-full"
+                                                heightClass="h-48"
+                                                emptyMessage="No Right Eye Images"
+                                            />
+
+                                            <EyeImageSlider
+                                                label="Left Eye"
+                                                images={patient?.display_left_eye_images || []}
+                                                eyeType="left"
+                                                widthClass="w-full"
+                                                heightClass="h-48"
+                                                emptyMessage="No Left Eye Images"
+                                            />
+                                        </div>
+
+                                        {/* col-md-5 */}
+                                        <div className="md:col-span-4">
+                                            <EyeImageSlider
+                                                label="Both Eyes"
+                                                images={patient?.display_both_eye_images || []}
+                                                eyeType="both"
+                                                widthClass="w-full"
+                                                heightClass="h-[26rem]"
+                                                emptyMessage="No Both Eye Images"
+                                            />
+                                        </div>
+
+                                        {/* col-md-4 */}
+                                        <div className="md:col-span-4 space-y-6">
+
+                                            <div>
+                                                <div className="text-xs font-semibold mb-2 text-gray-800">
+                                                    Left Eye
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-[0.08rem]">
+                                                    {TED_OPTIONS.map((opt) => (
+                                                        <label
+                                                            key={opt.id}
+                                                            className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors"
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="ted_leftEye"
+                                                                className="h-4 w-4 text-[#009efb] border-gray-300 focus:ring-[#009efb]"
+                                                                value={opt.id}
+                                                                checked={String(formData.leftEyeTed) === String(opt.id)}
+                                                                onChange={() => {
+                                                                    setFormData((prev) => ({
+                                                                        ...prev,
+                                                                        leftEyeTed: String(opt.id)
+                                                                    }));
+
+                                                                    setFormErrors((prev) => ({
+                                                                        ...prev,
+                                                                        leftEye: undefined
+                                                                    }));
+                                                                }}
+                                                            />
+
+                                                            <span className="text-xs">{opt.name}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+
+                                                {formErrors.leftEye && (
+                                                    <p className="text-red-500 text-xs mt-2 font-medium">
+                                                        {formErrors.leftEye}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <div className="text-xs font-semibold mb-2 text-gray-800">
+                                                    Right Eye
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-[0.08rem]">
+                                                    {TED_OPTIONS.map((opt) => (
+                                                        <label
+                                                            key={opt.id}
+                                                            className="flex items-center space-x-2 border border-gray-200 rounded p-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition-colors"
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="ted_rightEye"
+                                                                className="h-4 w-4 text-[#009efb] border-gray-300 focus:ring-[#009efb]"
+                                                                value={opt.id}
+                                                                checked={String(formData.rightEyeTed) === String(opt.id)}
+                                                                onChange={() => {
+                                                                    setFormData((prev) => ({
+                                                                        ...prev,
+                                                                        rightEyeTed: String(opt.id)
+                                                                    }));
+
+                                                                    setFormErrors((prev) => ({
+                                                                        ...prev,
+                                                                        rightEye: undefined
+                                                                    }));
+                                                                }}
+                                                            />
+
+                                                            <span className="text-xs">{opt.name}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+
+                                                {formErrors.rightEye && (
+                                                    <p className="text-red-500 text-xs mt-2 font-medium">
+                                                        {formErrors.rightEye}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    {/* COMMENTS / FOLLOW UP + CAS QUESTIONS */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 mt-6 border-t border-gray-100">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Doctor's Comments</label>
+                                                <FormField
+                                                    type="textarea"
+                                                    name="remark"
+                                                    value={formData.remark}
+                                                    onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                                                    placeholder="Enter remark here"
+                                                    rows="4"
+                                                    className="w-full border border-gray-300 rounded-md p-3 text-sm focus:ring-primary focus:border-primary shadow-sm"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Follow Up <span className="text-red-500">*</span></label>
+                                                <FormField
+                                                    type="select"
+                                                    name="follow_up"
+                                                    value={formData.follow_up}
+                                                    onChange={(e) => setFormData({ ...formData, follow_up: e.target.value })}
+                                                    options={additionalData?.followUps?.map((item) => ({ value: item?.id, label: item?.name }))}
+                                                    error={formErrors.follow_up}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* CAS Questions read-only table */}
+                                        {CAS_QUESTIONS.length > 0 && (
+                                            <div className="border border-[#0d5b74] rounded-md overflow-hidden self-start bg-white">
+                                                <div className="bg-[#0d5b74] px-4 py-2">
+                                                    <h4 className="text-sm font-semibold text-white">CAS Questions</h4>
+                                                </div>
+                                                <table className="w-full text-xs bg-white">
+                                                    <thead>
+                                                        <tr className="text-left bg-[#0d5b74] text-white">
+                                                            <th className="px-4 py-2 font-medium">Question</th>
+                                                            <th className="px-4 py-2 font-medium text-right">Response</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {CAS_QUESTIONS.map((q) => (
+                                                            <tr key={q.id} className="border-b border-gray-200 last:border-0">
+                                                                <td className="px-4 py-2 text-gray-700">{q.question}</td>
+                                                                <td className="px-4 py-2 text-right font-medium text-gray-800">{casAnswerLabel(q)}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* SUBMIT */}
+                                    <div className="flex justify-end mt-6">
+                                        {isLoadingSubmit ? (
+                                            <span className="inline-flex items-center gap-1 btn btn-success-50 btn-xs rounded cursor-not-allowed">
+                                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                                </svg>
+                                                <span className='text-xs text-muted'> Loading...</span>
+                                            </span>
+                                        ) : (
+                                            <button onClick={handleTedSubmit} className="btn btn-success btn-xs cursor-pointer rounded">
+                                                Submit
+                                            </button>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
                             <>
                                 {/* 1. TOP SUMMARY GRID FOR PENDING STATUS */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200">
@@ -1062,6 +1337,7 @@ const PatientView = () => {
                                     </div>
                                 </div>
                             </>
+                            )
                         ) : (
                             <>
                                 {/* COMPLETED VIEW DESIGN */}
@@ -1120,7 +1396,7 @@ const PatientView = () => {
                                                                 preview={img.src ? img.src : img}
                                                                 index={i}
                                                                 eyeType="both"
-                                                                eyeColor="purple"
+                                                                eyeColor="yellow"
                                                                 hasRemoveButton={false}
                                                                 fullSize={true}
                                                             />

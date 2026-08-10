@@ -202,7 +202,11 @@ const EyeImageUploader = ({ label, name, required = false, eyeType = 'left', set
     if (trigger) trigger(name);
   };
 
-  const eyeColor = eyeType === 'left' ? 'blue' : eyeType === 'right' ? 'green' : 'blue';
+  const eyeColor =
+    eyeType === 'left' ? 'blue' :
+    eyeType === 'right' ? 'green' :
+    eyeType === 'both' ? 'yellow' :
+    'blue';
 
   return (
     <div className="mb-4">
