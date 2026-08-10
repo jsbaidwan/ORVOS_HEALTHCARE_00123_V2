@@ -843,7 +843,7 @@ const PatientView = () => {
                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-3">
 
                                         {/* col-md-3 */}
-                                        <div className="md:col-span-2 space-y-6">
+                                        <div className="col-span-12 md:col-span-2 space-y-6">
                                             <EyeImageSlider
                                                 label="Right Eye"
                                                 images={patient?.display_right_eye_images || []}
@@ -864,19 +864,19 @@ const PatientView = () => {
                                         </div>
 
                                         {/* col-md-5 */}
-                                        <div className="md:col-span-4">
+                                        <div className="col-span-12 md:col-span-4">
                                             <EyeImageSlider
                                                 label="Both Eyes"
                                                 images={patient?.display_both_eye_images || []}
                                                 eyeType="both"
                                                 widthClass="w-full"
-                                                heightClass="h-[26rem]"
+                                                heightClass="h-[12rem] md:h-[26rem]"
                                                 emptyMessage="No Both Eye Images"
                                             />
                                         </div>
 
                                         {/* col-md-4 */}
-                                        <div className="md:col-span-4 space-y-6">
+                                        <div className="col-span-12 md:col-span-4">
 
                                             <div>
                                                 <div className="text-xs font-semibold mb-2 text-gray-800">
@@ -920,7 +920,7 @@ const PatientView = () => {
                                                 )}
                                             </div>
 
-                                            <div>
+                                            <div className='pt-3'>
                                                 <div className="text-xs font-semibold mb-2 text-gray-800">
                                                     Right Eye
                                                 </div>

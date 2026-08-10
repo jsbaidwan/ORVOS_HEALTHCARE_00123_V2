@@ -33,7 +33,7 @@ const SlideImage = ({ preview, eyeType, eyeColor, index, onView }) => {
         <img
           src={blobUrl}
           alt={`${badge} ${index + 1}`}
-          className="w-full h-full object-contain"
+          className="w-full h-full "
           onClick={() => onView(blobUrl)}
           style={{ cursor: 'zoom-in' }}
         />
