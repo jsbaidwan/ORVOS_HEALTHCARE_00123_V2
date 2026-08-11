@@ -1152,7 +1152,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                     </ul>
                   </div>
 
-                  <div className="m3-4 mb-3">
+                  <div className="mt-3 mb-3">
                       <div className="flex items-center space-x-2">
                         <label htmlFor="ted_review_access" className="relative inline-flex items-center cursor-pointer">
                           <input
