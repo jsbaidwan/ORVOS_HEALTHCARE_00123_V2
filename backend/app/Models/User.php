@@ -48,6 +48,7 @@ class User extends Authenticatable
         'licence_number',
         'password',
         'status',
+		'ted_review_access',
         'expiry_reminder',
 		'is_archived'
     ];

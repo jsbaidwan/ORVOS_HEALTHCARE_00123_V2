@@ -173,6 +173,7 @@ const buildDefaults = (data, insuranceCarriersList) => ({
   npi_number: data?.npi_number || '',
   caqh_id: data?.caqh_id || '',
   provider_id: data?.provider_id || '',
+  ted_review_access: data?.ted_review_access ?? false,
   licences: Array.isArray(data?.licenses) && data.licenses.length
     ? data.licenses.map((l) => ({
       id: l.id || null,
@@ -384,6 +385,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
         formData.append('npi_number', data.npi_number?.trim() || '');
         formData.append('caqh_id', data.caqh_id?.trim() || '');
         formData.append('provider_id', data.provider_id?.trim() || '');
+        formData.append('ted_review_access', data.ted_review_access ? 1 : 0);
 
         (data.licences || []).forEach((l, index) => {
           if (l.id) {
@@ -892,8 +894,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                         error={errors.provider_id?.message}
                       />
                     </div>
-                  </div>
-
+ 
                   {/* Licence Details */}
                   <div className="border-t border-gray-200 pt-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -1149,6 +1150,26 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                         </li>
                       ))}
                     </ul>
+                  </div>
+
+                  <div className="m3-4 mb-3">
+                      <div className="flex items-center space-x-2">
+                        <label htmlFor="ted_review_access" className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            id="ted_review_access"
+                            {...register('ted_review_access')}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:bg-primary transition-all duration-200"></div>
+                          <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-all duration-200"></div>
+                        </label>
+                        <span className="text-sm font-medium text-gray-700">TED Review Access</span>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Enable this setting to authorize this doctor to review Thyroid Eye Disease (TED) patients.
+                      </p>
+                    </div>
                   </div>
                 </>
               )}

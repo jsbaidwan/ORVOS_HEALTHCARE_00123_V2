@@ -383,6 +383,10 @@ class Helper{
 					
 					$query->where('remark_by',\Auth::user()->id);
 				}
+				
+				if(empty(\Auth::user()->ted_review_access) || \Auth::user()->ted_review_access === 0){
+					$query->where('screening_type_id', '!=', 2);
+				}
 				//$query->where('state_id',\Auth::user()->state_id);
 				 
 			} else{
