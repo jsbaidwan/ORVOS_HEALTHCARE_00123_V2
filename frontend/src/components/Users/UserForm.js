@@ -1167,7 +1167,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
                         <span className="text-sm font-medium text-gray-700">TED Review Access</span>
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        Enable this setting to authorize this doctor to review Thyroid Eye Disease (TED) patients.
+                        <em>(Enable this setting to authorize this doctor to review Thyroid Eye Disease (TED) patients.)</em>
                       </p>
                     </div>
                   </div>
