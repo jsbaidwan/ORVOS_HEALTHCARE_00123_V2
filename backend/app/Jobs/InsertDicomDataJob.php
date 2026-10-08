@@ -160,6 +160,7 @@ class InsertDicomDataJob implements ShouldQueue
 		}   
 		 
 		$patientName = $study['Tags']['0010,0010']['Value'] ?? $study['Patient']['MainDicomTags']['PatientName'] ?? null;
+		$patientComment = $study['Tags']['0010,4000']['Value'] ?? $study['Patient']['MainDicomTags']['PatientComments'] ?? null;
 		 
 		if (!empty($patientName)) {
 			$nameParts = explode('^', $patientName);
@@ -183,6 +184,7 @@ class InsertDicomDataJob implements ShouldQueue
 		$input['study_id'] = $studyId;
 		$input['first_name'] = $firstName;
 		$input['last_name'] = $lastName;
+		$input['note'] = $patientComment;
 		$input['user_id'] = 0;
 		$input['dicom_json'] = json_encode($study);
 		$input['medical_history'] = json_encode([]);
