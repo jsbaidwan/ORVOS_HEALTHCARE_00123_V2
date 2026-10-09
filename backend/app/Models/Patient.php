@@ -298,6 +298,17 @@ class Patient extends Authenticatable
 		$followUpData = \Helper::getFollowUpStatusById($value);
 		return $followUpData;
 	}
+	
+	public function getNoteAttribute($value)
+	{
+		json_decode($value);
+
+		if (json_last_error() === JSON_ERROR_NONE) {
+			return null;
+		}
+
+		return $value;
+	}
 	  
 	public function getFormatedCreatedAtAttribute()
 	{
