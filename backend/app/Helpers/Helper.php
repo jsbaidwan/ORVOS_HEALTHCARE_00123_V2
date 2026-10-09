@@ -3636,8 +3636,8 @@ class Helper{
 	|--------------------------------------------------------------------------
 	*/
 	 
-	public static function ghostScriptPdfCompress($inputFile, $outputFile)
-	{
+	public static function ghostScriptPdfCompress($inputFile, $outputFile,$userPassword,$hasPassword)
+	{	 
 		// Detect Laravel environment (BEST WAY)
 		$host = $_SERVER['HTTP_HOST'] ?? '';
 
@@ -3645,20 +3645,35 @@ class Helper{
 
 		// Choose Ghostscript binary
 		$gs = $isLocal
-			?  'C:\\Program Files\\gs\\gs10.07.0\\bin\\gswin64c.exe' // Windows local
+			?  'C:\\Program Files\\gs\\gs10.08.0\\bin\\gswin64c.exe' // Windows local
 			: 'gs';                               // Linux live server
-
-		// Build command safely
-		$cmd = '"' . $gs . '" '
-			. '-sDEVICE=pdfwrite '
-			. '-dCompatibilityLevel=1.4 '
-			. '-dPDFSETTINGS=/prepress '
-			. '-dNOPAUSE '
-			. '-dQUIET '
-			. '-dBATCH '
-			. '-sOutputFile=' . escapeshellarg($outputFile) . ' '
+		 
+		if(!empty($hasPassword)){
+			// Build command safely
+			$cmd = '"' . $gs . '" '
+				. '-sDEVICE=pdfwrite '
+				. '-dCompatibilityLevel=1.4 '
+				. '-dPDFSETTINGS=/prepress '
+				. '-dNOPAUSE '
+				. '-dQUIET '
+				. '-dBATCH '
+				. '-sOwnerPassword=' . $userPassword . ' '
+				. '-sUserPassword=' . $userPassword . ' '
+				. '-sOutputFile=' . escapeshellarg($outputFile) . ' '
 			. escapeshellarg($inputFile);
-
+		}else{
+			
+			$cmd = '"' . $gs . '" '
+				. '-sDEVICE=pdfwrite '
+				. '-dCompatibilityLevel=1.4 '
+				. '-dPDFSETTINGS=/prepress '
+				. '-dNOPAUSE '
+				. '-dQUIET '
+				. '-dBATCH '
+				. '-sOutputFile=' . escapeshellarg($outputFile) . ' '
+			. escapeshellarg($inputFile);
+		}
+		 
 		// Execute command
 		exec($cmd, $output, $status);
 

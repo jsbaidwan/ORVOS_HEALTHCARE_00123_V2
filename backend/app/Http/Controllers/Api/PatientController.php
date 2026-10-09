@@ -973,7 +973,7 @@ class PatientController extends Controller
 		$mpdf->dpi = 96;
 		$mpdf->curlAllowUnsafeSslRequests = true;
 		
-		if(!empty($request->hasPassword)){
+		/*if(!empty($request->hasPassword)){
 			// Set PDF Password
 			$userPassword  = $patient->clinic->code ?? 'orvosPass123!';   // password to OPEN the PDF
 			$ownerPassword = $userPassword; // password to control permissions
@@ -983,7 +983,7 @@ class PatientController extends Controller
 				$userPassword,     // user password
 				$ownerPassword     // owner password
 			);
-		}
+		}*/
 
 		// Write HTML
 		$mpdf->WriteHTML($html);
@@ -998,10 +998,21 @@ class PatientController extends Controller
 		$filename = preg_replace('/[^A-Za-z0-9_\-.]/', '', $filename);
 
 		$pdfContent = $mpdf->Output($filename, 'S');
+		
+		$userPassword  = $patient->clinic->code ?? 'orvosPass123!';
+		$hasPassword = NULL;
+		if(!empty($request->hasPassword)){
+			$hasPassword = true;
+		}
+		
 		if(!empty($request->return_back)){
+		 
+			$compressPDFData = $this->compressPDF($filename,$pdfContent,$hasPassword,$userPassword);
+			$finalPdf =  $compressPDFData['finalPdf'];
+			
 			return  [
 				'message'  => 'PDF Generated Successfully',
-				'pdfContent'  => $pdfContent,
+				'pdfContent'  => $finalPdf,
 				'fileName' => $filename,
 				 
 			];
@@ -1011,6 +1022,42 @@ class PatientController extends Controller
 			$patient->update(['is_pdf_report_downloaded' => 2,'pdf_report_downloaded_by' => \Auth::user()->id ?? 0]);
 		}
 		
+		$compressPDFData = $this->compressPDF($filename,$pdfContent,$hasPassword,$userPassword);
+		$inputFile =  $compressPDFData['inputFile'];
+		$outputFile =  $compressPDFData['outputFile'];
+		$finalPdf =  $compressPDFData['finalPdf'];
+
+		$finalFile = (file_exists($outputFile) && filesize($outputFile) > 0)
+			? $outputFile
+			: $inputFile;
+
+		$finalPdf = file_get_contents($finalFile);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Delete temp files
+		|--------------------------------------------------------------------------
+		*/
+
+		@unlink($inputFile);
+		@unlink($outputFile);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Return PDF
+		|--------------------------------------------------------------------------
+		*/
+		 
+		return response()->json([
+			'message'  =>  'PDf Downloaded',
+			'pdf'      => base64_encode($finalPdf),
+			'report_download_status_data' => $patient['report_download_status_data'] ?? [],
+			'fileName' => $filename
+		], 200);
+	}
+	
+	public function compressPDF($filename,$pdfContent,$hasPassword,$userPassword)
+	{
 		$tempDir = storage_path('app/pdf-temp');
 
 		if (!file_exists($tempDir)) {
@@ -1041,8 +1088,8 @@ class PatientController extends Controller
 		| Ghostscript Compress
 		|--------------------------------------------------------------------------
 		*/
-
-		\Helper::ghostScriptPdfCompress($inputFile,$outputFile);
+ 
+		\Helper::ghostScriptPdfCompress($inputFile,$outputFile,$userPassword,$hasPassword);
 		
 		/*
 		|--------------------------------------------------------------------------
@@ -1055,28 +1102,12 @@ class PatientController extends Controller
 			: $inputFile;
 
 		$finalPdf = file_get_contents($finalFile);
-
-		/*
-		|--------------------------------------------------------------------------
-		| Delete temp files
-		|--------------------------------------------------------------------------
-		*/
-
-		@unlink($inputFile);
-		@unlink($outputFile);
-
-		/*
-		|--------------------------------------------------------------------------
-		| Return PDF
-		|--------------------------------------------------------------------------
-		*/
-		 
-		return response()->json([
-			'message'  =>  'PDf Downloaded',
-			'pdf'      => base64_encode($finalPdf),
-			'report_download_status_data' => $patient['report_download_status_data'] ?? [],
-			'fileName' => $filename
-		], 200);
+		
+		return [
+			'inputFile' => $inputFile,
+			'outputFile' => $outputFile,
+			'finalPdf' => $finalPdf
+		];
 	}
 	 
 	public function sendPdf(Request $request)
