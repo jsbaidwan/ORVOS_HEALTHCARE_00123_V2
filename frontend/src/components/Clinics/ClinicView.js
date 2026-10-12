@@ -593,6 +593,7 @@ const ClinicView = () => {
                             <FormField
                               label="App Clinic Password"
                               type="password"
+                              required
                               name="ted_app_cred.app_clinic_password"
                               value={settingsData?.ted_app_cred?.app_clinic_password || ""}
                               placeholder="Enter App Clinic Password"
