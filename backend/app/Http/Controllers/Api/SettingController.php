@@ -53,6 +53,7 @@ class SettingController extends Controller
 
 		if ($clinic) {
 			$data['is_dicom_enabled'] = $clinic->is_dicom_enabled;
+			$data['clinic_code'] = $clinic->code;
 		}
 
 		if (empty($settings) || empty($settings->data)) {
@@ -77,6 +78,33 @@ class SettingController extends Controller
             
             return redirect()->back()->withErrors($validate)->withInput();
         }
+		
+		$hasTedAppAccess = $input['ted_app_cred']['has_ted_app_access'] ?? false;
+		if($hasTedAppAccess == false){
+			$input['ted_app_cred']['app_clinic_code'] = NULL;
+			$input['ted_app_cred']['app_clinic_password'] = NULL;
+		}
+	 
+		if ($hasTedAppAccess == true) {
+			$validate = Validator::make($input, [
+				'ted_app_cred.app_clinic_password' => 'required|string|min:8',
+			]);
+
+			if ($validate->fails()) {
+				return response()->json([
+					'errors' => $validate->errors(),
+					'message' => $validate->errors()->first(),
+				], 422);
+			}
+		}else{
+			$input['ted_app_cred']['has_ted_app_access']  = false;
+		}
+		
+		$clinic = \Helper::getClinicById($request->clinic_id)['clinic'];
+		if($clinic){
+			$input['ted_app_cred']['app_clinic_code'] = $clinic->code;
+		 
+		}
         
        
         $setting = AdditionalSetting::updateOrCreate(

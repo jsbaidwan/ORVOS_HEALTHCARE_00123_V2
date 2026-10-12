@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useClinic } from '../../context/ClinicContext';
 import { useAuth } from '../../context/AuthContext';
 import Breadcrumb from '../Common/Breadcrumb';
+import FormField from '../UI/FormField';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -30,6 +31,11 @@ const ClinicView = () => {
     emailToggle: false,
     patient_appointment_reminders: false,
     allow_add_patient_without_login: false,
+    ted_app_cred:{
+      has_ted_app_access: false,
+      app_clinic_code: '',
+      app_clinic_password: '',
+    },
     clinic_url: '',
   });
 
@@ -44,6 +50,11 @@ const ClinicView = () => {
           emailToggle: !!d.emailToggle,
           patient_appointment_reminders: !!d.patient_appointment_reminders,
           allow_add_patient_without_login: !!d.allow_add_patient_without_login,
+          ted_app_cred: {
+            has_ted_app_access: !!d.ted_app_cred?.has_ted_app_access,
+            app_clinic_code: d.ted_app_cred?.app_clinic_code || '',
+            app_clinic_password: d.ted_app_cred?.app_clinic_password || '',
+          },
           clinic_url: d.clinic_url || '',
         });
       }
@@ -52,10 +63,21 @@ const ClinicView = () => {
   }, [id, getAdditionalSettings]);
  
   const handleToggleField = (fieldName) => {
-    setSettingsData((prev) => ({
-      ...prev,
-      [fieldName]: !prev[fieldName],
-    }));
+    if (fieldName.includes('.')) {
+      const [key, subKey] = fieldName.split('.');
+      setSettingsData((prev) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [subKey]: !prev[key][subKey],
+        },
+      }));
+    } else {
+      setSettingsData((prev) => ({
+        ...prev,
+        [fieldName]: !prev[fieldName],
+      }));
+    }
   };
 
   const handleSaveSettings = async (e) => {
@@ -68,13 +90,21 @@ const ClinicView = () => {
       patient_appointment_reminders: settingsData.patient_appointment_reminders,
       allow_add_patient_without_login: settingsData.allow_add_patient_without_login,
       clinic_url: settingsData.clinic_url,
+      ted_app_cred: settingsData.ted_app_cred,
     });
+     
     if (response?.status && response?.status !== 200) {
-      setErrors({
-        general: response?.message || 'Unable to save settings'
-      });
+      if (response?.errors) {
+        setErrors(response.errors);
+      } else {
+        setErrors({
+          general: response?.message || 'Unable to save settings'
+        });
+      }
       return;
     }
+
+    setErrors({})
     Swal.fire({
       icon: 'success',
       title: 'Saved',
@@ -151,15 +181,15 @@ const ClinicView = () => {
         Swal.update({
           title: 'Running DICOM Fetch Cron...',
           html: `
-          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div
               id="cron-progress"
-              class="bg-blue-600 h-3 rounded-full transition-all duration-500"
-              style="width:0%"
+              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: '0%' }}
             ></div>
           </div>
 
-          <div class="mt-3 text-sm">
+          <div className="mt-3 text-sm">
             Elapsed Time:
             <span id="elapsed-time">0s</span>
           </div>
@@ -283,7 +313,7 @@ const ClinicView = () => {
           Back
         </button>
       </div>
-
+ 
       <ErrorHandle errors={errors} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -525,9 +555,65 @@ const ClinicView = () => {
                         </p>
                       </div>
                     )}
-                  </div>
-                
 
+                    <hr className="my-4" />
+
+                    <div>
+                      
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          TED App Access
+                        </label>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleField('ted_app_cred.has_ted_app_access')}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                              settingsData?.ted_app_cred?.has_ted_app_access ? '' : 'bg-gray-300'
+                            }`}
+                            style={settingsData?.ted_app_cred?.has_ted_app_access ? { backgroundColor: '#009efb' } : {}}
+                          >
+                            <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {settingsData?.ted_app_cred?.has_ted_app_access && (
+                          <div className="flex flex-col gap-2 w-full">
+                            <FormField
+                              label="App Clinic Code"
+                              name="ted_app_cred.app_clinic_code"
+                              value={clinic?.code || ""}
+                              readOnly
+                              placeholder="Enter App Clinic Code"
+                              required
+                              error={errors?.['ted_app_cred.app_clinic_code']}
+                            />
+                          
+                            <FormField
+                              label="App Clinic Password"
+                              type="password"
+                              name="ted_app_cred.app_clinic_password"
+                              value={settingsData?.ted_app_cred?.app_clinic_password || ""}
+                              placeholder="Enter App Clinic Password"
+                              error={errors?.['ted_app_cred.app_clinic_password']}
+                              onChange={(e) =>
+                                setSettingsData((prev) => ({
+                                  ...prev,
+                                  ted_app_cred: {
+                                    ...prev.ted_app_cred,
+                                    app_clinic_password: e.target.value,
+                                  },
+                                }))
+                              }
+                            />
+                        </div>
+                      )}
+
+                    </div>
+
+                </div>
+                 
                 {/* Save Button */}
                 <div className="pt-3">
                   <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white btn-primary rounded-lg shadow">
