@@ -105,6 +105,23 @@ class SettingController extends Controller
 			$input['ted_app_cred']['app_clinic_code'] = $clinic->code;
 		 
 		}
+		
+		if ($hasTedAppAccess == 'on') {
+			$fetchAddSetting = AdditionalSetting::where('clinic_id',$request->clinic_id)->first();
+			if($fetchAddSetting){
+				
+				$getAddSettingData = json_decode($fetchAddSetting['data'],true); 
+				$getClinicPass = $getAddSettingData['ted_app_cred']['app_clinic_password'];
+				if($input['ted_app_cred']['app_clinic_password'] != $getClinicPass){
+					\DB::table('oauth_access_tokens')
+					->where('name','TED')
+					->where('user_id', $request->clinic_id)
+					->update(['revoked' => 1]); 
+					 
+				}
+			}
+			
+		}
         
        
         $setting = AdditionalSetting::updateOrCreate(
