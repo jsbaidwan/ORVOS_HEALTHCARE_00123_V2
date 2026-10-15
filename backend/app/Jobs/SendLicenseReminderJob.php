@@ -22,7 +22,7 @@ class SendLicenseReminderJob implements ShouldQueue
     {
         $this->doctor = $doctor;
 		$this->expiringLicenses = $doctor->expiringLicenses;
-		$this->licenseExpiringDays = $doctor->license_expiring_days;
+		$this->licenseExpiringDays = $doctor->expiringLicenses->min('license_expiring_days') ?? 120;
 	   
     }
 
