@@ -117,7 +117,7 @@ class DeleteDicomDataCommand extends Command
 					if ($studyDate < $cutoff) {
 
 						// Delete old study
-						//$dicom->setGetUrl('/studies/'.$study['ID'])->delete();
+						$dicom->setGetUrl('/studies/'.$study['ID'])->delete();
 						   
 					} else {
 						$hasRecentStudy = true;
@@ -128,7 +128,7 @@ class DeleteDicomDataCommand extends Command
 			
 			// Delete patient if no recent study left
 			if (!$hasRecentStudy) {
-				//$dicom->setGetUrl('/patients/' . $patientId)->delete();
+				$dicom->setGetUrl('/patients/' . $patientId)->delete();
 				  
 			}
 			
