@@ -32,7 +32,7 @@ class DeleteDicomDataCommand extends Command
      */
     public function handle()
     { 
-	    $cutoff = now()->subDays(2)->format('Ymd'); // 2 days ago
+	    $cutoff = now()->subDays(6)->format('Ymd'); // 6 days ago
 
 		// 1. Get all patients
 		$patients = System::get("/patients");
