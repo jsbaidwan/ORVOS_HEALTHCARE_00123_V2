@@ -1443,6 +1443,10 @@ class Helper{
 
 			$query->where('status',$filters['active']);
 		}
+		
+		if(isset($filters['is_stow_enabled'])){
+			$query->where('is_stow_enabled',$filters['is_stow_enabled']);
+		}
 		 
 		if(isset($filters['is_archived'])){
 			$query->where('is_archived',$filters['is_archived']);
