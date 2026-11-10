@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-
+  
 class ObfuscateApiResponse
 {
 	
@@ -32,6 +32,29 @@ class ObfuscateApiResponse
 		if (!empty($request->input('device_info'))) {
 			return $response;
 		}
+		
+		$bearerToken = $request->bearerToken();
+		if(!empty($bearerToken)){
+			$parts = explode('.', $bearerToken);
+
+			if (count($parts) === 3) {
+				$payload = json_decode(
+					base64_decode(strtr($parts[1], '-_', '+/')),
+					true
+				);
+
+				$tokenId = $payload['jti'] ?? null;
+				$token = \Laravel\Passport\Passport::token()->find($tokenId);
+				  
+				if(!empty($token)){
+					if($token['name'] == env('TED_APP_NAME')){
+						return $response;
+					}
+				}
+			}
+			  
+		}
+		
 		
 		// Exclude specified URLs
         if ($request->is($this->exceptUris)) {
