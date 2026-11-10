@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ObfuscateApiResponse
 {
+	
+	protected array $exceptUris = [
+		'api/app-login',
+	];
+	
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
@@ -20,6 +25,11 @@ class ObfuscateApiResponse
 
         // Only for /api/* JSON responses
         if (! $request->is('api/*')) {
+            return $response;
+        }
+		
+		// Exclude specified URLs
+        if ($request->is($this->exceptUris)) {
             return $response;
         }
 
