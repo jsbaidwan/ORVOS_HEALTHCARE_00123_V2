@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\PngEncoder;
 
 class Helper{
 	 
@@ -85,7 +86,7 @@ class Helper{
 	public static function users($isAdmin = false,$filters = [])
 	{
 		$query = User::with('role','clinicUsers','licenses','clinicUsers.clinic')->orderBy('id', 'DESC');
-
+ 
 		if(!empty($filters['role_id'])){
 			$query->where('role_id', $filters['role_id']);
 		}
@@ -138,8 +139,9 @@ class Helper{
 		}
 
 		if(!empty(\Auth::user()) ){
+			
 			if(\Auth::user()->role_id != 1){
-				 
+				
 				if(!empty($filters['state_id'])){ 
 					$query->whereHas('licenses',function($q) use($filters){
 						$q->where('l_state_id',$filters['state_id']);
@@ -149,6 +151,7 @@ class Helper{
 				$query->whereHas('clinicUsers',function($q)  {
 					$q->whereIn('clinic_id',\Auth::user()->clinicUsers->pluck('clinic_id'));
 				});
+				 
 			}
 		}else{
 			
@@ -163,7 +166,7 @@ class Helper{
 			}
 			
 		}
-		 
+		
 		if(empty($filters['paginate']) || $filters['paginate'] === false){
 			$users = $query->get();
 		} else {
@@ -172,6 +175,7 @@ class Helper{
 			$page = $filters['page'] ?? 1;
 			$users = $query->paginate($perPage, ['*'], 'page', $page);
 		}
+		
 		
 		return ['users' => $users];
 	}
@@ -2181,6 +2185,7 @@ class Helper{
 				 
 			}
 		}
+		
  
 		// Thyroid Eye Disease (screening_type_id = 2) uses a dedicated report layout
 		if(!empty($screeningTypeId) && (string) $screeningTypeId === '2'){
@@ -2227,7 +2232,8 @@ class Helper{
 <p><span style="font-family: Arial,Helvetica,sans-serif;"><br></span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;"><strong>Orvos Doctor&nbsp;</strong></span><span style="font-size: 12px;"><span style="font-family: Arial,Helvetica,sans-serif;"><strong>:</strong> </span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;" data-pasted="true">{OrvosDoctor:Name}</span></span><span style="font-family: Arial,Helvetica,sans-serif;"><br></span><span style="font-size: 12px;"><span style="font-family: Arial,Helvetica,sans-serif;"><strong>NPI Number:&nbsp;</strong></span><span style="font-size: 12px; font-family: Arial, Helvetica, sans-serif;" data-pasted="true">{OrvosDoctor:NPINumber}</span></span></p>
 
 <p>
-	<br>
+<p style="font-size:12px;"><strong>Signature:</strong><br> {OrvosDoctor:Signature}<p>
+	 
 </p>
 
 <p style="text-align: right;"><img src="'.$footerLogo.'"  style="width: 224px;" class="fr-fic fr-dib fr-fir"></p>
@@ -2511,7 +2517,9 @@ class Helper{
 			}
 			 
 			foreach($leftEyesArr as $key => $file ){
-				$lUrl = $file['src'];
+				$lUrl = !empty($file['relative_path'])
+				? \Crypt::decryptString($file['relative_path'])
+				: ($file['src'] ?? '');
 				$leftEyes .= '<td width="33%" align="center" valign="top" >
 				<img src="'.$lUrl.'" width="100" height="100"><br>
 				<small>L ' . ($key + 1) . '</small>
@@ -2534,7 +2542,11 @@ class Helper{
 				$rightEyes .= '<td style="border:0;"></td>';
 			} 
 			foreach($rightEyesArr as $key => $file ){
-				$rUrl = $file['src'];
+				  
+				$rUrl = !empty($file['relative_path'])
+				? \Crypt::decryptString($file['relative_path'])
+				: ($file['src'] ?? '');
+				 
 				$rightEyes .= '<td width="33%" align="center" valign="top">
 					<img src="'.$rUrl.'" width="100" height="100"><br>
 					<small>R ' . ($key + 1) . '</small>
@@ -2555,7 +2567,11 @@ class Helper{
 				$bothEyes .= '<td style="border:0;"></td>';
 			}
 			foreach($bothEyesArr as $key => $file ){
-				$bUrl = $file['src'] ?? '';
+				 
+				$bUrl = !empty($file['relative_path'])
+				? \Crypt::decryptString($file['relative_path'])
+				: ($file['src'] ?? '');
+				
 				$bothEyes .= '<td width="33%" align="center" valign="top">
 					<img src="'.$bUrl.'" width="100" height="100"><br>
 					<small>B ' . ($key + 1) . '</small>
@@ -2651,7 +2667,9 @@ class Helper{
 		
 		$sigImg = NULL;
 		if(!empty($data->remarkBy->signature)){
-			$url = $data['remarkBy']['display_signature']['src'] ?? '';
+			$url = isset($data['remarkBy']['display_signature']['relative_path'])
+			? \Crypt::decryptString($data['remarkBy']['display_signature']['relative_path'])
+			: ($data['remarkBy']['display_signature']['src'] ?? '');
 			$sigImg = '<img src="'.$url.'" style="max-height:50px; width:100%;">';
 		}
 		 
@@ -2829,9 +2847,10 @@ class Helper{
 		}
 
 		try {
-			$manager = new ImageManager(new Driver());
-			$image = $manager->read($fullPath);
-			$image->toPng()->save($tempPath);
+			$manager = new ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+			
+			$image = $manager->decode($fullPath);
+			$image->encode(new PngEncoder())->save($tempPath);
 
 			return $tempPath;
 		} catch (\Exception $e) {
@@ -3701,49 +3720,58 @@ class Helper{
 	|--------------------------------------------------------------------------
 	*/
 	
+	
 	public static function convertImages($file, $path, $quality = 85, $ext = 'webp')
 	{
 		$fullPath = storage_path('app/public/' . $path);
 
-		if (!file_exists($fullPath)) {
+		if (!is_dir($fullPath)) {
 			mkdir($fullPath, 0755, true);
 		}
 
+		$ext = strtolower($ext);
 		$filename = time() . '_' . uniqid() . '.' . $ext;
 
 		$manager = new \Intervention\Image\ImageManager(
 			new \Intervention\Image\Drivers\Gd\Driver()
 		);
-		
-		if ($file instanceof \Illuminate\Http\UploadedFile) {
-			$image = $manager->read($file->getRealPath());
-		} else {
-			$image = $manager->read($file);
-		}
 
-		switch (strtolower($ext)) {
+		$source = $file instanceof \Illuminate\Http\UploadedFile
+			? $file->getRealPath()
+			: $file;
+
+		$image = $manager->decode(file_get_contents($source));
+
+		switch ($ext) {
 			case 'webp':
-				$image->toWebp($quality)->save($fullPath . '/' . $filename);
+				$encoder = new \Intervention\Image\Encoders\WebpEncoder(
+					quality: $quality
+				);
 				break;
 
 			case 'jpg':
 			case 'jpeg':
-				$image->toJpeg($quality)->save($fullPath . '/' . $filename);
+				$encoder = new \Intervention\Image\Encoders\JpegEncoder(
+					quality: $quality
+				);
 				break;
 
 			case 'png':
-				$image->toPng()->save($fullPath . '/' . $filename);
+				$encoder = new \Intervention\Image\Encoders\PngEncoder();
 				break;
 
 			default:
 				throw new \Exception("Unsupported image format: {$ext}");
 		}
 
+		$image->encode($encoder)->save($fullPath . '/' . $filename);
+
 		return [
 			'fileName' => $filename,
 			'path' => $path . '/' . $filename,
 		];
 	}
+
 
 	/*
 	|--------------------------------------------------------------------------
@@ -3932,6 +3960,80 @@ class Helper{
 	/*
 	|--------------------------------------------------------------------------
 	| End: Get CAS Question By Id
+	|--------------------------------------------------------------------------
+	*/
+	
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Has Encrypt data
+	|--------------------------------------------------------------------------
+	*/
+	
+	public static function hasEncrypt()
+	{
+		return true;
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| End: Has Encrypt data
+	|--------------------------------------------------------------------------
+	*/
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Encrypt data
+	|--------------------------------------------------------------------------
+	*/
+
+	public static function encryptData($val)
+	{
+		return [
+			'encrypt' => app('hashids')->encode($val)
+		];
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| End: Encrypt data
+	|--------------------------------------------------------------------------
+	*/
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| Start: Decrypt data
+	|--------------------------------------------------------------------------
+	*/
+
+	public static function decryptData($val)
+	{
+		// If already an integer or numeric ID, return as it is
+		if (is_int($val) || (is_string($val) && ctype_digit($val))) {
+			return [
+				'decrypt' => $val
+			];
+		}
+
+		// If empty or not a string, return original value
+		if (!is_string($val) || empty($val)) {
+			return [
+				'decrypt' => $val
+			];
+		}
+
+		// Decode Hashids
+		$decoded = app('hashids')->decode($val);
+
+		return [
+			'decrypt' => !empty($decoded) ? $decoded[0] : $val
+		];
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| End: Decrypt data
 	|--------------------------------------------------------------------------
 	*/
 }

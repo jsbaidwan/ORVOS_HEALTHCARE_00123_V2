@@ -67,15 +67,20 @@ const Dashboard = () => {
       const currentMonth = new Date();
       currentMonth.setMonth(currentMonth.getMonth());
       
-      const totalCompletedPatientsCurrentVise = (completedPatients ?? []).filter(
-        (patient) => {
-          const date = new Date(patient.created_at);
-          return (
-            date.getMonth() === currentMonth.getMonth() &&
-            date.getFullYear() === currentMonth.getFullYear()
-          );
-        }
-      );
+      const totalCompletedPatientsCurrentVise = (
+			Array.isArray(completedPatients) ? completedPatients : []
+		).filter((patient) => {
+			if (!patient?.created_at) return false;
+
+			const date = new Date(patient.created_at);
+
+			if (isNaN(date.getTime())) return false;
+
+			return (
+				date.getMonth() === currentMonth.getMonth() &&
+				date.getFullYear() === currentMonth.getFullYear()
+			);
+		});
       setTotalCompletedPatientsCurrentVise(totalCompletedPatientsCurrentVise);
       tlc.current = true;
     }
@@ -85,7 +90,10 @@ const Dashboard = () => {
    
   useEffect(() => {
  
-      const totalPatients = (pendingPatients ?? []).concat(completedPatients ?? []);
+		const totalPatients = [
+			...(Array.isArray(pendingPatients) ? pendingPatients : []),
+			...(Array.isArray(completedPatients) ? completedPatients : [])
+		];
       setTotalPatients(totalPatients);
          
   }, [pendingPatients, completedPatients]);

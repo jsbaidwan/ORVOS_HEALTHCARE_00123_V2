@@ -13,7 +13,7 @@ class ClinicUser extends Authenticatable
 
 	protected $table = 'clinic_users';  
 	
-	protected $appends = ['formated_created_at'];
+	protected $appends = ['formated_created_at','u_id'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -43,6 +43,38 @@ class ClinicUser extends Authenticatable
         return $this->hasOne('App\Models\User','id','user_id');
 
     }
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
+	}
 	
 	public function getFormatedCreatedAtAttribute()
 	{

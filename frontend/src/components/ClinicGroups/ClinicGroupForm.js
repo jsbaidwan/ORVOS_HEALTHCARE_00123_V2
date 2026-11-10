@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useClinicGroup } from '../../context/ClinicGroupContext';
 import { errorsFormatted } from '../../utils/errorHandler';
-import { useLoader } from '../../context/LoaderContext';
+import { useLoader } from '../../context/LoaderContext'; 
 import { toast } from 'sonner';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +33,7 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
     if(!id){
       return {};
     }
+
     const data = await getClinicGroupById(id);
     return {
       name: data?.clinicGroup?.name || '',
@@ -76,10 +77,11 @@ const ClinicGroupForm = ({ clinicGroup, onClose }) => {
 
     showLoader();
     try {
-      const result = clinicGroup && clinicGroup.id
-        ? await updateClinicGroup(clinicGroup.id, clinicGroupData)
-        : await addClinicGroup(clinicGroupData);
+      const id = clinicGroup?.u_id || clinicGroup?.id;
 
+      const result = id
+          ? await updateClinicGroup(id, clinicGroupData)
+          : await addClinicGroup(clinicGroupData);
       if (result && (result.status === 200 || result.success)) {
         
         onClose();

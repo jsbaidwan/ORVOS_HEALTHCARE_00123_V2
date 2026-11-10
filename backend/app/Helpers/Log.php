@@ -16,10 +16,11 @@ class Log{
 	 
     public static function save($text, $description  = null,$module = null, $moduleId = null)
     {
+		$mId = \Helper::hasEncrypt()? \Helper::decryptData($moduleId)['decrypt'] : $moduleId;
         return LogModel::create([
             'user_id'   => Auth::id(),
             'module'    => $module,
-            'module_id' => $moduleId,
+            'module_id' => $mId,
             'url'       => request()->fullUrl(),
             'text'      => $text,
 			'description' => $description,

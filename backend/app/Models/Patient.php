@@ -12,7 +12,7 @@ class Patient extends Authenticatable
  
 	protected $table = 'patients'; 
 
-	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','display_both_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data','dicom_file_status_data','follow_up_data','display_remark_at'];
+	protected $appends = ['formated_created_at','display_left_eye_images','display_right_eye_images','display_both_eye_images','medical_history','diagnosis_status_data','date_of_birth','medical_condition','medical_history_data','gender_data','report_download_status_data','report_sent_status','fax_status_data','dicom_file_status_data','follow_up_data','display_remark_at','u_id'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -105,6 +105,9 @@ class Patient extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'relative_path' => $status == 200
+					? \Crypt::encryptString(\Storage::disk('public')->path($path))
+					: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 					'name' => $file,
 				];
 			})->values()->toArray(); // reset index (important)
@@ -134,6 +137,9 @@ class Patient extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'relative_path' => $status == 200
+						? \Crypt::encryptString(\Storage::disk('public')->path($path))
+						: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -163,6 +169,9 @@ class Patient extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'relative_path' => $status == 200
+						? \Crypt::encryptString(\Storage::disk('public')->path($path))
+						: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -308,6 +317,38 @@ class Patient extends Authenticatable
 		}
 
 		return $value;
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
 	}
 	  
 	public function getFormatedCreatedAtAttribute()

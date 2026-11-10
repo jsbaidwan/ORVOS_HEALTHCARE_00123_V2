@@ -150,7 +150,7 @@
 						@if(!empty($patient->l_eye_images))
 							@foreach($patient->display_left_eye_images as $key => $file)
 								<td width="33%" align="center" valign="top" >
-									<img src="{{ $file['src'] }}" width="100" height="100">
+									<img src="{{ \Crypt::decryptString($file['relative_path']) }}" width="100" height="100">
 									<small>Image ({{$key + 1}}) </small>
 								</td>
 							@endforeach
@@ -171,7 +171,7 @@
 							
 							@foreach($patient->display_right_eye_images as $key => $file)
 								<td width="33%" align="center" valign="top" >
-									<img src="{{ $file['src'] }}" width="100" height="100">
+									<img src="{{ \Crypt::decryptString($file['relative_path']) }}" width="100" height="100">
 									<small>Image ({{$key + 1}}) </small>
 								</td>
 							@endforeach
@@ -246,13 +246,15 @@
 		<strong>Orvos Doctor:</strong>
 		{{ $patient->remarkBy->first_name ?? '' }} {{ $patient->remarkBy->last_name ?? '' }}<br>
 
-		<strong>NPI Number:</strong>
+		<strong>NPI Number22:</strong>
 		{{ $patient->remarkBy->npi_number ?? '-' }}<br><br>
 		
 		@php
 		$sigImg = '<span></span>';
 		if(!empty($patient->remarkBy->signature)){
-			$sigImg = '<img src="' . ($patient['remarkBy']['display_signature']['src'] ?? '') . '" style="max-height:50px; width:100%;">';
+			$sigImg = '<img src="' . (!empty($patient['remarkBy']['display_signature']['relative_path'])
+			? \Crypt::decryptString($patient['remarkBy']['display_signature']['relative_path'])
+			: ($data['remarkBy']['display_signature']['src'] ?? '')) . '" style="max-height:50px; width:100%;">';
 		}
 		@endphp
 		
@@ -389,7 +391,7 @@
 									@if(count($rightEyesArr) == 1)<td style="border:0;"></td>@endif
 									@foreach($rightEyesArr as $key => $file)
 										<td class="padding " data-cell-padding="10" style="padding: 10px;">
-											<img src="{{ $file['src'] }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
+											<img src="{{ \Crypt::decryptString($file['relative_path']) }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
 											<div><small>Image {{ $key + 1 }}</small></div>
 										</td>
 									@endforeach
@@ -475,7 +477,7 @@
 								@if(count($leftEyesArr) == 1)<td style="border:0;"></td>@endif
 								@foreach($leftEyesArr as $key => $file)
 									<td class="padding " data-cell-padding="10" style="padding: 10px;">
-										<img src="{{ $file['src'] }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
+										<img src="{{ \Crypt::decryptString($file['relative_path']) }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
 										<div><small>Image {{ $key + 1 }}</small></div>
 									</td>
 								@endforeach
@@ -497,8 +499,10 @@
 								@php $bothEyesArr = $patient->display_both_eye_images; @endphp
 								@if(count($bothEyesArr) == 1)<td style="border:0;"></td>@endif
 								@foreach($bothEyesArr as $key => $file)
+								
 									<td class="padding " data-cell-padding="10" style="padding: 10px;">
-										<img src="{{ $file['src'] }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
+									 
+										<img src="{{ \Crypt::decryptString($file['relative_path']) }}" width="100" height="100" style="border:1px solid #cccccc; padding:2px;">
 										<div><small>Image {{ $key + 1 }}</small></div>
 									</td>
 								@endforeach
@@ -529,7 +533,7 @@
 			-
 		@endif
 	</p>
-
+	 
 	{{-- Doctor Info --}}
 	<p style="font-size:12px;">
 		<strong>Orvos Doctor:</strong>
@@ -540,8 +544,12 @@
 
 		@php
 		$sigImg = '<span></span>';
+		
 		if(!empty($patient->remarkBy->signature)){
-			$sigImg = '<img src="' . ($patient['remarkBy']['display_signature']['src'] ?? '') . '" style="max-height:50px; width:100%;">';
+			
+			$sigImg = '<img src="' . (!empty($patient['remarkBy']['display_signature']['relative_path'])
+			? \Crypt::decryptString($patient['remarkBy']['display_signature']['relative_path'])
+			: ($data['remarkBy']['display_signature']['src'] ?? '')) . '" style="max-height:50px; width:100%;">';
 		}
 		@endphp
 

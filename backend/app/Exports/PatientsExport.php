@@ -6,6 +6,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Illuminate\Support\Enumerable;
 
 class PatientsExport implements FromCollection, WithHeadings, WithCustomCsvSettings,WithEvents
 {
@@ -46,7 +47,7 @@ class PatientsExport implements FromCollection, WithHeadings, WithCustomCsvSetti
         $this->patients = $patients;
     }
 
-    public function collection()
+    public function collection(): Enumerable
     {
 		
         return collect($this->patients)->map(function ($patient) {

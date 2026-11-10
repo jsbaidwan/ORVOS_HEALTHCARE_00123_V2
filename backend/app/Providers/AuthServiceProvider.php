@@ -30,20 +30,18 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
 		$this->registerPolicies();
-		
+		 
 		Passport::tokensExpireIn(\Helper::tokensExpireIn()['token_expire_in']);
 		Passport::personalAccessTokensExpireIn(\Helper::tokensExpireIn()['token_expire_in']);		
 		//Passport::routes();
 		
 		Auth::extend('custom-passport', function ($app, $name, array $config) {
-			// Original user provider, e.g. EloquentUserProvider
 			$defaultUserProvider = Auth::createUserProvider($config['provider']);
-			
-			// Hasher instance
-			$hasher = $app['hash'];
 
-			// Create PassportUserProvider with 2 args
-			$userProvider = new PassportUserProvider($defaultUserProvider, $hasher);
+			$userProvider = new PassportUserProvider(
+				$defaultUserProvider,
+				$config['provider']
+			);
 
 			return new \App\Guards\PassportTokenGuard(
 				$app->make(ResourceServer::class),

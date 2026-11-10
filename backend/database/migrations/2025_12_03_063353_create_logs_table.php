@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->increments('id');
 			$table->unsignedBigInteger('user_id')->nullable();
-			$table->string('url')->nullable();
+			$table->text('url')->nullable();
 			$table->text('text')->nullable();
 			$table->string('method')->nullable();
 			$table->string('ip')->nullable();

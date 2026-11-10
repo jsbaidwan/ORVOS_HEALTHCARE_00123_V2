@@ -11,6 +11,8 @@ class Role extends Authenticatable
     use Notifiable;
 
 	protected $table = 'roles';  
+	
+	protected $appends = ['u_id'];	
 	 
     /**
      * The attributes that are mass assignable.
@@ -27,5 +29,37 @@ class Role extends Authenticatable
 		'slug' => 'nullable|unique:roles',
 		 
     );
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
+	}
    
 }

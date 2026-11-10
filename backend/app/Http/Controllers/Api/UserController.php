@@ -15,6 +15,8 @@ use App\Models\State;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendUserInvitationJob;
+use Illuminate\Support\Facades\Password;
   
 class UserController extends Controller
 { 
@@ -26,7 +28,9 @@ class UserController extends Controller
 		}
 		
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
+		
 		$users = \Helper::users(false,$input)['users']; 
+		 
 		return response()->json(['users' => $users], 200);
 		 
 	}
@@ -301,6 +305,15 @@ class UserController extends Controller
                 } 
             }
         }
+		
+		$token = Password::broker('user_invitations')->createToken($user);
+
+		$invitationUrl = url('/password/reset/' . $token)
+			. '?email=' . urlencode($user->email);
+			 
+		
+		SendUserInvitationJob::dispatch($user, $invitationUrl)
+		->onQueue('send-user-invitation');
 		
 		\Log::save(
 			'User Created.',

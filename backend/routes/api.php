@@ -129,6 +129,7 @@ Route::middleware('auth:api')->group(function () {
 			 
 			return response()->json(['message' => 'The Module and id field is required.'],422,[],JSON_UNESCAPED_SLASHES); 
 		}
+		$input['id'] = \Helper::hasEncrypt()? \Helper::decryptData($input['id'])['decrypt'] : $input['id'];
 		
 		$fModule = ucwords(rtrim(str_replace('-', ' ', $input['module']), 's')); 
 		$module = 'App\\Models\\' . str_replace(' ', '', $fModule);
@@ -162,6 +163,7 @@ Route::middleware('auth:api')->group(function () {
 			 
 			return response()->json(['message' => 'The Module and id field is required.'],422,[],JSON_UNESCAPED_SLASHES); 
 		}
+		$input['id'] = \Helper::hasEncrypt()? \Helper::decryptData($input['id'])['decrypt'] : $input['id'];
 		
 		$fModule = ucwords(rtrim(str_replace('-', ' ', $input['module']), 's')); 
 		$module = 'App\\Models\\' . str_replace(' ', '', $fModule);

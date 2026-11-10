@@ -57,10 +57,10 @@ class LoginController extends Controller
         }
 		 
 
-		 
+		
         if ($this->attemptLogin($request)) {
             return $this->sendLoginResponse($request);
-        }
+        }  
 
         // If the login attempt was unsuccessful we will increment the number of attempts
         // to login and redirect the user back to the login form. Of course, when this
@@ -173,7 +173,7 @@ class LoginController extends Controller
 		$rolesResult = \Helper::getRoles(true);
 		
 		$roleIds = [];
-		
+	
 		$user = User::where($field, $request->get($this->username()))->first();
 		$userRoleId = $user ? $user->role_id : null;
 		
@@ -199,7 +199,7 @@ class LoginController extends Controller
 			'status' => 1,
 			'role_id' => $roleIds,
 			 
-		];
+		];	
 		  
 		return $data;
 	 

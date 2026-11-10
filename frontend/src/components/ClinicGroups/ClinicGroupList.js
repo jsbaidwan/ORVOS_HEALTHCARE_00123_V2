@@ -191,7 +191,7 @@ const ClinicGroupList = ({ archived = false }) => {
 
               <div className="text-sm">
                 <Link
-                  to={getRoutePath(`/clinic-groups/view/${row.id}`)}
+                  to={getRoutePath(`/clinic-groups/view/${row.u_id || row.id}`)}
                   className='text-primary hover:text-primary-700'
                   target='_blank'
                 >
@@ -285,7 +285,7 @@ const ClinicGroupList = ({ archived = false }) => {
             menus={[
               {
                 label: "View",
-                path: (row) => getRoutePath(`/clinic-groups/view/${row.id}`),
+                path: (row) => getRoutePath(`/clinic-groups/view/${row.u_id || row.id}`),
 
               },
 

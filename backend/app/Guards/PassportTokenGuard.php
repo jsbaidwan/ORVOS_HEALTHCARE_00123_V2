@@ -2,20 +2,21 @@
 
 namespace App\Guards;
 
-use Laravel\Passport\Guards\TokenGuard;
-use Illuminate\Http\Request;
-use Laravel\Passport\TokenRepository;
-use Laravel\Passport\ClientRepository;
-use Laravel\Passport\PassportUserProvider;
-use League\OAuth2\Server\ResourceServer;
-use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Contracts\Encryption\Encrypter;
-use Lcobucci\JWT\Configuration;
 use Carbon\Carbon;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Encryption\Encrypter;
+use Illuminate\Http\Request;
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Guards\TokenGuard;
+use Laravel\Passport\PassportUserProvider;
+use Laravel\Passport\TokenRepository;
+use League\OAuth2\Server\ResourceServer;
 
 class PassportTokenGuard extends TokenGuard
 {
-    protected $jwtConfig;
+    protected TokenRepository $tokens;
 
     public function __construct(
         ResourceServer $server,
@@ -25,49 +26,73 @@ class PassportTokenGuard extends TokenGuard
         Encrypter $encrypter,
         Request $request
     ) {
-        parent::__construct($server, $provider, $tokens, $clients, $encrypter, $request);
+        parent::__construct(
+            $server,
+            $provider,
+            $clients,
+            $encrypter,
+            $request
+        );
 
-        // Setup JWT configuration for parsing tokens
-        $this->jwtConfig = Configuration::forUnsecuredSigner();
+        $this->tokens = $tokens;
     }
 
-    public function user(Request $request = null)
+    public function user(): ?Authenticatable
     {
-        $request = $request ?: request();
-		
+        $request = request();
         $bearerToken = $request->bearerToken();
 
         if (!$bearerToken) {
             return null;
         }
 
-        // Parse token to get token ID (jti)
         $tokenId = $this->getTokenIdFromTokenString($bearerToken);
+
         if (!$tokenId) {
             return null;
         }
 
-        // Find token in DB using TokenRepository for better abstraction
-        $token = $this->tokens->find($tokenId);
- 
-        if (!$token || $token->revoked || Carbon::parse($token->expires_at)->isPast()) {
+        $token = \Laravel\Passport\Passport::token()->find($tokenId);
+		
+        if (
+            !$token ||
+            $token->revoked ||
+            !$token->expires_at ||
+            Carbon::parse($token->expires_at)->isPast()
+        ) {
             return null;
         }
-	 
-		// Extend token expiration by 1 day (or any duration you want)
-		$token->expires_at = \Helper::tokensExpireIn()['token_expire_in'];
-		$token->save();
-		   
-        // Get user model via UserProvider
+
+        // Extend expiration only after validating the token.
+        $token->expires_at = \Helper::tokensExpireIn()['token_expire_in'];
+		 
+        $token->save();
+
         return $this->provider->retrieveById($token->user_id);
     }
 
-    protected function getTokenIdFromTokenString(string $bearerToken)
+    protected function getTokenIdFromTokenString(string $bearerToken): ?string
     {
         try {
-            $token = $this->jwtConfig->parser()->parse($bearerToken);
-            return $token->claims()->get('jti');
-        } catch (\Exception $e) {
+            // Decode only to extract jti. Passport's ResourceServer
+            // is responsible for cryptographic bearer-token validation.
+            $parts = explode('.', $bearerToken);
+
+            if (count($parts) !== 3) {
+                return null;
+            }
+
+            $payload = json_decode(
+                JWT::urlsafeB64Decode($parts[1]),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+
+            return isset($payload['jti']) && is_string($payload['jti'])
+                ? $payload['jti']
+                : null;
+        } catch (\Throwable $e) {
             return null;
         }
     }

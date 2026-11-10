@@ -14,8 +14,13 @@ use App\Notifications\ResetPassword as ResetPasswordNotification;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+	
+	public function getProviderName(): string
+	{
+        return 'users';
+    }
 
-	protected $appends = ['formated_created_at','google_map_api_key','display_signature','display_documents','display_avatar','is_active_status'];
+	protected $appends = ['formated_created_at','google_map_api_key','display_signature','display_documents','display_avatar','is_active_status','u_id'];
     /**
      * The attributes that are mass assignable.
      *
@@ -172,6 +177,9 @@ class User extends Authenticatable
 		return [
 			'status' => $status,
 			'src' => $src,
+			'relative_path' => $status == 200
+			? \Crypt::encryptString(\Storage::disk('public')->path($path))
+			: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 			'name' => $signature
 		];
 	}
@@ -197,6 +205,9 @@ class User extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'relative_path' => $status == 200
+					? \Crypt::encryptString(\Storage::disk('public')->path($path))
+					: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -225,10 +236,45 @@ class User extends Authenticatable
 		return [
 			'status' => $status,
 			'src' => $src,
+			'relative_path' => $status == 200
+			? \Crypt::encryptString(\Storage::disk('public')->path($path))
+			: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 			'name' => $image
 		];
 	}
 	  
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
+	}
+	
 	public function getFormatedCreatedAtAttribute()
 	{
 		if (!empty($this->created_at)) {

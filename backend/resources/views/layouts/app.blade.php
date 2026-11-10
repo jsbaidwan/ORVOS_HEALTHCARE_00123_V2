@@ -13,72 +13,68 @@
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
-    <!-- Styles -->
-    @vite('resources/css/app.css')
-</head> 
-<body class="bg-gray-900 min-h-screen flex flex-col">
-    <div id="app" class="flex-grow flex flex-col">
-
-        <!-- Navbar Section -->
-        <nav class="bg-gray-700 shadow">
-            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                <a href="{{ url('/') }}" class="text-2xl font-bold text-white hover:text-gray-300">
+    <!-- Scripts -->
+    
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="{{ url('/') }}">
                     {{ config('app.name', 'Laravel') }}
                 </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                <div class="flex items-center space-x-6">
-                    @guest
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="text-gray-300 hover:text-white font-medium">{{ __('Login') }}</a>
-                        @endif
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <!-- Left Side Of Navbar -->
+                    <ul class="navbar-nav me-auto">
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="text-gray-300 hover:text-white font-medium">{{ __('Register') }}</a>
-                        @endif
-                    @else
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center text-gray-300 hover:text-white font-medium focus:outline-none">
-                                {{ Auth::user()->name }}
-                                <svg class="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            </button>
+                    </ul>
 
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-md shadow-lg py-1 z-50">
-                                <a href="{{ route('logout') }}"
-                                   class="block px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white"
-                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    {{ __('Logout') }}
+                    <!-- Right Side Of Navbar -->
+                    <ul class="navbar-nav ms-auto">
+                        <!-- Authentication Links -->
+                        @guest
+                            @if (Route::has('login'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                </li>
+                            @endif
+
+                            @if (Route::has('register'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                                </li>
+                            @endif
+                        @else
+                            <li class="nav-item dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    {{ Auth::user()->name }}
                                 </a>
 
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-                                    @csrf
-                                </form>
-                            </div>
-                        </div>
-                    @endguest
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                       onclick="event.preventDefault();
+                                                     document.getElementById('logout-form').submit();">
+                                        {{ __('Logout') }}
+                                    </a>
+
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
+                                </div>
+                            </li>
+                        @endguest
+                    </ul>
                 </div>
             </div>
         </nav>
 
-        <!-- Content Area (Grey Background) -->
-        <main class="flex-grow">
-            <div class="container mx-auto px-4 py-8 rounded-lg shadow-md">
-                @yield('content')
-            </div>
+        <main class="py-4">
+            @yield('content')
         </main>
-
-        <!-- Footer Section -->
-        <footer class="bg-gray-700 py-4 mt-8 shadow-inner">
-            <div class="container mx-auto px-4 text-center text-gray-400 text-sm">
-                &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-            </div>
-        </footer>
     </div>
-
-    <!-- AlpineJS for dropdown -->
-    <script src="//unpkg.com/alpinejs" defer></script>
-	  
-
 </body>
 </html>

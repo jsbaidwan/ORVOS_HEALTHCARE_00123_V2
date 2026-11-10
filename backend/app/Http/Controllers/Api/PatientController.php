@@ -1023,6 +1023,7 @@ class PatientController extends Controller
 		}
 		
 		$compressPDFData = $this->compressPDF($filename,$pdfContent,$hasPassword,$userPassword);
+		 
 		$inputFile =  $compressPDFData['inputFile'];
 		$outputFile =  $compressPDFData['outputFile'];
 		$finalPdf =  $compressPDFData['finalPdf'];

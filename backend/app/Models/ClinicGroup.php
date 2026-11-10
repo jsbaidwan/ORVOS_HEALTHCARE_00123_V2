@@ -13,7 +13,7 @@ class ClinicGroup extends Authenticatable
 
 	protected $table = 'clinic_groups';  
 	
-	protected $appends = ['formated_created_at','is_active_status'];
+	protected $appends = ['formated_created_at','is_active_status','u_id'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -40,6 +40,39 @@ class ClinicGroup extends Authenticatable
 		return \Helper::getIsActiveStatusById($this->active)['status'] ?? [];
 		 
 	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
+	}
+	
 	
 	public function getFormatedCreatedAtAttribute()
 	{

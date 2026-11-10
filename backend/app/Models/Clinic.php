@@ -14,7 +14,7 @@ class Clinic extends Authenticatable
 
 	protected $table = 'clinics'; 
   
-	protected $appends = ['formated_created_at','is_active_status','display_files','display_image'];
+	protected $appends = ['formated_created_at','is_active_status','display_files','display_image','u_id'];
 	 
     /**
      * The attributes that are mass assignable.
@@ -120,6 +120,9 @@ class Clinic extends Authenticatable
 				return [
 					'status' => $status,
 					'src' => $status == 200 ? $src : asset('assets/images/dummy.png'),
+					'relative_path' => $status == 200
+					? \Crypt::encryptString(\Storage::disk('public')->path($path))
+					: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 					'name' => $file
 				];
 			})->values()->toArray(); // reset index (important)
@@ -148,6 +151,9 @@ class Clinic extends Authenticatable
 		return [
 			'status' => $status,
 			'src' => $src,
+			'relative_path' => $status == 200
+			? \Crypt::encryptString(\Storage::disk('public')->path($path))
+			: \Crypt::encryptString(public_path('assets/images/dummy.png')),
 			'name' => $image
 		];
 	}
@@ -156,6 +162,38 @@ class Clinic extends Authenticatable
 	{
         $this->attributes['status'] = !empty($value) ? 1 : 0;
  
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Decrypt ID when retrieving
+	|--------------------------------------------------------------------------
+	*/
+ 
+	public function setUIdAttribute($value)
+	{
+		if (!\Helper::hasEncrypt()) {
+			$this->attributes['id'] = $value;
+			return;
+		}
+
+		$this->attributes['id'] = \Helper::decryptData($value)['decrypt'];
+	}
+	
+	/*
+	|--------------------------------------------------------------------------
+	| Encrypt ID when storing
+	|--------------------------------------------------------------------------
+	*/
+ 
+
+	public function getUIdAttribute()
+	{
+		if (!\Helper::hasEncrypt()) {
+			return $this->attributes['id'];
+		}
+
+		return \Helper::encryptData($this->attributes['id'])['encrypt'];
 	}
 	
 	public function getFormatedCreatedAtAttribute()

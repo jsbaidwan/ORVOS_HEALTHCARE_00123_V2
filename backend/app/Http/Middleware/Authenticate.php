@@ -14,7 +14,7 @@ class Authenticate extends Middleware
      * @return string|null
      */
     protected function redirectTo($request)
-	{
+	{  
 		// Always return JSON for API requests
 		if ($request->is('api/*')) {
 			abort(response()->json(['message' => 'Unauthorized'], 401));
