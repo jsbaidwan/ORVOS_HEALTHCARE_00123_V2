@@ -1507,6 +1507,23 @@ class Helper{
 	 * End: Get clinic by id
 	 * -------------------------------------
 	 */
+	 
+	 /*
+	 *---------------------------------------
+	 * Start: Get clinic by code
+	 * -------------------------------------
+	 */
+	public static function getClinicByCode($code)
+	{
+		$clinic = Clinic::select('id', 'name','slug','code')->with('additionalSetting')->where('status',1)->where('code', $code)->first();
+		return ['clinic' => $clinic];
+	} 
+	
+	 /*
+	 *---------------------------------------
+	 * End: Get clinic by code
+	 * -------------------------------------
+	 */
 	
 	/*
 	 *---------------------------------------

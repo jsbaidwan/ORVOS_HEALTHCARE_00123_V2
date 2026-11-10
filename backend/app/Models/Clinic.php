@@ -7,10 +7,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\User;
 use App\Models\AdditionalSetting;
+use Laravel\Passport\HasApiTokens;
   
 class Clinic extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable,HasApiTokens;
 
 	protected $table = 'clinics'; 
   

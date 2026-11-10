@@ -478,5 +478,5 @@ class ClinicController extends Controller
 		return response()->json(['message' => 'The staff has been remove from the clinic.'], 200);
          
     }
-  
+	 
 }

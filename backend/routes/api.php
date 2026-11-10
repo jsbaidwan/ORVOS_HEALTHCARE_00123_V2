@@ -348,8 +348,8 @@ Route::resource('register', 'App\Http\Controllers\Api\RegisterController');
 Route::post('password/email','App\Http\Controllers\Api\ForgotPasswordController@sendResetLinkEmail');
 Route::post('password/reset', 'App\Http\Controllers\Api\ResetsPasswords@reset');
 Route::post('patients/guest/store','App\Http\Controllers\Api\PatientController@guestPatientsStore')->name('patients.guest.store');
-Route::post('clinics/verify-code', 'App\Http\Controllers\Api\ClinicController@verifyCode')->name('clinics.verify-code');
-
+Route::post('app-login', 'App\Http\Controllers\Api\App\Auth\LoginController@login');
+  
 Route::get('patients/guest/verify/{id}',function(Request $request, $id){
 	
 	$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();

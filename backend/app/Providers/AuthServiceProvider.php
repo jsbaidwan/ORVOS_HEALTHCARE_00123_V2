@@ -31,6 +31,9 @@ class AuthServiceProvider extends ServiceProvider
     {
 		$this->registerPolicies();
 		 
+		// oauth_clients.id is an auto-increment integer (pre Passport 13 schema)
+		Passport::$clientUuids = false;
+		
 		Passport::tokensExpireIn(\Helper::tokensExpireIn()['token_expire_in']);
 		Passport::personalAccessTokensExpireIn(\Helper::tokensExpireIn()['token_expire_in']);		
 		//Passport::routes();

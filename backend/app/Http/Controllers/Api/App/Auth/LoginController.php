@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\App\Auth;
  
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Response;
 use Illuminate\Contracts\Cache\Repository as Cache;
  
-class AppLoginController extends Controller
+class LoginController extends Controller
 {
      /**
      * Handle a login request to the application.
@@ -219,9 +219,10 @@ class AppLoginController extends Controller
 				'message' => 'Invalid clinic settings.',
 			], 422);
 		}
-
+		
 		// Check whether TED app access is enabled.
-		if (($data['ted_app_cred']['has_ted_app_access'] ?? 'off') !== 'on') {
+		if (($data['ted_app_cred']['has_ted_app_access'] ?? false) !== true) {
+			 
 			return response()->json([
 				'status'  => 422,
 				'message' => 'TED app access is disabled for this clinic.',
@@ -246,7 +247,7 @@ class AppLoginController extends Controller
 		$userData = $this->user($clinic, $input);
 		
 		$tokenId = $userData['token_id'] ?? NULL;
-		
+		 
 		if (!empty($input['device_info'])) {
 			$deviceInfo = $input['device_info'];
 
@@ -284,7 +285,7 @@ class AppLoginController extends Controller
 
 	protected function user($clinic, $input)
 	{
-		$tokenResult = $clinic->createToken('TED');
+		$tokenResult = $clinic->createToken(env('TED_APP_NAME'));
 		$tokenId = $tokenResult->token->id;
 
 		return [

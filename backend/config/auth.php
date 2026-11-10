@@ -47,6 +47,15 @@ return [
 			'driver' => 'custom-passport',
 			'provider' => 'users',
 		],
+		// Passport resolves the provider for createToken() only from guards using the "passport" driver
+		'passport-users' => [
+			'driver' => 'passport',
+			'provider' => 'users',
+		],
+		'passport-clinics' => [
+			'driver' => 'passport',
+			'provider' => 'clinics',
+		],
     ],
 
     /*
@@ -70,6 +79,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'clinics' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Clinic::class,
         ],
 
         // 'users' => [
