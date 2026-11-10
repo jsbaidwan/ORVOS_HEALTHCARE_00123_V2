@@ -5,6 +5,7 @@ import Breadcrumb from '../Common/Breadcrumb';
 import Filters from '../Common/Filters';
 import ErrorHandle from '../Common/ErrorHandle';
 import PageLoader from '../Common/PageLoader';
+import Swal from 'sweetalert2';
 import {
   ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
@@ -221,24 +222,57 @@ const ClinicPatients = () => {
 
 
   const exportExcel = async (endpoint) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to export clinic patients report?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, export it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+      confirmButtonColor: "#009efb",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          const response = await exportReport(filterValues, endpoint);
 
-    const params = new URLSearchParams();
-    if (filterValues.from_date) params.set('from_date', filterValues.from_date);
-    if (filterValues.to_date) params.set('to_date', filterValues.to_date);
-    if (filterValues.month) params.set('month', filterValues.month);
-    if (filterValues.clinics?.length) {
-      filterValues.clinics.forEach((id) => params.append('clinics[]', id));
-    }
+          if (!response || response.status !== 200) {
+            Swal.showValidationMessage(
+              response?.data?.message || response?.message || 'Failed to export clinic patients report. Please try again.'
+            );
+            return false;
+          }
 
-    const getExportExcel = await exportReport(filterValues, endpoint);
-    if (getExportExcel?.status === 200) {
-      const link = document.createElement('a');
-      link.href = getExportExcel.data.url;
-      link.download = endpoint + '.xlsx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+          return response;
+        } catch (error) {
+          Swal.showValidationMessage('Something went wrong. Please try again.');
+          return false;
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const response = result.value;
+
+        Swal.fire({
+          title: "Export",
+          text: response?.data?.message || "Clinic patients report exported successfully",
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#009efb",
+          timer: 2000,
+          timerProgressBar: true
+        });
+
+        const link = document.createElement('a');
+        link.href = response?.data?.url;
+        link.download = response?.data?.filename || endpoint + '.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
   }
 
   return (
