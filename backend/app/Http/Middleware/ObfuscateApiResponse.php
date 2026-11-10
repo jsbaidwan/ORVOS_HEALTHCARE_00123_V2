@@ -9,7 +9,7 @@ class ObfuscateApiResponse
 {
 	
 	protected array $exceptUris = [
-		'api/app-login',
+		/*'api/app-login',*/
 	];
 	
     public function handle(Request $request, Closure $next)
