@@ -15,7 +15,7 @@ class ObfuscateApiResponse
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
-
+ 
         // Normalize env flag (accept "true"/"1"/true)
         $enabled = \config('app.obfuscate_condition');
  
@@ -27,6 +27,11 @@ class ObfuscateApiResponse
         if (! $request->is('api/*')) {
             return $response;
         }
+		
+		 
+		if (!empty($request->input('device_info'))) {
+			return $response;
+		}
 		
 		// Exclude specified URLs
         if ($request->is($this->exceptUris)) {
