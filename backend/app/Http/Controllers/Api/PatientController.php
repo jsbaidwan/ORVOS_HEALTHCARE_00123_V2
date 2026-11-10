@@ -107,7 +107,7 @@ class PatientController extends Controller
         $validate = Validator::make($input, $rules,$messages);
         
         if ($validate->fails()) {
-			return response()->json(['message' => $validator->errors()], 422);
+			return response()->json(['message' => $validate->errors()], 422);
         }
 		 
 		$input['slug'] = \Helper::genSlug(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'), 0, 7))['slug'];

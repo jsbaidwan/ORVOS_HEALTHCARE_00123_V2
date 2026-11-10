@@ -6,7 +6,7 @@ import Breadcrumb from '../Common/Breadcrumb';
 import FormField from '../UI/FormField';
 import ErrorHandle from '../Common/ErrorHandle';
 import { useRoutePath } from '../../hooks/useRoutePath';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PencilIcon, EyeIcon, EyeSlashIcon, ClipboardDocumentIcon, KeyIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useTitle } from '../../context/TitleContext';
 import NoRecord from '../Common/NoRecord';
 import BlobFileItem from '../UI/BlobFileItem';
@@ -24,6 +24,8 @@ const ClinicView = () => {
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState(null);
   const [clinic, setClinic] = useState(null);
+  const [isAppPasswordEditable, setIsAppPasswordEditable] = useState(false);
+  const [showAppPassword, setShowAppPassword] = useState(false);
 
   const [settingsData, setSettingsData] = useState({
     patient_ins_billing_fields: false,
@@ -57,11 +59,42 @@ const ClinicView = () => {
           },
           clinic_url: d.clinic_url || '',
         });
+        setIsAppPasswordEditable(!d.ted_app_cred?.app_clinic_password);
       }
     };
     if (id) loadSettings();
   }, [id, getAdditionalSettings]);
  
+  const setAppClinicPassword = (value) => {
+    setSettingsData((prev) => ({
+      ...prev,
+      ted_app_cred: {
+        ...prev.ted_app_cred,
+        app_clinic_password: value,
+      },
+    }));
+  };
+
+  const generateAppClinicPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+    const values = new Uint32Array(16);
+    window.crypto.getRandomValues(values);
+    const password = Array.from(values, (v) => chars[v % chars.length]).join('');
+    setAppClinicPassword(password);
+    setShowAppPassword(true);
+    toast.success('Password generated. Save settings to apply it.');
+  };
+
+  const copyAppClinicPassword = () => {
+    const password = settingsData?.ted_app_cred?.app_clinic_password;
+    if (!password) {
+      toast.error('There is no password to copy.');
+      return;
+    }
+    navigator.clipboard.writeText(password);
+    toast.success('App Clinic Password copied to clipboard.');
+  };
+
   const handleToggleField = (fieldName) => {
     if (fieldName.includes('.')) {
       const [key, subKey] = fieldName.split('.');
@@ -590,24 +623,73 @@ const ClinicView = () => {
                               error={errors?.['ted_app_cred.app_clinic_code']}
                             />
                           
-                            <FormField
-                              label="App Clinic Password"
-                              type="password"
-                              required
-                              name="ted_app_cred.app_clinic_password"
-                              value={settingsData?.ted_app_cred?.app_clinic_password || ""}
-                              placeholder="Enter App Clinic Password"
-                              error={errors?.['ted_app_cred.app_clinic_password']}
-                              onChange={(e) =>
-                                setSettingsData((prev) => ({
-                                  ...prev,
-                                  ted_app_cred: {
-                                    ...prev.ted_app_cred,
-                                    app_clinic_password: e.target.value,
-                                  },
-                                }))
-                              }
-                            />
+                            <div>
+                              <label htmlFor="ted_app_cred.app_clinic_password" className="block text-sm font-medium text-gray-700 mb-1">
+                                App Clinic Password <span className="text-red-500">*</span>
+                              </label>
+                              <div className="flex flex-col sm:flex-row sm:items-stretch lg:flex-col lg:items-stretch gap-2">
+                                <input
+                                  id="ted_app_cred.app_clinic_password"
+                                  name="ted_app_cred.app_clinic_password"
+                                  type={showAppPassword ? 'text' : 'password'}
+                                  value={settingsData?.ted_app_cred?.app_clinic_password || ''}
+                                  onChange={(e) => setAppClinicPassword(e.target.value)}
+                                  readOnly={!isAppPasswordEditable}
+                                  required
+                                  placeholder="Enter App Clinic Password"
+                                  autoComplete="new-password"
+                                  className={`input-field w-full sm:flex-1 lg:flex-none min-w-0 ${!isAppPasswordEditable ? 'bg-gray-200 cursor-not-allowed' : ''} ${errors?.['ted_app_cred.app_clinic_password'] ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                                />
+                                <div className="flex items-stretch gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsAppPasswordEditable((prev) => !prev)}
+                                  className={`flex items-center justify-center w-11 h-10 sm:h-auto lg:h-10 border rounded-lg ${isAppPasswordEditable ? 'border-primary text-primary bg-primary-50' : 'border-gray-300 text-gray-700 bg-gray-50 hover:bg-gray-100'}`}
+                                  title={isAppPasswordEditable ? 'Lock' : 'Edit'}
+                                >
+                                  <PencilIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAppPassword((prev) => !prev)}
+                                  className="flex items-center justify-center w-11 h-10 sm:h-auto lg:h-10 border border-gray-300 rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100"
+                                  title={showAppPassword ? 'Hide' : 'Show'}
+                                >
+                                  {showAppPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={copyAppClinicPassword}
+                                  className="flex items-center justify-center w-11 h-10 sm:h-auto lg:h-10 border border-gray-300 rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100"
+                                  title="Copy"
+                                >
+                                  <ClipboardDocumentIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={generateAppClinicPassword}
+                                  className="flex-1 sm:flex-none lg:flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white rounded-lg shadow whitespace-nowrap"
+                                  style={{ backgroundColor: '#009efb' }}
+                                  title="Generate Password"
+                                >
+                                  <KeyIcon className="w-4 h-4 mr-1" />
+                                  Generate
+                                </button>
+                                </div>
+                              </div>
+                              {errors?.['ted_app_cred.app_clinic_password'] && (
+                                <p className="mt-1 text-sm text-red-600">{errors['ted_app_cred.app_clinic_password']}</p>
+                              )}
+                              <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                                <p className="flex items-center text-sm font-semibold italic text-yellow-800">
+                                  <ExclamationTriangleIcon className="w-4 h-4 mr-2 shrink-0" />
+                                  Important Notice
+                                </p>
+                                <p className="mt-1 text-xs sm:text-sm italic text-yellow-800 break-words">
+                                  Updating the App Clinic Password will automatically log out all users currently logged in on devices associated with this clinic. Sessions for all other clinics will remain unaffected.
+                                </p>
+                              </div>
+                            </div>
                         </div>
                       )}
 

@@ -198,7 +198,7 @@ export const ClinicGroupProvider = ({ children }) => {
   };
 
   const getExistingClinicGroup = (id) => {
-    return clinicGroups.find(c => c.id === Number(id)) || null;
+    return clinicGroups.find(c => String(c.u_id) === String(id) || c.id === Number(id)) || null;
  };
   
   const value = {

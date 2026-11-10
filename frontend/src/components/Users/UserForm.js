@@ -201,8 +201,8 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   const { user: authUser, updateUser: setAuthUser } = useAuth();
   const usersListPath = roleSlug ? `/users/${roleSlug}` : '/users';
   const { setPageTitle } = useTitle();
-  const resolvedId = userProp?.id ?? (idParam ? parseInt(idParam, 10) : null);
-  const isEditMode = Boolean(resolvedId && !Number.isNaN(resolvedId));
+  const resolvedId = userProp?.u_id || userProp?.id || idParam || null;
+  const isEditMode = Boolean(resolvedId);
   const [isSuperAdminProfile, setIsSuperAdminProfile] = useState(isProfile && (authUser?.role_id === 1));
 
   const [userData, setUserData] = useState(userProp || null);
@@ -254,7 +254,7 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
   });
 
   const fetched = useRef(false);
-  const uId = userProp?.id || id || null;
+  const uId = userProp?.u_id || userProp?.id || id || null;
 
   useEffect(() => {
     setPageTitle(isEditMode ? 'User Edit' : 'User Create');
@@ -435,13 +435,13 @@ const UserForm = ({ user: userProp, onClose, isProfile = false, roleSlug = null 
       }
 
       const result = userData?.id
-        ? await updateUser(userData.id, formData)
+        ? await updateUser(userData.u_id || userData.id, formData)
         : await addUser(formData);
 
       if (result && (result.status === 200 || result.success)) {
         if (userData?.id && authUser?.id === userData.id) {
           try {
-            const fresh = await getUserById(userData.id);
+            const fresh = await getUserById(userData.u_id || userData.id);
             if (fresh?.status === 200 && fresh?.user) {
               setAuthUser(fresh.user);
             }

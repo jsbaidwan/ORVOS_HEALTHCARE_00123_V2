@@ -117,7 +117,7 @@ const PdfTemplateList = ({ archived = false }) => {
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
-          const response = await deletePdfTemplate(template.id);
+          const response = await deletePdfTemplate(template.u_id || template.id);
   
           if (!response || response.status !== 200) {
             Swal.showValidationMessage(
@@ -155,7 +155,7 @@ const PdfTemplateList = ({ archived = false }) => {
     if (templateToArchive) {
       showLoader();
       try {
-        const result = await archivePdfTemplate(templateToArchive.id);
+        const result = await archivePdfTemplate(templateToArchive.u_id || templateToArchive.id);
         if (result && result?.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -176,7 +176,7 @@ const PdfTemplateList = ({ archived = false }) => {
     if (templateToArchive) {
       showLoader();
       try {
-        const result = await unarchivePdfTemplate(templateToArchive.id);
+        const result = await unarchivePdfTemplate(templateToArchive.u_id || templateToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -338,7 +338,7 @@ const PdfTemplateList = ({ archived = false }) => {
       render: (row) => (
         <div className="flex items-center">
           {!archived && (
-            <Link to={getRoutePath(`/settings/pdf-templates/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+            <Link to={getRoutePath(`/settings/pdf-templates/${row.u_id || row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -380,7 +380,7 @@ const PdfTemplateList = ({ archived = false }) => {
             menus={[
               {
                 label: 'View',
-                path: (r) => getRoutePath(`/settings/pdf-templates/view/${r.id}`),
+                path: (r) => getRoutePath(`/settings/pdf-templates/view/${r.u_id || r.id}`),
               },
             ]}
           />

@@ -656,7 +656,7 @@ const PatientView = () => {
                 <div className="bg-white rounded-2xl shadow-sm border p-3 sm:p-4 space-y-3 min-w-[220px]">
 
                     <button
-                        onClick={() => handlePDFDownload(row.id)}
+                        onClick={() => handlePDFDownload(row.u_id || row.id)}
                         className="w-full h-11 rounded btn-primary text-white text-sm font-medium flex items-center justify-center gap-2 transition"
                     >
                         <Download className="w-4 h-4" />

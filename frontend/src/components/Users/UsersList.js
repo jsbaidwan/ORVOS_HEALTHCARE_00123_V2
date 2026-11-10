@@ -70,11 +70,11 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     userRoleSlugs.find((r) => r.roleId === Number(rid))?.slug || null;
   const buildEditPath = (row) => {
     const slug = getUserSlug(row?.role_id);
-    return slug ? `/users/${slug}/${row.id}/edit` : `/users/${row.id}/edit`;
+    return slug ? `/users/${slug}/${row.u_id || row.id}/edit` : `/users/${row.u_id || row.id}/edit`;
   };
   const buildViewPath = (row) => {
     const slug = getUserSlug(row?.role_id);
-    return slug ? `/users/${slug}/view/${row.id}` : `/users/view/${row.id}`;
+    return slug ? `/users/${slug}/view/${row.u_id || row.id}` : `/users/view/${row.u_id || row.id}`;
   };
 
   useEffect(() => {
@@ -164,7 +164,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     if (userToArchive) {
       showLoader();
       try {
-        const result = await archiveUser(userToArchive.id);
+        const result = await archiveUser(userToArchive.u_id || userToArchive.id);
         if (result && result?.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -185,7 +185,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
     if (userToArchive) {
       showLoader();
       try {
-        const result = await unarchiveUser(userToArchive.id);
+        const result = await unarchiveUser(userToArchive.u_id || userToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -397,7 +397,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
 
                 < li key={c.clinic_id} >
                   <Link
-                    to={getRoutePath(`/clinics/view/${c.clinic_id}`)}
+                    to={getRoutePath(`/clinics/view/${c?.clinic?.u_id || c.clinic_id}`)}
                     className={`${user?.clinic_users?.some(u => u.clinic_id === c?.clinic_id)
                         ? "underline"
                         : user?.role_id !== 1
@@ -457,7 +457,7 @@ const UsersList = ({ archived = false, roleId: roleIdProp = null }) => {
             menus={[
               {
                 label: "View",
-                path: (row) => getRoutePath(`/users/view/${row.id}`),
+                path: (row) => getRoutePath(`/users/view/${row.u_id || row.id}`),
 
               }
             ]}

@@ -192,7 +192,7 @@ const ClinicsList = ({ archived = false }) => {
 
               <div className="text-sm">
                 <Link
-                  to={getRoutePath(`/clinics/view/${row.id}`)}
+                  to={getRoutePath(`/clinics/view/${row.u_id || row.id}`)}
                   className="text-primary hover:text-primary-700"
                   target="_blank"
                 >
@@ -269,7 +269,7 @@ const ClinicsList = ({ archived = false }) => {
             </svg>
           </button> */}
 
-          <Link to={getRoutePath(`/clinics/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+          <Link to={getRoutePath(`/clinics/${row.u_id || row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -291,12 +291,12 @@ const ClinicsList = ({ archived = false }) => {
             menus={[
               {
                 label: "View",
-                path: (row) => getRoutePath(`/clinics/view/${row.id}`),
+                path: (row) => getRoutePath(`/clinics/view/${row.u_id || row.id}`),
 
               },
               {
                 label: "Clinic Staffs",
-                path: (row) => getRoutePath(`/clinics/${row.id}/staffs`),
+                path: (row) => getRoutePath(`/clinics/${row.u_id || row.id}/staffs`),
 
               }
             ]}
@@ -335,7 +335,7 @@ const ClinicsList = ({ archived = false }) => {
     if (clinicToArchive) {
       showLoader();
       try {
-        const result = await archiveClinic(clinicToArchive.id);
+        const result = await archiveClinic(clinicToArchive.u_id || clinicToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -356,7 +356,7 @@ const ClinicsList = ({ archived = false }) => {
     if (clinicToArchive) {
       showLoader();
       try {
-        const result = await unarchiveClinic(clinicToArchive.id);
+        const result = await unarchiveClinic(clinicToArchive.u_id || clinicToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);

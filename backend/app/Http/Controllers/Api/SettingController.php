@@ -29,7 +29,7 @@ class SettingController extends Controller
 			], 422);
 		}
 
-		$clinicId = $input['clinic_id'];
+		$clinicId = \Helper::hasEncrypt() ? \Helper::decryptData($input['clinic_id'])['decrypt'] : $input['clinic_id'];
 		$appUrl = $request->app_url;
 		$signedUrl = \Helper::genSignedUrl(
 			$clinicId,
@@ -70,6 +70,9 @@ class SettingController extends Controller
 	
 	public function postAdditionalSettings(Request $request)
 	{	 
+		if (\Helper::hasEncrypt() && $request->filled('clinic_id')) {
+			$request->merge(['clinic_id' => \Helper::decryptData($request->clinic_id)['decrypt']]);
+		}
 		$input = $request->filled('data') ? json_decode($request->input('data'), true) : $request->all();
 		$rules = AdditionalSetting::$rules;
   

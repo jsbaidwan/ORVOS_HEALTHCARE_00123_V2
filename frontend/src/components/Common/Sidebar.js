@@ -138,12 +138,37 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const isActive = path => location.pathname === path || location.pathname.startsWith(path + '/');
 
+  const lastSubKey = (item) => `sidebar_last_sub_${item.basePath}`;
+
+  // Matches the sub-item from the url, e.g. /users/doctor/{id}/edit -> /users/doctor
+  const getMatchedSubPath = (item) => {
+    if (!item.subItems) return null;
+    const exact = item.subItems.find(sub => location.pathname === sub.path);
+    if (exact) return exact.path;
+    const prefix = item.subItems.find(sub => !sub.basePath.includes('create') && isActive(sub.path));
+    return prefix ? prefix.path : null;
+  };
+
+  // Detail pages (view/edit with an id) don't contain the list path, so fall back to the last visited sub-item
+  const getActiveSubPath = (item) => {
+    const matched = getMatchedSubPath(item);
+    if (matched) return matched;
+    if (!isActive(item.path)) return null;
+    const last = sessionStorage.getItem(lastSubKey(item));
+    return item.subItems?.some(sub => sub.path === last) ? last : null;
+  };
+
   // Track which parent menu is open
   const [openParentId, setOpenParentId] = useState(null);
 
   useEffect(() => {
     const activeParent = menuItemsWithPaths.find(item => isActive(item.path) && item.subItems);
     setOpenParentId(activeParent ? activeParent.basePath : null);
+
+    menuItemsWithPaths.forEach(item => {
+      const matched = getMatchedSubPath(item);
+      if (matched) sessionStorage.setItem(lastSubKey(item), matched);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -218,7 +243,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <Link
                               to={subItem.path}
                               onClick={() => { if (isOpen) toggleSidebar(); }}
-                              className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${location.pathname === subItem.path
+                              className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${getActiveSubPath(item) === subItem.path
                                 ? 'bg-primary-100 text-primary border'
                                 : 'hover:bg-primary-50 hover:text-primary'
                                 }`}

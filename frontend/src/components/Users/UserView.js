@@ -162,7 +162,7 @@ const UserView = ({ roleSlug = null }) => {
                     user.clinic_users.map((cUser, i) => (
                       <Link
                         key={i}
-                        to={getRoutePath(`/clinics/view/${cUser?.clinic?.id}`)}
+                        to={getRoutePath(`/clinics/view/${cUser?.clinic?.u_id || cUser?.clinic?.id}`)}
                         className="text-primary hover:underline"
                         target="_blank"
                       >

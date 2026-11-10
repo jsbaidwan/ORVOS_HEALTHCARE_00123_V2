@@ -190,7 +190,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     setNewFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const cId = clinic?.id || id || null;
+  const cId = clinic?.u_id || clinic?.id || id || null;
   const { setPageTitle } = useTitle();
   const loadData = useCallback(async () => {
     try {
@@ -296,7 +296,7 @@ const ClinicForm = ({ clinic, onClose }) => {
     try {
       showLoader()
       const result = clinicData?.id
-        ? await updateClinic(clinicData.id, formData)
+        ? await updateClinic(clinicData.u_id || clinicData.id, formData)
         : await addClinic(formData);
 
       if (result && (result.status === 200 || result.success)) {

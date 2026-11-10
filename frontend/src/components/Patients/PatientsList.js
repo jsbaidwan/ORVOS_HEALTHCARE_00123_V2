@@ -413,7 +413,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
           </div>
       
           <Link
-            to={getRoutePath(`/patients/view/${row.id}`)}
+            to={getRoutePath(`/patients/view/${row.u_id || row.id}`)}
             className="block text-sm text-primary hover:text-primary-700 truncate"
             target="_blank"
             title={row?.p_code}
@@ -479,7 +479,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
       sortValue: (row) => row?.clinic?.name?.toLowerCase() || '',
       render: (row) => (
         <div>
-          <p className="text-gray-900 text-sm"><Link to={getRoutePath(`/clinics/view/${row.clinic?.id}`)} target="_blank" className="text-primary hover:text-primary-700">{row.clinic?.name || '-'}</Link></p>
+          <p className="text-gray-900 text-sm"><Link to={getRoutePath(`/clinics/view/${row.clinic?.u_id || row.clinic?.id}`)} target="_blank" className="text-primary hover:text-primary-700">{row.clinic?.name || '-'}</Link></p>
         </div>
       ),
     },
@@ -543,7 +543,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         <div>
           {row?.user ? (
             <span className="text-green-600 font-medium">
-              <Link to={getRoutePath(`/users/view/${row?.user?.id}`)} target="_blank" className="text-primary hover:text-primary-700 underline">
+              <Link to={getRoutePath(`/users/view/${row?.user?.u_id || row?.user?.id}`)} target="_blank" className="text-primary hover:text-primary-700 underline">
                 {row?.user?.first_name || ''} {row?.user?.last_name || ''}
               </Link>
             </span>
@@ -561,7 +561,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         <div>
           {row?.remark_by ? (
           <span className="text-green-600 font-medium">
-            <Link to={getRoutePath(`/users/view/${row?.remark_by?.id}`)} target="_blank" className="underline">
+            <Link to={getRoutePath(`/users/view/${row?.remark_by?.u_id || row?.remark_by?.id}`)} target="_blank" className="underline">
               {row?.remark_by?.first_name || ''} {row?.remark_by?.last_name || ''} ({row?.remark_by?.role?.name || ''})
             </Link>
             </span>
@@ -591,7 +591,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
         <div className="flex items-center">
           {!archived && (
             <>
-              <Link to={getRoutePath(`/patients/${row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
+              <Link to={getRoutePath(`/patients/${row.u_id || row.id}/edit`)} className="p-2 text-primary hover:bg-primary-200 rounded-lg transition-colors duration-200" title="Edit">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
@@ -601,7 +601,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleMarkAsCompleted(row.id);
+                    handleMarkAsCompleted(row.u_id || row.id);
                   }}
                   className="p-2 text-green-600 hover:bg-green-200 rounded-lg transition-colors duration-200"
                   title="Mark as Completed"
@@ -622,7 +622,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
             menus={[
               {
                 label: "View",
-                path: (row) => getRoutePath(`/patients/view/${row.id}`),
+                path: (row) => getRoutePath(`/patients/view/${row.u_id || row.id}`),
 
               }
             ]}
@@ -667,7 +667,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     if (patientToArchive) {
       showLoader();
       try {
-        const result = await archivePatient(patientToArchive.id);
+        const result = await archivePatient(patientToArchive.u_id || patientToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -688,7 +688,7 @@ const PatientsList = ({ status = 'all', archived = false, diagnosis_status = 'al
     if (patientToArchive) {
       showLoader();
       try {
-        const result = await unarchivePatient(patientToArchive.id);
+        const result = await unarchivePatient(patientToArchive.u_id || patientToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);

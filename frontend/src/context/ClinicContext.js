@@ -180,7 +180,7 @@ export const ClinicProvider = ({ children }) => {
   };
 
   const getExistingClinic = (id) => {
-    return clinics.find(c => c.id === Number(id)) || null;
+    return clinics.find(c => String(c.u_id) === String(id) || c.id === Number(id)) || null;
   };
 
   const runDicomFetchCron = async (data) => {

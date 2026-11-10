@@ -331,7 +331,7 @@ const ClinicGroupList = ({ archived = false }) => {
     if (clinicGroupToArchive) {
       showLoader();
       try {
-        const result = await archiveClinicGroup(clinicGroupToArchive.id);
+        const result = await archiveClinicGroup(clinicGroupToArchive.u_id || clinicGroupToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);
@@ -352,7 +352,7 @@ const ClinicGroupList = ({ archived = false }) => {
     if (clinicGroupToArchive) {
       showLoader();
       try {
-        const result = await unarchiveClinicGroup(clinicGroupToArchive.id);
+        const result = await unarchiveClinicGroup(clinicGroupToArchive.u_id || clinicGroupToArchive.id);
         if (result && result.status === 200) {
           toast.success(result?.message);
           setShowArchiveConfirm(false);

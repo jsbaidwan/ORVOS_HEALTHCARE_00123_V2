@@ -40,7 +40,7 @@ const Header = ({ toggleSidebar, closeSidebar }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const userData = await getUserById(user?.id);
+      const userData = await getUserById(user?.u_id || user?.id);
       setUserData(userData?.user);
 
     };

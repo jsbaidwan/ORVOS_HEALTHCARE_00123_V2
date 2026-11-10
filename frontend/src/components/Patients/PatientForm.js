@@ -220,7 +220,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
     apiKey: isGuest ? (additionalData?.google_map_api_key || '') : undefined,
   });
 
-  const pId = patient?.id || id || null;
+  const pId = patient?.u_id || patient?.id || id || null;
 
   useEffect(() => {
     setPageTitle(isGuest ? 'Patient Form' : patientData?.id ? 'Patient Edit' : 'Patient Create');
@@ -288,7 +288,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
       setRemovedRightEyeFiles([]);
       setRemovedBothEyeFiles([]);
       reset(buildDefaults(null));
-    } else if (id && (!patientData || String(patientData.id) !== String(id))) {
+    } else if (id && (!patientData || (String(patientData.u_id) !== String(id) && String(patientData.id) !== String(id)))) {
       // Transition from Create -> Edit, or Edit A -> Edit B
       const existingPatient = getExistingPatient(id);
       if (existingPatient) {
@@ -452,7 +452,7 @@ const PatientForm = ({ patient, isGuest = false, guestClinicId = '', guestSignat
         result = await guestPatientsStore(formData);
       } else {
         result = patientData?.id
-          ? await updatePatient(patientData.id, formData)
+          ? await updatePatient(patientData.u_id || patientData.id, formData)
           : await addPatient(formData);
       }
 

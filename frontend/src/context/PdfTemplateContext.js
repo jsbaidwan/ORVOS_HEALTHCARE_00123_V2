@@ -191,7 +191,7 @@ export const PdfTemplateProvider = ({ children }) => {
   };
 
   const getExistingPdfTemplate = (id) => {
-    return pdfTemplates.find(t => t.id === Number(id)) || null;
+    return pdfTemplates.find(t => String(t.u_id) === String(id) || t.id === Number(id)) || null;
   };
 
   const value = {

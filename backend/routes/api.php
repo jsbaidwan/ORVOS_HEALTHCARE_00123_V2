@@ -203,7 +203,7 @@ Route::middleware('auth:api')->group(function () {
 			], 422);
 		}
 
-		$clinicId = $request->clinic_id;
+		$clinicId = \Helper::hasEncrypt() ? \Helper::decryptData($request->clinic_id)['decrypt'] : $request->clinic_id;
 		$clinic = \Helper::getClinicById($clinicId)['clinic'];
 
 		$deviceIds = $clinic->device_ids;
@@ -348,6 +348,7 @@ Route::resource('register', 'App\Http\Controllers\Api\RegisterController');
 Route::post('password/email','App\Http\Controllers\Api\ForgotPasswordController@sendResetLinkEmail');
 Route::post('password/reset', 'App\Http\Controllers\Api\ResetsPasswords@reset');
 Route::post('patients/guest/store','App\Http\Controllers\Api\PatientController@guestPatientsStore')->name('patients.guest.store');
+Route::post('clinics/verify-code', 'App\Http\Controllers\Api\ClinicController@verifyCode')->name('clinics.verify-code');
 
 Route::get('patients/guest/verify/{id}',function(Request $request, $id){
 	

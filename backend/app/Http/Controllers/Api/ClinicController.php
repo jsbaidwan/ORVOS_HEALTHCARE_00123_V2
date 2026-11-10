@@ -468,7 +468,7 @@ class ClinicController extends Controller
 			return response()->json(['message' => 'The clinic staff id (p_id) is required.'], 422);
 		}
          
-        $pId = $input['p_id'];
+        $pId = \Helper::hasEncrypt() ? \Helper::decryptData($input['p_id'])['decrypt'] : $input['p_id'];
         $clinicUser = ClinicUser::find($pId);
         if(!$clinicUser){
 			return response()->json(['message' => 'The staff you are trying to get does not exist.'], 422);

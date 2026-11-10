@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline';
 import { useRoutePath } from '../../hooks/useRoutePath';
 
 const Breadcrumb = ({ removeSegments = [] }) => {
   const location = useLocation();
+  const { id: routeId } = useParams();
   const getRoutePath = useRoutePath();
   const routePathParam = ["pending", "completed"].find((s) =>
     location.pathname.includes(s)
@@ -75,7 +76,7 @@ const Breadcrumb = ({ removeSegments = [] }) => {
 
   // Helper to reconstruct a link path including any leading prefixes
   const buildPathThroughIndex = (rawIndexInclusive) => `/${rawSegments.slice(0, rawIndexInclusive + 1).join('/')}`;
-  const visibleItems = displayItems.filter(({ seg }) => seg.trim() && isNaN(seg));
+  const visibleItems = displayItems.filter(({ seg }) => seg.trim() && isNaN(seg) && seg !== routeId);
   const formatName = (name) => {
     return name
       .replace(/-/g, ' ') // replace dashes with spaces

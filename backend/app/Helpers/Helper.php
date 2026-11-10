@@ -3729,7 +3729,11 @@ class Helper{
 			mkdir($fullPath, 0755, true);
 		}
 
-		$ext = strtolower($ext);
+		$quality = $quality ?? 85;
+		$ext = strtolower($ext ?: 'webp');
+		if ($ext === 'jfif') {
+			$ext = 'jpg';
+		}
 		$filename = time() . '_' . uniqid() . '.' . $ext;
 
 		$manager = new \Intervention\Image\ImageManager(

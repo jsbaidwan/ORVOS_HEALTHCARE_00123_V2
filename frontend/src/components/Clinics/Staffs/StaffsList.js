@@ -51,7 +51,7 @@ const StaffsList = () => {
     const buildEditPath = (row) => {
 
         const slug = getUserSlug(row?.user?.role_id);
-        return slug ? `/users/${slug}/${row.user.id}/edit` : `/users/${row.user.id}/edit`;
+        return slug ? `/users/${slug}/${row.user.u_id || row.user.id}/edit` : `/users/${row.user.u_id || row.user.id}/edit`;
     };
 
     useEffect(() => {
@@ -211,7 +211,7 @@ const StaffsList = () => {
                         timer: 2000,
                         timerProgressBar: true
                     });
-                    setStaffs((prev) => prev.filter((s) => s.id !== id));
+                    setStaffs((prev) => prev.filter((s) => (s.u_id || s.id) !== id));
                 } else {
 
                     Swal.fire({
@@ -331,7 +331,7 @@ const StaffsList = () => {
                    
                     {row?.user?.role_id !== 6 && (
                         <button
-                            onClick={() => removeStaffRequest(row.id)}
+                            onClick={() => removeStaffRequest(row.u_id || row.id)}
                             title="delete"
                             className="p-2 hover:bg-danger-50 text-danger rounded-lg transition-colors duration-200"
 

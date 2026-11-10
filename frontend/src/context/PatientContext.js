@@ -216,7 +216,7 @@ export const PatientProvider = ({ children }) => {
   };
 
   const getExistingPatient = (id) => {
-    return patients.find(p => p.id === Number(id)) || null;
+    return patients.find(p => String(p.u_id) === String(id) || p.id === Number(id)) || null;
   };
 
   const getPendingPatients = async (filters = {}) => {

@@ -205,7 +205,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const getExistingUser = (id) => {
-    return users.find((u) => u.id === Number(id)) || null;
+    return users.find((u) => String(u.u_id) === String(id) || u.id === Number(id)) || null;
   };
 
   const importLicences = async (id, file, data) => {
