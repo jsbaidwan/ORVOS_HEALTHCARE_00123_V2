@@ -3981,7 +3981,7 @@ class Helper{
 	
 	public static function hasEncrypt()
 	{
-		return env('URL_ID_ENCRYPTION', false);
+		return env('URL_ID_ENCRYPTION', true);
 	}
 	
 	/*
