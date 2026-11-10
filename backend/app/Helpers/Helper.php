@@ -3740,11 +3740,16 @@ class Helper{
 			new \Intervention\Image\Drivers\Gd\Driver()
 		);
 
-		$source = $file instanceof \Illuminate\Http\UploadedFile
-			? $file->getRealPath()
-			: $file;
+		// $file can be an uploaded file, a file path, or raw image bytes (e.g. from DICOM jobs)
+		if ($file instanceof \Illuminate\Http\UploadedFile) {
+			$contents = file_get_contents($file->getRealPath());
+		} elseif (is_string($file) && !str_contains($file, "\0") && strlen($file) < PHP_MAXPATHLEN && is_file($file)) {
+			$contents = file_get_contents($file);
+		} else {
+			$contents = $file;
+		}
 
-		$image = $manager->decode(file_get_contents($source));
+		$image = $manager->decode($contents);
 
 		switch ($ext) {
 			case 'webp':
@@ -3976,7 +3981,7 @@ class Helper{
 	
 	public static function hasEncrypt()
 	{
-		return true;
+		return env('URL_ID_ENCRYPTION', false);
 	}
 	
 	/*

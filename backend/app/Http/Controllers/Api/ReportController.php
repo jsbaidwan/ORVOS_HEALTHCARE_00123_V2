@@ -162,7 +162,7 @@ class ReportController extends Controller
 					return $this->rows;
 				}
 
-				public function styles(Worksheet $sheet)
+				public function styles(Worksheet $sheet): ?array
 				{
 					$sheet->getColumnDimension('A')->setWidth(45);
 
@@ -509,7 +509,7 @@ class ReportController extends Controller
 					return $this->rows;
 				}
 
-				public function styles(Worksheet $sheet)
+				public function styles(Worksheet $sheet): ?array
 				{
 					$sheet->getColumnDimension('A')->setWidth(45);
 
