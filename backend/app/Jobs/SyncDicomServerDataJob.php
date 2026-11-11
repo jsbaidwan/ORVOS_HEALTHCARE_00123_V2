@@ -58,11 +58,11 @@ class SyncDicomServerDataJob implements ShouldQueue
 		$client = new Client();
  
 		$response = $client->post(
-			env('ORTHANC_ENDPOINT'). ':' .env('ORTHANC_PORT2'). '/modalities/MAIN/store',
+			config('orvos.orthanc.endpoint'). ':' .config('orvos.orthanc.port2'). '/modalities/MAIN/store',
 			[
 				'auth' => [
-					env('ORTHANC_USERNAME2'),
-					env('ORTHANC_PASSWORD2'),
+					config('orvos.orthanc.username2'),
+					config('orvos.orthanc.password2'),
 				],
 				'headers' => [
 					'Content-Type' => 'application/json',

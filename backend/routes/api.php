@@ -72,22 +72,8 @@ Route::middleware('auth:api')->group(function () {
 		return \Helper::permission();
 	});
 	
-	Route::post('/impersonate', function(Request $request){
-		 
-		 return impersonateFunc($request);
-	});
-	
-	Route::post('/stop-impersonate', function(Request $request){
-		
-		$request->merge([
-			'stop' => true
-		]);
-		
-		return impersonateFunc($request);
-	});
-	
-	function impersonateFunc(Request $request)
-	{
+	// A closure instead of a named function: routes files can be loaded more than once (config:cache, route:cache)
+	$impersonateFunc = function (Request $request) {
 		$input = $request->all();
 		if(empty($input['user_id'])){
 			return json_encode(['status' => 422,'message' => 'The user_id is required.']);
@@ -105,7 +91,21 @@ Route::middleware('auth:api')->group(function () {
 		}
 	 
 		return $loginController->impersonateLoginResponse($request,$user);
-	}
+	};
+	
+	Route::post('/impersonate', function(Request $request) use ($impersonateFunc) {
+		 
+		 return $impersonateFunc($request);
+	});
+	
+	Route::post('/stop-impersonate', function(Request $request) use ($impersonateFunc) {
+		
+		$request->merge([
+			'stop' => true
+		]);
+		
+		return $impersonateFunc($request);
+	});
 	 
 	
 	Route::post('/get-pdf-temp-category', function (Request $request) {

@@ -50,7 +50,7 @@ class UpdateFaxDataJob implements ShouldQueue
 
             $response = $client->post('https://api.ifaxapp.com/v1/customer/fax-status', [
                 'headers' => [
-                    'accessToken' => env('FAX_ACCESS_TOKEN'),
+                    'accessToken' => config('orvos.fax.access_token'),
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                 ],

@@ -47,7 +47,7 @@ class ObfuscateApiResponse
 				$token = \Laravel\Passport\Passport::token()->find($tokenId);
 				  
 				if(!empty($token)){
-					if($token['name'] == env('TED_APP_NAME')){
+					if($token['name'] == config('orvos.ted_app_name')){
 						return $response;
 					}
 				}

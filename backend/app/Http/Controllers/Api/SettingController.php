@@ -117,7 +117,7 @@ class SettingController extends Controller
 				$getClinicPass = $getAddSettingData['ted_app_cred']['app_clinic_password'];
 				if($input['ted_app_cred']['app_clinic_password'] != $getClinicPass){
 					\DB::table('oauth_access_tokens')
-					->where('name',env('TED_APP_NAME'))
+					->where('name',config('orvos.ted_app_name'))
 					->where('user_id', $request->clinic_id)
 					->update(['revoked' => 1]); 
 					 

@@ -91,9 +91,9 @@ class DeleteDicomDataCommand extends Command
 		 */
 		 
 		$params = [
-			'stow_url'      => env('ORTHANC_ENDPOINT').':'.env('ORTHANC_PORT2'),
-			'stow_username' => env('ORTHANC_USERNAME2'),
-			'stow_password' => env('ORTHANC_PASSWORD2'),
+			'stow_url'      => config('orvos.orthanc.endpoint').':'.config('orvos.orthanc.port2'),
+			'stow_username' => config('orvos.orthanc.username2'),
+			'stow_password' => config('orvos.orthanc.password2'),
 			'stow_get'      => '/patients',
 			'stow_post'     => '/',
 		];

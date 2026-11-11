@@ -171,7 +171,7 @@ class Helper{
 			$users = $query->get();
 		} else {
 			 
-			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$perPage = config('orvos.pagination_per_page', 15);
 			$page = $filters['page'] ?? 1;
 			$users = $query->paginate($perPage, ['*'], 'page', $page);
 		}
@@ -420,7 +420,7 @@ class Helper{
 			$patients = $query->get();
 		} else{
 			
-			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$perPage = config('orvos.pagination_per_page', 15);
 			$page = $filters['page'] ?? 1;
 			$patients = $query->paginate($perPage, ['*'], 'page', $page);
 		}  
@@ -1286,7 +1286,7 @@ class Helper{
 	 */
 	public static function googleApiKey()
 	{   
-		return ['key' => env('GOOGLE_MAP_API_KEY')];
+		return ['key' => config('orvos.google_map_api_key')];
 	}
 	 /*
 	 *---------------------------------------
@@ -1303,7 +1303,7 @@ class Helper{
 	public static function getLatLng($address)
 	{
 		//$key = self::googleApiKey()['key'];
-		$key = env('GOOGLE_MAP_GEOCODE_API_KEY');
+		$key = config('orvos.google_map_geocode_api_key');
 		$geocodeUrl = "https://maps.googleapis.com/maps/api/geocode/json?address=" . urlencode($address) . "&key=".$key;
         $response = file_get_contents($geocodeUrl);
         $data = json_decode($response);
@@ -1376,7 +1376,7 @@ class Helper{
 			$clinicGroups = $query->get();
 		} else {
 			 
-			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$perPage = config('orvos.pagination_per_page', 15);
 			$page = $filters['page'] ?? 1;
 			$clinicGroups = $query->paginate($perPage, ['*'], 'page', $page);
 		}
@@ -1479,7 +1479,7 @@ class Helper{
 			$clinics = $query->get();
 		} else {
 			 
-			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$perPage = config('orvos.pagination_per_page', 15);
 			$page = $filters['page'] ?? 1;
 			$clinics = $query->paginate($perPage, ['*'], 'page', $page);
 		}
@@ -2420,7 +2420,7 @@ class Helper{
 			$pdfTemplates = $query->get();
 		} else {
 			 
-			$perPage = env('PAGINATION_PER_PAGE', 15);
+			$perPage = config('orvos.pagination_per_page', 15);
 			$page = $filters['page'] ?? 1;
 			$pdfTemplates = $query->paginate($perPage, ['*'], 'page', $page);
 		}
@@ -3020,7 +3020,7 @@ class Helper{
 	 
 	public static function googleMapApiKey()
 	{ 
-		return ['google_map_api_key' => env('GOOGLE_MAP_API_KEY')];
+		return ['google_map_api_key' => config('orvos.google_map_api_key')];
 	}
 	
 	/**
@@ -3040,13 +3040,13 @@ class Helper{
 		//utest5452@gmail.com
 		$credentials =  [
 			'v2' => [
-				'site_key' => env('RECAPTCHA_SITE_KEY_V2'),
-				'secret_key' => env('RECAPTCHA_SECRET_KEY_V2'),
+				'site_key' => config('orvos.recaptcha.v2.site_key'),
+				'secret_key' => config('orvos.recaptcha.v2.secret_key'),
 			],
 			
 			'v3' => [
-				'site_key' => env('RECAPTCHA_SITE_KEY_V3'),
-				'secret_key' => env('RECAPTCHA_SECRET_KEY_V3'),
+				'site_key' => config('orvos.recaptcha.v3.site_key'),
+				'secret_key' => config('orvos.recaptcha.v3.secret_key'),
 			],
 			
 		];
@@ -3409,7 +3409,7 @@ class Helper{
 		 
 		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-send', [
 			'headers' => [
-				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'accessToken' => config('orvos.fax.access_token'),
 				'Content-Type' => 'application/json',
 				'Accept' => 'application/json',
 			],
@@ -3418,8 +3418,8 @@ class Helper{
 				'message' => ($data['message'] ?? NULL),
 				'subject' => 'Patient Diagnosis Report - '.($data['first_name'] ?? NULL).' '.($data['last_name'] ?? NULL),
 				'from_name' => ($data['first_name'] ?? NULL).' '.($data['last_name'] ?? NULL),
-				'to_name' => env('APP_NAME'),
-				'callerId' => env('Fax_CALLER_ID'),
+				'to_name' => config('app.name'),
+				'callerId' => config('orvos.fax.caller_id'),
 				'faxQuality' => 'HD',
 				'faxData' => [
 					[
@@ -3460,7 +3460,7 @@ class Helper{
 		
 		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-status', [
 			'headers' => [
-				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'accessToken' => config('orvos.fax.access_token'),
 				'Content-Type' => 'application/json',
 				'Accept' => 'application/json',
 			],
@@ -3490,7 +3490,7 @@ class Helper{
 		
 		$response = $client->post('https://api.ifaxapp.com/v1/customer/fax-resend', [
 			'headers' => [
-				'accessToken' => env('FAX_ACCESS_TOKEN'),
+				'accessToken' => config('orvos.fax.access_token'),
 				'Content-Type' => 'application/json',
 				'Accept' => 'application/json',
 			],
@@ -3998,7 +3998,7 @@ class Helper{
 	
 	public static function hasEncrypt()
 	{
-		return env('URL_ID_ENCRYPTION', true);
+		return config('orvos.url_id_encryption', true);
 	}
 	
 	/*

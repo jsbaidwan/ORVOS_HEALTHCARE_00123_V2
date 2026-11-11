@@ -285,7 +285,7 @@ class LoginController extends Controller
 
 	protected function user($clinic, $input)
 	{
-		$tokenResult = $clinic->createToken(env('TED_APP_NAME'));
+		$tokenResult = $clinic->createToken(config('orvos.ted_app_name'));
 		$tokenId = $tokenResult->token->id;
 
 		return [
