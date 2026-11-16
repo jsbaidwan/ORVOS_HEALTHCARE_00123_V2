@@ -118,16 +118,13 @@ class FetchDicomDataCommand extends Command
 			$totalSeriesNumber = [];
 			foreach($instances as $instanceVal){
 				$tags = System::get("/instances/".$instanceVal['ID']."/tags");
-				$manufacturerModelName = $tags['0008,1090']['Value'][0] ?? null;
+				$manufacturerModelName = $tags['0008,1090']['Value'] ?? null;
 				
 				$patientOrientation = $tags['0020,0020']['Value'][0] ?? null;
-				$orientation = $patientOrientation
-				? explode('\\', $patientOrientation)[0]
-				: null;
-						
-				$imageLaterality = $tags['0020,0062']['Value'][0]
-				?? $tags['0020,0060']['Value'][0]
-				?? $orientation
+				  
+				$imageLaterality = $tags['0020,0062']['Value']
+				?? $tags['0020,0060']['Value']
+				?? $patientOrientation
 				?? null; 
 				
 				$patientCommentsRaw = $tags['0010,4000']['Value'] ?? null;
