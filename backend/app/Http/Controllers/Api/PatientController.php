@@ -914,6 +914,15 @@ class PatientController extends Controller
 			'public'
 		);
 		
+		$user = \Auth::user();
+
+		\Log::save(
+			ucfirst($pStatus) .' Patients  Exported.',
+			"Patients {$fileName} exported successfully by " . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? 'N/A')) . '.',
+			'User',
+			$user->id ?? NULL
+		);
+		
 		return response()->json([
 			'file_name' => $fileName,
 			'download_url' => asset('storage/' . $path),
@@ -1048,6 +1057,14 @@ class PatientController extends Controller
 		| Return PDF
 		|--------------------------------------------------------------------------
 		*/
+		
+		$user = \Auth::user();
+		\Log::save(
+			'PDF '. ucfirst($filename) .' Downloaded.',
+			'Patient '. ucfirst($filename) .' PDF successfully downloaded by ' . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? 'N/A')) . '.',
+			'Patient',
+			$patient->id ?? NULL
+		);
 		 
 		return response()->json([
 			'message'  =>  'PDf Downloaded',
@@ -1130,6 +1147,15 @@ class PatientController extends Controller
 		$patient = Patient::find($input['patient_id']);
 		$status = $patient->is_report_sent ? 'PDF Sent':'PDF Failed';
 		$class = $patient->is_report_sent ? 'text-success':'text-danger';
+		
+		$user = \Auth::user();
+		\Log::save(
+			 $status,
+			'Patient  '. $status .' by ' . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? 'N/A')) . '.',
+			'Patient',
+			$patient->id ?? NULL
+		);
+		
 		return response()->json(['message' => $status,'class' => $class,'report_sent_status' => $patient['report_sent_status'] ?? []], 200);
 	 
 	}
@@ -1147,9 +1173,9 @@ class PatientController extends Controller
 			return response()->json(['message' => 'This Patient not exist in your records.'], 422); 
 		}
 		if(empty($patient->clinic->fax_number)){  
-		return response()->json(['message' => 'The fax number for the '.$patient->clinic->name.' is not available.Please add a fax number to the clinic'], 422);
-			  
+			return response()->json(['message' => 'The fax number for the '.$patient->clinic->name.' is not available.Please add a fax number to the clinic'], 422);	  
 		}
+		
 		$patient->clinic->email = $patient->clinic->poc_email ?? NULL; 
 		 
 		$sendFax = new SendFaxReportToClinicJob($patient);
@@ -1174,6 +1200,15 @@ class PatientController extends Controller
 			$faxArr = json_decode($patient->fax_json,true);
 			$errorMsg = $faxArr['message'] ?? NULL;
 		}
+		
+		$user = \Auth::user();
+		\Log::save(
+			$status,
+			'Patient  '. $status .' by ' . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? 'N/A')) . '.',
+			'Patient',
+			$patient->id ?? NULL
+		);
+		
 		return ['status_code' => $response['fax_status'],'err_msg' => $errorMsg,'fax_status_data' => $patient['fax_status_data']]; 
 		
 	}
@@ -1194,6 +1229,15 @@ class PatientController extends Controller
 		$response = $sendDicom->handle();
 		 
 		$response['dicom_file_status_data'] = $patient['dicom_file_status_data']; 
+		
+		$user = \Auth::user();
+		\Log::save(
+			'DICOM Send',
+			'Patient DICOM Send by ' . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? 'N/A')) . '.',
+			'Patient',
+			$patient->id ?? NULL
+		);
+		
 		return json_encode($response);
 		 
 	}
@@ -1264,6 +1308,16 @@ class PatientController extends Controller
 		 
 		/* save as new record */
 		$newPatient->save();
+		
+		$user = \Auth::user();
+	 
+		\Log::save(
+			'Patient Record Cloned',
+			'Patient record successfully cloned by ' . trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) . '.',
+			'Patient',
+			$newPatient->id ?? NULL
+		);
+
 		return response()->json(['message' => 'Patient record cloned successfully.'], 200);
 	}
 	

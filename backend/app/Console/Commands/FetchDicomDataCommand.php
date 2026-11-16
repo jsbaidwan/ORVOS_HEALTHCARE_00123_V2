@@ -119,7 +119,10 @@ class FetchDicomDataCommand extends Command
 			foreach($instances as $instanceVal){
 				$tags = System::get("/instances/".$instanceVal['ID']."/tags");
 						
-				$imageLaterality = $tags['0020,0062']['Value'][0] ?? null;
+				$imageLaterality = $tags['0020,0062']['Value'][0]
+				?? $tags['0020,0060']['Value'][0]
+				?? null;
+				
 				$patientCommentsRaw = $tags['0010,4000']['Value'] ?? null;
 
 				$patientComments = $patientCommentsRaw;

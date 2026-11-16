@@ -283,6 +283,38 @@ Route::middleware('auth:api')->group(function () {
 	});
 	  
 });
+
+Route::any('/fax-webhook', function (Request $request) {
+
+    $data = json_decode($request->getContent(), true);
+	if(!empty($data['jobId'])){
+
+		$patient = Patient::where('fax_job_id',$data['jobId'])->first();
+		if($patient){
+			$faxStatus = 3;
+			if($data['faxStatus']  == 'delivered'){
+				$faxStatus = 2;
+			} 
+			
+			$patient->update(['fax_status' => $faxStatus,'fax_sent_at' => now(),'fax_json' => $data]);
+			 
+			\Log::save(
+				$data['faxStatus'] ?? 'Fax Status Updated',
+				'Patient fax status updated to ' . ($data['faxStatus'] ?? 'Unknown') . ' for job ID ' . ($data['jobId'] ?? 'N/A') . '.',
+				'Patient',
+				$patient->id ?? NULL
+			);
+		}
+		\Log::info('Fax Webhook received', [
+			'jobId' => $data['jobId'] ?? null,
+			'status' => $data['status'] ?? null,
+			'direction' => $data['direction'] ?? null,
+			'raw' => $request->getContent(),
+		]);
+		 
+	}
+	  
+});
   
 Route::get('countries', function(){
 	$countries = \Helper::getCountries()['countries'];

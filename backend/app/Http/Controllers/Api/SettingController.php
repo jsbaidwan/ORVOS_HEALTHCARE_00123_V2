@@ -114,7 +114,7 @@ class SettingController extends Controller
 			if($fetchAddSetting){
 				
 				$getAddSettingData = json_decode($fetchAddSetting['data'],true); 
-				$getClinicPass = $getAddSettingData['ted_app_cred']['app_clinic_password'];
+				$getClinicPass = $getAddSettingData['ted_app_cred']['app_clinic_password'] ?? NULL;
 				if($input['ted_app_cred']['app_clinic_password'] != $getClinicPass){
 					\DB::table('oauth_access_tokens')
 					->where('name',config('orvos.ted_app_name'))
