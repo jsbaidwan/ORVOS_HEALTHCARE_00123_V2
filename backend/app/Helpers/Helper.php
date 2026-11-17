@@ -3200,6 +3200,7 @@ class Helper{
 		return [
 			0 => ['id' => 1,'name' => 'Volk'],
 			1 => ['id' => 2,'name' => 'Eyer2'],
+			2 => ['id' => 3,'name' => 'Aurora'],
 		];
 	}	
 	 /*

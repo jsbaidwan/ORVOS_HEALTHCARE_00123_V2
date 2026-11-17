@@ -122,10 +122,17 @@ class FetchDicomDataCommand extends Command
 				
 				$patientOrientation = $tags['0020,0020']['Value'][0] ?? null;
 				  
-				$imageLaterality = $tags['0020,0062']['Value']
-				?? $tags['0020,0060']['Value']
-				?? $patientOrientation
-				?? null; 
+				if(strtolower($manufacturerModelName) == 'aurora'){
+					
+					$imageLaterality = $tags['0020,0062']['Value']
+					?? $tags['0020,0060']['Value']
+					?? 'r';
+					
+				}else{
+					$imageLaterality = $tags['0020,0062']['Value']
+					?? $tags['0020,0060']['Value']
+					?? null; 
+				} 
 				
 				$patientCommentsRaw = $tags['0010,4000']['Value'] ?? null;
 
